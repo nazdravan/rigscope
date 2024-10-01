@@ -1,0 +1,45 @@
+[workspace]
+resolver = "2"
+members = ["crates/*", "apps/rigscope", "xtask"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/nazdravan/rigscope"
+
+[workspace.dependencies]
+rigscope-model = { path = "crates/rigscope-model" }
+rigscope-smbios = { path = "crates/rigscope-smbios" }
+rigscope-procfs = { path = "crates/rigscope-procfs" }
+rigscope-probe = { path = "crates/rigscope-probe" }
+rigscope-engine = { path = "crates/rigscope-engine" }
+rigscope-ui = { path = "crates/rigscope-ui" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+anyhow = "1.0"
+proptest = "1.12"
+eframe = { version = "0.37", default-features = false, features = ["default_fonts", "glow", "persistence", "x11", "wayland"] }
+egui = "0.37"
+egui_kittest = "0.37"
+arboard = { version = "3.7", default-features = false }
+rfd = "0.17"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unreachable = "deny"
+unimplemented = "deny"
+indexing_slicing = "deny"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
