@@ -7,6 +7,7 @@ pub mod cpu;
 pub mod field;
 pub mod memory;
 pub mod system;
+pub mod text;
 
 pub use compat::{compat_summary, CompatLine};
 pub use cpu::{CacheKind, CacheLevel, CoreFreq, CpuInfo};
@@ -15,3 +16,4 @@ pub use memory::{
     FormFactor, MemType, MemoryArray, MemoryInfo, MemoryModule, MemorySlot, SlotState, VoltageMv,
 };
 pub use system::{BoardInfo, DmiSource, Snapshot, SystemInfo, SCHEMA_VERSION};
+pub use text::clean_text;
