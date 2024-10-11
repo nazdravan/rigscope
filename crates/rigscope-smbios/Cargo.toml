@@ -4,8 +4,19 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+description = "Panic-free SMBIOS/DMI table decoder for rigscope"
+
+[features]
+# Public builder of synthetic SMBIOS tables, for tests and fixture generation.
+testutil = []
 
 [dependencies]
+rigscope-model.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+rigscope-smbios = { path = ".", features = ["testutil"] }
 
 [lints]
 workspace = true
