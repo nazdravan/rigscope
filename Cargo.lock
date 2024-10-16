@@ -2042,6 +2042,13 @@ dependencies = [
 [[package]]
 name = "rigscope-probe"
 version = "0.1.0"
+dependencies = [
+ "proptest",
+ "rigscope-model",
+ "rigscope-procfs",
+ "rigscope-smbios",
+ "thiserror 2.0.21",
+]
 
 [[package]]
 name = "rigscope-procfs"
@@ -3170,6 +3177,7 @@ name = "xtask"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "rigscope-smbios",
  "serde_json",
 ]
 
