@@ -4,8 +4,13 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+description = "Panic-free parsers for Linux /proc and /sys text files"
 
 [dependencies]
+rigscope-model.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
 
 [lints]
 workspace = true
