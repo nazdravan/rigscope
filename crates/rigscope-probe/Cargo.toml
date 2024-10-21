@@ -4,8 +4,17 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+description = "Collects a rigscope Snapshot from /proc, /sys and SMBIOS"
 
 [dependencies]
+rigscope-model.workspace = true
+rigscope-smbios.workspace = true
+rigscope-procfs.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+rigscope-smbios = { workspace = true, features = ["testutil"] }
 
 [lints]
 workspace = true
