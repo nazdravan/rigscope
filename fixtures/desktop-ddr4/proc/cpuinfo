@@ -1,0 +1,36 @@
+processor	: 0
+vendor_id	: GenuineIntel
+model name	: Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz
+microcode	: 0xf4
+cpu MHz		: 3400.000
+physical id	: 0
+core id		: 0
+flags		: fpu vme sse sse2 ssse3 sse4_1 sse4_2 avx avx2 aes
+
+processor	: 1
+vendor_id	: GenuineIntel
+model name	: Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz
+microcode	: 0xf4
+cpu MHz		: 3400.000
+physical id	: 0
+core id		: 1
+flags		: fpu vme sse sse2 ssse3 sse4_1 sse4_2 avx avx2 aes
+
+processor	: 2
+vendor_id	: GenuineIntel
+model name	: Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz
+microcode	: 0xf4
+cpu MHz		: 3400.000
+physical id	: 0
+core id		: 2
+flags		: fpu vme sse sse2 ssse3 sse4_1 sse4_2 avx avx2 aes
+
+processor	: 3
+vendor_id	: GenuineIntel
+model name	: Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz
+microcode	: 0xf4
+cpu MHz		: 3400.000
+physical id	: 0
+core id		: 3
+flags		: fpu vme sse sse2 ssse3 sse4_1 sse4_2 avx avx2 aes
+
