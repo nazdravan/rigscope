@@ -157,3 +157,130 @@ pub fn memory_device(handle: u16, array: u16, d: &Dimm<'_>) -> Vec<u8> {
         .u16(0x26, d.voltage_mv)
         .build()
 }
+
+fn bios_board(
+    vendor: &str,
+    product: &str,
+    bios_vendor: &str,
+    bios_version: &str,
+    bios_date: &str,
+) -> Vec<Vec<u8>> {
+    vec![
+        StructBuilder::new(0, 0x0000, 0x18)
+            .string(0x04, bios_vendor)
+            .string(0x05, bios_version)
+            .string(0x08, bios_date)
+            .build(),
+        StructBuilder::new(2, 0x0002, 0x0F)
+            .string(0x04, vendor)
+            .string(0x05, product)
+            .string(0x06, "x.x")
+            .build(),
+    ]
+}
+
+fn processor(socket: &str, max_mhz: u16, cores: u8, threads: u8) -> Vec<u8> {
+    StructBuilder::new(4, 0x0004, 0x30)
+        .string(0x04, socket)
+        .u16(0x14, max_mhz)
+        .u8(0x18, 0x41)
+        .u8(0x23, cores)
+        .u8(0x25, threads)
+        .build()
+}
+
+/// Synthetic `(smbios_entry_point, DMI)` files for the named fixture machine, or `None`.
+///
+/// These are written to `fixtures/<name>/sys/firmware/dmi/tables/` by `cargo xtask gen-fixtures`
+/// and checked for drift by a test in `rigscope-probe`.
+pub fn fixture_tables(name: &str) -> Option<(Vec<u8>, Vec<u8>)> {
+    let structs = match name {
+        "desktop-ddr4" => {
+            let mut s = bios_board(
+                "Gigabyte Technology Co., Ltd.",
+                "B250M-D3H",
+                "American Megatrends Inc.",
+                "F10",
+                "12/04/2018",
+            );
+            s.push(processor("LGA1151", 3800, 4, 4));
+            s.push(memory_array(0x1000, 64 * GIB, 2));
+            s.push(memory_device(
+                0x1100,
+                0x1000,
+                &Dimm {
+                    size_mib: 8192,
+                    form_factor: 0x09,
+                    mem_type: 0x1A,
+                    speed: 2666,
+                    configured: 2400,
+                    locator: "ChannelA-DIMM0",
+                    bank: "BANK 0",
+                    manufacturer: "Kingston",
+                    serial: "4A1B2C3D",
+                    part: "KHX2666C16/8G",
+                    ranks: 1,
+                    voltage_mv: 1200,
+                },
+            ));
+            s.push(memory_device(
+                0x1101,
+                0x1000,
+                &Dimm {
+                    size_mib: 0,
+                    form_factor: 0x09,
+                    mem_type: 0x02,
+                    speed: 0,
+                    configured: 0,
+                    locator: "ChannelB-DIMM0",
+                    bank: "BANK 2",
+                    manufacturer: "Not Specified",
+                    serial: "Not Specified",
+                    part: "Not Specified",
+                    ranks: 0,
+                    voltage_mv: 0,
+                },
+            ));
+            s
+        }
+        "laptop-ddr5" => {
+            let mut s = bios_board(
+                "LENOVO",
+                "21K5CTO1WW",
+                "LENOVO",
+                "R2AET41W (1.41 )",
+                "08/20/2024",
+            );
+            s.push(processor("FP8", 5100, 8, 16));
+            s.push(memory_array(0x1000, 96 * GIB, 2));
+            for (i, loc) in ["DIMM 0", "DIMM 1"].iter().enumerate() {
+                s.push(memory_device(
+                    0x1100 + i as u16,
+                    0x1000,
+                    &Dimm {
+                        size_mib: 16384,
+                        form_factor: 0x0D,
+                        mem_type: 0x22,
+                        speed: 5600,
+                        configured: 5600,
+                        locator: loc,
+                        bank: "P0 CHANNEL A",
+                        manufacturer: "Samsung",
+                        serial: if i == 0 { "00000A11" } else { "00000B22" },
+                        part: "M425R2GA3BB0-CWMOD",
+                        ranks: 1,
+                        voltage_mv: 1100,
+                    },
+                ));
+            }
+            s
+        }
+        _ => return None,
+    };
+    let t = table(&structs);
+    let len = u32::try_from(t.len()).unwrap_or(0);
+    Some((entry_point_3(len), t))
+}
+
+/// Names of the fixtures that carry a DMI table.
+pub const DMI_FIXTURES: &[&str] = &["desktop-ddr4", "laptop-ddr5"];
