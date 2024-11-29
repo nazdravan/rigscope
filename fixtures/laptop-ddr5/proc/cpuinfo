@@ -1,0 +1,18 @@
+processor	: 0
+vendor_id	: AuthenticAMD
+model name	: AMD Ryzen 7 7840U w/ Radeon 780M Graphics
+microcode	: 0xa704104
+cpu MHz		: 1400.000
+physical id	: 0
+core id		: 0
+flags		: fpu sse2 avx avx2 avx512f
+
+processor	: 1
+vendor_id	: AuthenticAMD
+model name	: AMD Ryzen 7 7840U w/ Radeon 780M Graphics
+microcode	: 0xa704104
+cpu MHz		: 1400.000
+physical id	: 0
+core id		: 1
+flags		: fpu sse2 avx avx2 avx512f
+
