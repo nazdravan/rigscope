@@ -1,0 +1,16 @@
+processor	: 0
+vendor_id	: GenuineIntel
+model name	: Intel Xeon Processor (Skylake, IBRS)
+cpu MHz		: 2095.076
+physical id	: 0
+core id		: 0
+flags		: fpu sse2 avx avx2 hypervisor
+
+processor	: 1
+vendor_id	: GenuineIntel
+model name	: Intel Xeon Processor (Skylake, IBRS)
+cpu MHz		: 2095.076
+physical id	: 1
+core id		: 0
+flags		: fpu sse2 avx avx2 hypervisor
+
