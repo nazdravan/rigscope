@@ -2030,6 +2030,15 @@ dependencies = [
 [[package]]
 name = "rigscope-engine"
 version = "0.1.0"
+dependencies = [
+ "rigscope-engine",
+ "rigscope-model",
+ "rigscope-probe",
+ "rigscope-smbios",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.21",
+]
 
 [[package]]
 name = "rigscope-model"
