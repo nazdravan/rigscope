@@ -24,8 +24,9 @@ fn main() -> Result<()> {
         "layers" => layers_check(),
         "wasm" => wasm(),
         "linux" => linux(rest),
+        "gen-fixtures" => gen_fixtures(),
         _ => {
-            eprintln!("usage: cargo xtask <ci|layers|wasm|linux [cmd...]>");
+            eprintln!("usage: cargo xtask <ci|layers|wasm|linux [cmd...]|gen-fixtures>");
             Ok(())
         }
     }
@@ -173,4 +174,22 @@ fn rustup_which(tool: &str) -> Option<String> {
     }
     let path = String::from_utf8(out.stdout).ok()?.trim().to_string();
     (!path.is_empty()).then_some(path)
+}
+
+/// Writes the synthetic DMI tables into `fixtures/<name>/sys/firmware/dmi/tables/`.
+fn gen_fixtures() -> Result<()> {
+    for name in rigscope_smbios::testutil::DMI_FIXTURES {
+        let Some((entry, table)) = rigscope_smbios::testutil::fixture_tables(name) else {
+            bail!("no tables for fixture {name}");
+        };
+        let dir = root()
+            .join("fixtures")
+            .join(name)
+            .join("sys/firmware/dmi/tables");
+        std::fs::create_dir_all(&dir)?;
+        std::fs::write(dir.join("smbios_entry_point"), entry)?;
+        std::fs::write(dir.join("DMI"), table)?;
+        eprintln!("wrote {}", dir.display());
+    }
+    Ok(())
 }
