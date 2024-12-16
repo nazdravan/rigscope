@@ -14,6 +14,15 @@ pub fn specs() -> Vec<CommandSpec> {
             run: section,
         },
         CommandSpec {
+            id: "view.language",
+            label_key: "cmd.language",
+            menu: "",
+            shortcut: None,
+            params_doc: r#"{"id": "en" | "ro"}"#,
+            enabled: always,
+            run: language,
+        },
+        CommandSpec {
             id: "live.toggle",
             label_key: "cmd.live",
             menu: "View",
@@ -45,6 +54,16 @@ fn section(s: &mut Session, params: &Value) -> Result<Value, EngineError> {
     let section: SectionId =
         serde_json::from_value(id).map_err(|e| EngineError::BadParams(format!("id: {e}")))?;
     s.section = section;
+    Ok(json!(null))
+}
+
+fn language(s: &mut Session, params: &Value) -> Result<Value, EngineError> {
+    let id = params
+        .get("id")
+        .cloned()
+        .ok_or_else(|| EngineError::BadParams("missing \"id\"".into()))?;
+    s.language =
+        serde_json::from_value(id).map_err(|e| EngineError::BadParams(format!("id: {e}")))?;
     Ok(json!(null))
 }
 
