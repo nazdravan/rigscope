@@ -4,8 +4,19 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
+description = "egui panels for rigscope"
 
 [dependencies]
+rigscope-model.workspace = true
+rigscope-engine.workspace = true
+egui.workspace = true
+eframe.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+egui_kittest.workspace = true
+rigscope-probe.workspace = true
+rigscope-engine = { workspace = true, features = ["testutil"] }
 
 [lints]
 workspace = true
