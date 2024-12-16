@@ -14,11 +14,21 @@ pub enum SectionId {
     System,
 }
 
+/// UI language (the UI owns the strings; the engine only remembers the choice).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Language {
+    #[default]
+    En,
+    Ro,
+}
+
 pub struct Session {
     pub snapshot: Snapshot,
     pub history: Vec<Snapshot>,
     pub section: SectionId,
     pub live: bool,
+    pub language: Language,
     /// Last user-facing message (errors from commands, "copied", ...).
     pub status: Option<String>,
     /// DMI dump from the elevated helper, reused by refresh so slot details stay.
