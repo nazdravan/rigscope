@@ -133,3 +133,15 @@ fn live_toggle_and_tick() {
     a.run("live.tick", json!({})).unwrap();
     assert!(a.session.history.is_empty(), "tick must not create history");
 }
+
+#[test]
+fn view_language_switches() {
+    let mut a = app();
+    assert_eq!(a.session.language, Language::En);
+    a.run("view.language", json!({"id": "ro"})).unwrap();
+    assert_eq!(a.session.language, Language::Ro);
+    assert!(matches!(
+        a.run("view.language", json!({"id": "fr"})),
+        Err(EngineError::BadParams(_))
+    ));
+}
