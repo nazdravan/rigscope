@@ -31,6 +31,7 @@ impl App {
                 history: Vec::new(),
                 section: SectionId::Memory,
                 live: true,
+                language: crate::Language::En,
                 status: None,
                 dmi_dump: None,
                 env,
@@ -74,6 +75,7 @@ impl App {
             self.session.history.clone(),
             self.session.section,
             self.session.live,
+            self.session.language,
             self.session.dmi_dump.clone(),
         );
         let session = &mut self.session;
@@ -88,11 +90,12 @@ impl App {
                 result
             }
             Err(_) => {
-                let (snapshot, history, section, live, dmi_dump) = saved;
+                let (snapshot, history, section, live, language, dmi_dump) = saved;
                 self.session.snapshot = snapshot;
                 self.session.history = history;
                 self.session.section = section;
                 self.session.live = live;
+                self.session.language = language;
                 self.session.dmi_dump = dmi_dump;
                 let err = EngineError::Panicked;
                 self.session.status = Some(format!("{id}: {err}"));
