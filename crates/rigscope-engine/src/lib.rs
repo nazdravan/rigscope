@@ -12,4 +12,4 @@ pub mod testutil;
 pub use command::{App, CommandSpec};
 pub use env::Env;
 pub use error::EngineError;
-pub use session::{SectionId, Session, HISTORY_LIMIT};
+pub use session::{Language, SectionId, Session, HISTORY_LIMIT};
