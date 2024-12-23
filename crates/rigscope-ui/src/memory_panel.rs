@@ -20,7 +20,10 @@ pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
                 tr(lang, Key::MaxCapacity),
                 fmt::field(lang, &array.max_capacity_bytes, |b| fmt::bytes(*b)),
             ));
-            rows.push((tr(lang, Key::Ecc), fmt::text(lang, &array.ecc)));
+            rows.push((
+                tr(lang, Key::Ecc),
+                fmt::field(lang, &array.ecc, |v| crate::i18n::ecc(lang, v)),
+            ));
         }
         kv_grid(ui, "mem-summary", &rows);
 
@@ -33,7 +36,7 @@ pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
     match snap.dmi_source {
         DmiSource::FullTable => {}
         DmiSource::SysfsIdOnly => {
-            card(ui, tr(lang, Key::NeedsRoot), |ui| {
+            card(ui, tr(lang, Key::SlotDetails), |ui| {
                 ui.label(tr(lang, Key::NeedsRootBanner));
                 command_button(
                     ui,
@@ -46,7 +49,7 @@ pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
             });
         }
         DmiSource::None => {
-            card(ui, tr(lang, Key::Unknown), |ui| {
+            card(ui, tr(lang, Key::SlotDetails), |ui| {
                 ui.label(tr(lang, Key::NoDmi));
             });
         }
@@ -59,7 +62,7 @@ pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
         .flat_map(|a| a.slots.iter())
         .collect();
     if !slots.is_empty() {
-        card(ui, tr(lang, Key::Slot), |ui| {
+        card(ui, tr(lang, Key::Slots), |ui| {
             slot_strip(ui, lang, &slots);
             ui.add_space(10.0);
             egui::ScrollArea::horizontal().show(ui, |ui| slot_table(ui, lang, &slots));
