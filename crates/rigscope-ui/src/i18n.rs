@@ -20,6 +20,8 @@ pub enum Key {
     MaxCapacity,
     Ecc,
     Slot,
+    Slots,
+    SlotDetails,
     Bank,
     Size,
     Type,
@@ -84,6 +86,8 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             MaxCapacity => "Maximum supported by the board",
             Ecc => "Error correction",
             Slot => "Slot",
+            Slots => "Slots",
+            SlotDetails => "Slot details",
             Bank => "Bank",
             Size => "Size",
             Type => "Type",
@@ -144,6 +148,8 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             MaxCapacity => "Maximul suportat de placa de bază",
             Ecc => "Corecția erorilor",
             Slot => "Slot",
+            Slots => "Sloturi",
+            SlotDetails => "Detalii sloturi",
             Bank => "Bancă",
             Size => "Capacitate",
             Type => "Tip",
@@ -217,6 +223,21 @@ pub fn command_label(lang: Language, label_key: &str) -> String {
     };
     match lang {
         Language::En => en.to_string(),
+        Language::Ro => ro.to_string(),
+    }
+}
+
+/// ECC values come from the SMBIOS decoder in English.
+pub fn ecc(lang: Language, value: &str) -> String {
+    let ro = match value {
+        "None" => "Fără",
+        "Parity" => "Paritate",
+        "Single-bit ECC" => "ECC pe un bit",
+        "Multi-bit ECC" => "ECC pe mai mulți biți",
+        other => other,
+    };
+    match lang {
+        Language::En => value.to_string(),
         Language::Ro => ro.to_string(),
     }
 }
