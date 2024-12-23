@@ -10,6 +10,8 @@ pub struct Args {
     pub lang: Option<String>,
     /// Initial section: `memory`, `cpu`, `system`.
     pub section: Option<String>,
+    /// Port of the local control channel.
+    pub control: Option<u16>,
 }
 
 impl Args {
@@ -24,8 +26,15 @@ impl Args {
                 "--fixture" => a.fixture = Some(value("--fixture")?),
                 "--lang" => a.lang = Some(value("--lang")?),
                 "--section" => a.section = Some(value("--section")?),
+                "--control" => {
+                    let v = value("--control")?;
+                    a.control = Some(
+                        v.parse()
+                            .map_err(|_| anyhow::anyhow!("--control: bad port {v}"))?,
+                    );
+                }
                 "-h" | "--help" => {
-                    println!("usage: rigscope [--fixture DIR] [--lang en|ro] [--section memory|cpu|system]");
+                    println!("usage: rigscope [--fixture DIR] [--lang en|ro] [--section memory|cpu|system] [--control PORT]");
                     std::process::exit(0);
                 }
                 other => bail!("unknown argument: {other}"),
