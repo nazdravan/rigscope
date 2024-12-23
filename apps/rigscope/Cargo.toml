@@ -13,6 +13,7 @@ rigscope-engine.workspace = true
 rigscope-probe.workspace = true
 rigscope-ui.workspace = true
 serde_json.workspace = true
+image = { version = "0.25", default-features = false, features = ["png"] }
 
 [lints]
 workspace = true
