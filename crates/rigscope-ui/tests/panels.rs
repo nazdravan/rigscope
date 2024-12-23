@@ -98,3 +98,15 @@ fn clicking_sidebar_switches_section() {
     h.run();
     assert_eq!(h.state().session.section, rigscope_engine::SectionId::Cpu);
 }
+
+#[test]
+fn card_titles_and_ecc_are_translated() {
+    let h = harness(FakeEnv::fixture("desktop-ddr4"), |a| {
+        a.run("view.language", json!({"id": "ro"})).unwrap();
+    });
+    assert!(has(&h, "Sloturi"));
+    assert!(has(&h, "Fără"), "ECC 'None' in Romanian");
+    let vm = harness(FakeEnv::fixture("minimal-vm"), |_| {});
+    assert!(has(&vm, "Slot details"));
+    assert!(!has(&vm, "Unknown"));
+}
