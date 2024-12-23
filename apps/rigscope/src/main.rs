@@ -1,6 +1,7 @@
 //! rigscope — detailed hardware configuration viewer for Linux.
 
 mod args;
+mod control;
 mod env;
 
 use anyhow::Result;
@@ -8,6 +9,7 @@ use rigscope_engine::App;
 use serde_json::json;
 
 /// Sample machine shown when not running on Linux and no `--fixture` is given.
+#[cfg(not(target_os = "linux"))]
 const DEMO_FIXTURE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/desktop-ddr4");
 
 fn main() -> Result<()> {
@@ -33,10 +35,21 @@ fn main() -> Result<()> {
             .with_title("rigscope"),
         ..Default::default()
     };
+    let control = args.control;
     eframe::run_native(
         "rigscope",
         options,
-        Box::new(move |_cc| Ok(Box::new(rigscope_ui::RigscopeUi::new(app, demo)))),
+        Box::new(move |cc| {
+            let ui = rigscope_ui::RigscopeUi::new(app, demo);
+            let boxed: Box<dyn eframe::App> = match control {
+                Some(port) => Box::new(control::Controlled::new(
+                    ui,
+                    control::spawn(port, cc.egui_ctx.clone())?,
+                )),
+                None => Box::new(ui),
+            };
+            Ok(boxed)
+        }),
     )
     .map_err(|e| anyhow::anyhow!("{e}"))
 }
