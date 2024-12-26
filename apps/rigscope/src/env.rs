@@ -49,7 +49,14 @@ impl Env for RealEnv {
     }
 
     fn elevate_dump(&self) -> Result<Vec<u8>, EngineError> {
-        Err(EngineError::Io("not available yet".into()))
+        #[cfg(target_os = "linux")]
+        {
+            crate::dump_dmi::run_helper()
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            Err(EngineError::Io("elevated reading needs Linux".into()))
+        }
     }
 
     fn clipboard_set(&mut self, _text: &str) -> Result<(), EngineError> {
