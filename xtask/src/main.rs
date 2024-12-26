@@ -1,6 +1,7 @@
 //! Project automation: `cargo xtask <ci|layers|wasm|linux>`.
 
 mod layers;
+mod screenshot;
 
 use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
@@ -25,21 +26,23 @@ fn main() -> Result<()> {
         "wasm" => wasm(),
         "linux" => linux(rest),
         "gen-fixtures" => gen_fixtures(),
+        "screenshot" => screenshot::screenshot(rest),
+        "screenshot-inner" => screenshot::inner(rest),
         _ => {
-            eprintln!("usage: cargo xtask <ci|layers|wasm|linux [cmd...]|gen-fixtures>");
+            eprintln!("usage: cargo xtask <ci|layers|wasm|linux [cmd...]|gen-fixtures|screenshot [--fixture D --section S --lang L --out P]>");
             Ok(())
         }
     }
 }
 
-fn root() -> PathBuf {
+pub(crate) fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .map(Path::to_path_buf)
         .unwrap_or_else(|| PathBuf::from("."))
 }
 
-fn run(cmd: &mut Command) -> Result<()> {
+pub(crate) fn run(cmd: &mut Command) -> Result<()> {
     eprintln!("$ {cmd:?}");
     let status = cmd
         .current_dir(root())
@@ -51,7 +54,7 @@ fn run(cmd: &mut Command) -> Result<()> {
     Ok(())
 }
 
-fn cargo() -> Command {
+pub(crate) fn cargo() -> Command {
     Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".into()))
 }
 
@@ -133,7 +136,7 @@ fn wasm() -> Result<()> {
 }
 
 /// Builds the Linux test image and runs a command in it (default: the workspace tests).
-fn linux(cmd: &[String]) -> Result<()> {
+pub(crate) fn linux(cmd: &[String]) -> Result<()> {
     let root = root();
     run(Command::new("docker").args([
         "build",
