@@ -163,7 +163,12 @@ pub(crate) fn linux(cmd: &[String]) -> Result<()> {
         LINUX_IMAGE,
     ]);
     if cmd.is_empty() {
-        docker.args(["cargo", "test", "--workspace", "--quiet"]);
+        // Linux-only code (`cfg(target_os = "linux")`) is invisible to clippy on macOS.
+        docker.args([
+            "bash",
+            "-c",
+            "cargo clippy -q --workspace --all-targets -- -D warnings && cargo test --workspace --quiet",
+        ]);
     } else {
         docker.args(cmd);
     }
