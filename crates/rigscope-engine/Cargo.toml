@@ -20,6 +20,7 @@ thiserror.workspace = true
 
 [dev-dependencies]
 rigscope-engine = { path = ".", features = ["testutil"] }
+proptest.workspace = true
 
 [lints]
 workspace = true
