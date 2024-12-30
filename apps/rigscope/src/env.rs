@@ -15,12 +15,15 @@ pub enum SystemSource {
 
 pub struct RealEnv {
     pub source: SystemSource,
+    /// Opened on first use; kept alive so X11/Wayland keep serving the copied text.
+    clipboard: Option<arboard::Clipboard>,
 }
 
 impl RealEnv {
     pub fn fixture(dir: &str) -> Self {
         RealEnv {
             source: SystemSource::Fixture(FixtureSource::new(dir)),
+            clipboard: None,
         }
     }
 
@@ -28,6 +31,7 @@ impl RealEnv {
     pub fn system() -> Self {
         RealEnv {
             source: SystemSource::Real(rigscope_probe::FsSource),
+            clipboard: None,
         }
     }
 }
@@ -59,8 +63,15 @@ impl Env for RealEnv {
         }
     }
 
-    fn clipboard_set(&mut self, _text: &str) -> Result<(), EngineError> {
-        Err(EngineError::Io("clipboard not available yet".into()))
+    fn clipboard_set(&mut self, text: &str) -> Result<(), EngineError> {
+        let err = |e: arboard::Error| EngineError::Io(format!("clipboard: {e}"));
+        if self.clipboard.is_none() {
+            self.clipboard = Some(arboard::Clipboard::new().map_err(err)?);
+        }
+        match self.clipboard.as_mut() {
+            Some(c) => c.set_text(text.to_string()).map_err(err),
+            None => Err(EngineError::Io("clipboard unavailable".into())),
+        }
     }
 
     fn write_file(&self, path: &str, bytes: &[u8]) -> Result<(), EngineError> {
