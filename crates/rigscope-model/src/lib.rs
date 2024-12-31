@@ -6,6 +6,7 @@ pub mod compat;
 pub mod cpu;
 pub mod field;
 pub mod memory;
+pub mod report;
 pub mod system;
 pub mod text;
 
@@ -15,5 +16,6 @@ pub use field::Field;
 pub use memory::{
     FormFactor, MemType, MemoryArray, MemoryInfo, MemoryModule, MemorySlot, SlotState, VoltageMv,
 };
+pub use report::{format_bytes, mask, masked, report_text};
 pub use system::{BoardInfo, DmiSource, Snapshot, SystemInfo, SCHEMA_VERSION};
 pub use text::clean_text;
