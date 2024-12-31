@@ -1,5 +1,6 @@
 //! Built-in commands.
 
+mod export;
 mod snapshot;
 mod view;
 
@@ -9,6 +10,7 @@ pub fn builtin() -> Vec<CommandSpec> {
     let mut v = Vec::new();
     v.extend(snapshot::specs());
     v.extend(view::specs());
+    v.extend(export::specs());
     v
 }
 
