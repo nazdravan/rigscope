@@ -110,3 +110,31 @@ fn card_titles_and_ecc_are_translated() {
     assert!(has(&vm, "Slot details"));
     assert!(!has(&vm, "Unknown"));
 }
+
+#[test]
+fn file_menu_lists_export_commands() {
+    let mut h = harness(FakeEnv::fixture("desktop-ddr4"), |_| {});
+    h.get_by_label("File").click();
+    h.run();
+    for item in [
+        "Copy report",
+        "Export report…",
+        "Save snapshot…",
+        "Open snapshot…",
+    ] {
+        assert!(has(&h, item), "{item}");
+    }
+}
+
+#[test]
+fn copy_button_copies_compat_line() {
+    let env = FakeEnv::fixture("desktop-ddr4");
+    let state = env.handle();
+    let mut h = harness(env, |_| {});
+    h.get_by_label("Copy").click();
+    h.run();
+    assert_eq!(
+        state.lock().unwrap().clipboard.as_deref(),
+        Some("DDR4 DIMM 2666 MT/s 32GB")
+    );
+}
