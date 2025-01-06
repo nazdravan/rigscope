@@ -6,22 +6,7 @@ use rigscope_model::Field;
 
 /// Binary size: `8 GiB`, `1.5 GiB`, `512 KiB`.
 pub fn bytes(n: u64) -> String {
-    const UNITS: [(&str, u64); 4] = [
-        ("TiB", 1 << 40),
-        ("GiB", 1 << 30),
-        ("MiB", 1 << 20),
-        ("KiB", 1 << 10),
-    ];
-    for (unit, size) in UNITS {
-        if n >= size {
-            return if n % size == 0 {
-                format!("{} {unit}", n / size)
-            } else {
-                format!("{:.1} {unit}", n as f64 / size as f64)
-            };
-        }
-    }
-    format!("{n} B")
+    rigscope_model::format_bytes(n)
 }
 
 pub fn mhz(v: u32) -> String {
