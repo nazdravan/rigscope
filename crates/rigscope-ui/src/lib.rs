@@ -9,7 +9,7 @@ mod shell;
 mod system_panel;
 mod widgets;
 
-pub use shell::{draw, RigscopeUi};
+pub use shell::{draw, draw_with, params_for, ParamsPicker, RigscopeUi};
 
 /// Commands requested by widgets during a frame, run after drawing.
 #[derive(Default)]
