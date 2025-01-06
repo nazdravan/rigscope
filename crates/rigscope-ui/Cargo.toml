@@ -12,6 +12,7 @@ rigscope-engine.workspace = true
 egui.workspace = true
 eframe.workspace = true
 serde_json.workspace = true
+rfd.workspace = true
 
 [dev-dependencies]
 egui_kittest.workspace = true
