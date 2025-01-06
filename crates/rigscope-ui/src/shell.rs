@@ -24,6 +24,27 @@ pub fn parse_shortcut(s: &str) -> Option<egui::KeyboardShortcut> {
     key.map(|k| egui::KeyboardShortcut::new(mods, k))
 }
 
+/// Parameters for a command triggered from a menu or shortcut. Commands that take a file path
+/// ask for it with a native dialog; `None` means the user cancelled.
+fn params_for(id: &str) -> Option<serde_json::Value> {
+    let json_filter = |d: rfd::FileDialog| d.add_filter("rigscope snapshot", &["json"]);
+    match id {
+        "report.export_text" => rfd::FileDialog::new()
+            .add_filter("Text", &["txt"])
+            .set_file_name("rigscope-report.txt")
+            .save_file()
+            .map(|p| json!({ "path": p.display().to_string() })),
+        "snapshot.save" => json_filter(rfd::FileDialog::new())
+            .set_file_name("rigscope-snapshot.json")
+            .save_file()
+            .map(|p| json!({ "path": p.display().to_string() })),
+        "snapshot.open" => json_filter(rfd::FileDialog::new())
+            .pick_file()
+            .map(|p| json!({ "path": p.display().to_string() })),
+        _ => Some(json!({})),
+    }
+}
+
 /// Draws the whole window into `ui` and runs the commands the user triggered.
 pub fn draw(ui: &mut egui::Ui, app: &mut App) {
     let mut actions = Actions::default();
@@ -31,8 +52,10 @@ pub fn draw(ui: &mut egui::Ui, app: &mut App) {
 
     for spec in app.specs() {
         if let Some(sc) = spec.shortcut.and_then(parse_shortcut) {
-            if ui.input_mut(|i| i.consume_shortcut(&sc)) {
-                actions.push(spec.id, json!({}));
+            if ui.input_mut(|i| i.consume_shortcut(&sc)) && app.is_enabled(spec.id).is_ok() {
+                if let Some(params) = params_for(spec.id) {
+                    actions.push(spec.id, params);
+                }
             }
         }
     }
