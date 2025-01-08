@@ -221,3 +221,31 @@ fn fs_source_smoke_on_real_linux() {
     assert!(s.memory.os_total_bytes.known().is_some());
     assert!(s.system.kernel.known().is_some());
 }
+
+#[test]
+fn hybrid_cpu_caches_keep_each_size() {
+    // P-cores 0-1 (own 1.25 MiB L2 each), E-cores 2-5 (one shared 2 MiB L2 cluster).
+    let mut m = MemSource::default().with(paths::CPU_PRESENT, "0-5\n");
+    for cpu in 0..6u32 {
+        let (size, shared) = if cpu < 2 {
+            ("1280K", cpu.to_string())
+        } else {
+            ("2048K", "2-5".to_string())
+        };
+        let d = format!("/sys/devices/system/cpu/cpu{cpu}/cache/index2");
+        m = m
+            .with(&format!("{d}/level"), "2\n")
+            .with(&format!("{d}/type"), "Unified\n")
+            .with(&format!("{d}/size"), format!("{size}\n"))
+            .with(&format!("{d}/shared_cpu_list"), format!("{shared}\n"));
+    }
+    let s = build_snapshot(&m, None, 0);
+    let l2: Vec<(u64, u32)> = s
+        .cpu
+        .caches
+        .iter()
+        .filter(|c| c.level == 2)
+        .map(|c| (c.size_bytes, c.instances))
+        .collect();
+    assert_eq!(l2, vec![(1280 * 1024, 2), (2048 * 1024, 1)]);
+}
