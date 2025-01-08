@@ -138,3 +138,23 @@ fn copy_button_copies_compat_line() {
         Some("DDR4 DIMM 2666 MT/s 32GB")
     );
 }
+
+#[test]
+fn file_menu_save_uses_picked_path() {
+    let env = FakeEnv::fixture("desktop-ddr4");
+    let state = env.handle();
+    let app = App::new(Box::new(env));
+    let picker = |id: &str| (id == "snapshot.save").then(|| json!({"path": "/picked.json"}));
+    let mut h = Harness::builder()
+        .with_size(egui::vec2(1100.0, 800.0))
+        .build_ui_state(
+            move |ui, app: &mut App| rigscope_ui::draw_with(ui, app, &picker),
+            app,
+        );
+    h.run();
+    h.get_by_label("File").click();
+    h.run();
+    h.get_by_label_contains("Save snapshot").click();
+    h.run();
+    assert!(state.lock().unwrap().files.contains_key("/picked.json"));
+}
