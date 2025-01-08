@@ -8,6 +8,8 @@ pub struct CompatLine {
     /// Common memory type of the installed modules; `None` if mixed or unknown.
     pub mem_type: Option<MemType>,
     pub mixed_types: bool,
+    /// Every memory type seen on installed modules (more than one when mixed).
+    pub all_types: Vec<MemType>,
     pub form_factor: Option<FormFactor>,
     /// Highest rated speed among installed modules.
     pub max_mts: Option<u32>,
@@ -66,6 +68,7 @@ pub fn compat_summary(m: &MemoryInfo) -> Option<CompatLine> {
     Some(CompatLine {
         mem_type: single(&types),
         mixed_types,
+        all_types: types.clone(),
         form_factor: single(&form_factors),
         max_mts,
         max_per_slot_bytes_estimated: match (max_capacity, u64::from(total)) {
@@ -81,7 +84,10 @@ impl CompatLine {
     /// Short text to paste into a shop search, e.g. `DDR4 SO-DIMM 3200 MT/s 32GB`.
     pub fn to_search_text(&self) -> String {
         let mut parts: Vec<String> = Vec::new();
-        if let Some(t) = self.mem_type {
+        if self.mixed_types {
+            let labels: Vec<String> = self.all_types.iter().map(|t| t.label()).collect();
+            parts.push(format!("mixed {}", labels.join("/")));
+        } else if let Some(t) = self.mem_type {
             parts.push(t.label());
         }
         if let Some(f) = self.form_factor {
@@ -201,6 +207,7 @@ mod tests {
         let c = compat_summary(&mixed).expect("compat");
         assert!(c.mixed_types);
         assert_eq!(c.mem_type, None);
+        assert_eq!(c.to_search_text(), "mixed DDR4/DDR5 DIMM 4800 MT/s 16GB");
     }
 
     #[test]
