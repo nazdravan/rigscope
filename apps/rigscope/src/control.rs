@@ -221,6 +221,10 @@ impl eframe::App for Controlled {
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
         self.inner.ui(ui, frame);
     }
+
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        self.inner.save(storage);
+    }
 }
 
 #[cfg(test)]
