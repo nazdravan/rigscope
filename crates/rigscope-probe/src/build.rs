@@ -252,7 +252,8 @@ fn read_cpu(src: &dyn Source, dmi: &Dmi) -> CpuInfo {
 }
 
 fn read_caches(src: &dyn Source, cpus: &[u32]) -> Vec<CacheLevel> {
-    // (level, kind) → (size of one instance, distinct shared_cpu_list values)
+    // (level, kind, size) → distinct shared_cpu_list values. Size is part of the key because
+    // hybrid CPUs have different cache sizes on P- and E-cores at the same level.
     let mut groups: Vec<(u8, CacheKind, u64, Vec<String>)> = Vec::new();
     for &cpu in cpus {
         let dir = format!("{}/cpu{cpu}/cache", paths::CPU_DIR);
@@ -275,7 +276,10 @@ fn read_caches(src: &dyn Source, cpus: &[u32]) -> Vec<CacheLevel> {
             let shared = read("shared_cpu_list")
                 .map(|t| t.trim().to_string())
                 .unwrap_or_else(|| cpu.to_string());
-            match groups.iter_mut().find(|g| g.0 == level && g.1 == kind) {
+            match groups
+                .iter_mut()
+                .find(|g| g.0 == level && g.1 == kind && g.2 == size)
+            {
                 Some(g) => {
                     if !g.3.contains(&shared) {
                         g.3.push(shared);
@@ -294,7 +298,7 @@ fn read_caches(src: &dyn Source, cpus: &[u32]) -> Vec<CacheLevel> {
             instances: u32::try_from(shared.len()).unwrap_or(u32::MAX),
         })
         .collect();
-    out.sort_by_key(|c| (c.level, c.kind as u8));
+    out.sort_by_key(|c| (c.level, c.kind as u8, c.size_bytes));
     out
 }
 
