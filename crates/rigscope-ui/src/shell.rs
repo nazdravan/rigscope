@@ -176,7 +176,12 @@ pub struct RigscopeUi {
 }
 
 impl RigscopeUi {
-    pub fn new(app: App, demo: bool) -> Self {
+    /// `storage` (eframe persistence) restores the language chosen last time.
+    pub fn new(mut app: App, demo: bool, storage: Option<&dyn eframe::Storage>) -> Self {
+        if let Some(lang) = storage.and_then(|s| s.get_string(LANGUAGE_KEY)) {
+            // Unknown stored values are rejected by the command and simply ignored.
+            let _ = app.run("view.language", json!({ "id": lang }));
+        }
         RigscopeUi {
             app,
             demo,
@@ -185,7 +190,18 @@ impl RigscopeUi {
     }
 }
 
+/// Persistence key for the UI language.
+const LANGUAGE_KEY: &str = "language";
+
 impl eframe::App for RigscopeUi {
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        let id = match self.app.session.language {
+            Language::En => "en",
+            Language::Ro => "ro",
+        };
+        storage.set_string(LANGUAGE_KEY, id.to_string());
+    }
+
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         if self.app.session.live {
             let now = std::time::Instant::now();
