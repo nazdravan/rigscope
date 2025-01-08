@@ -40,11 +40,15 @@ fn main() -> Result<()> {
         ..Default::default()
     };
     let control = args.control;
+    let lang_flag = args.lang.clone();
     eframe::run_native(
         "rigscope",
         options,
         Box::new(move |cc| {
-            let ui = rigscope_ui::RigscopeUi::new(app, demo);
+            let mut ui = rigscope_ui::RigscopeUi::new(app, demo, cc.storage);
+            if let Some(lang) = &lang_flag {
+                let _ = ui.app.run("view.language", json!({ "id": lang }));
+            }
             let boxed: Box<dyn eframe::App> = match control {
                 Some(port) => Box::new(control::Controlled::new(
                     ui,
