@@ -26,7 +26,7 @@ pub fn parse_shortcut(s: &str) -> Option<egui::KeyboardShortcut> {
 
 /// Parameters for a command triggered from a menu or shortcut. Commands that take a file path
 /// ask for it with a native dialog; `None` means the user cancelled.
-fn params_for(id: &str) -> Option<serde_json::Value> {
+pub fn params_for(id: &str) -> Option<serde_json::Value> {
     let json_filter = |d: rfd::FileDialog| d.add_filter("rigscope snapshot", &["json"]);
     match id {
         "report.export_text" => rfd::FileDialog::new()
@@ -47,20 +47,28 @@ fn params_for(id: &str) -> Option<serde_json::Value> {
 
 /// Draws the whole window into `ui` and runs the commands the user triggered.
 pub fn draw(ui: &mut egui::Ui, app: &mut App) {
+    draw_with(ui, app, &params_for);
+}
+
+/// Asks for a command's parameters (file dialogs); `None` = cancelled.
+pub type ParamsPicker<'a> = &'a dyn Fn(&str) -> Option<serde_json::Value>;
+
+/// [`draw`] with an injectable parameter picker (tests replace the file dialogs).
+pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
     let mut actions = Actions::default();
     let lang = app.session.language;
 
     for spec in app.specs() {
         if let Some(sc) = spec.shortcut.and_then(parse_shortcut) {
             if ui.input_mut(|i| i.consume_shortcut(&sc)) && app.is_enabled(spec.id).is_ok() {
-                if let Some(params) = params_for(spec.id) {
+                if let Some(params) = pick(spec.id) {
                     actions.push(spec.id, params);
                 }
             }
         }
     }
 
-    egui::Panel::top("menu").show(ui, |ui| menu_bar(ui, app, &mut actions, lang));
+    egui::Panel::top("menu").show(ui, |ui| menu_bar(ui, app, &mut actions, lang, pick));
     egui::Panel::bottom("status").show(ui, |ui| status_bar(ui, app, &mut actions, lang));
     egui::Panel::left("sections")
         .resizable(false)
@@ -98,7 +106,13 @@ pub fn draw(ui: &mut egui::Ui, app: &mut App) {
     }
 }
 
-fn menu_bar(ui: &mut egui::Ui, app: &App, actions: &mut Actions, lang: Language) {
+fn menu_bar(
+    ui: &mut egui::Ui,
+    app: &App,
+    actions: &mut Actions,
+    lang: Language,
+    pick: ParamsPicker<'_>,
+) {
     egui::MenuBar::new().ui(ui, |ui| {
         for (menu, key) in [
             ("File", Key::File),
@@ -115,8 +129,10 @@ fn menu_bar(ui: &mut egui::Ui, app: &App, actions: &mut Actions, lang: Language)
                         .add_enabled(app.is_enabled(spec.id).is_ok(), button)
                         .clicked()
                     {
-                        actions.push(spec.id, json!({}));
                         ui.close();
+                        if let Some(params) = pick(spec.id) {
+                            actions.push(spec.id, params);
+                        }
                     }
                 }
                 if menu == "View" {
