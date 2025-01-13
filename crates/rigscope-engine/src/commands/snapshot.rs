@@ -38,6 +38,8 @@ pub fn specs() -> Vec<CommandSpec> {
             enabled: |s| {
                 if !s.env.can_elevate() {
                     Err("elevated reading needs Linux with pkexec".into())
+                } else if s.elevating {
+                    Err("already waiting for authentication".into())
                 } else if s.snapshot.dmi_source == DmiSource::FullTable {
                     Err("the full DMI table is already loaded".into())
                 } else {
@@ -46,11 +48,34 @@ pub fn specs() -> Vec<CommandSpec> {
             },
             run: elevate,
         },
+        CommandSpec {
+            id: "snapshot.elevate_poll",
+            label_key: "cmd.elevate_poll",
+            menu: "",
+            shortcut: None,
+            params_doc: "{} — collects the helper result; the UI calls it while `elevating`",
+            enabled: always,
+            run: elevate_poll,
+        },
     ]
 }
 
 fn elevate(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
-    let raw = s.env.elevate_dump()?;
+    s.env.start_elevate()?;
+    s.elevating = true;
+    s.status = Some("waiting for authentication…".into());
+    Ok(json!({ "pending": true }))
+}
+
+fn elevate_poll(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
+    if !s.elevating {
+        return Ok(json!({ "pending": false }));
+    }
+    let Some(result) = s.env.poll_elevate() else {
+        return Ok(json!({ "pending": true }));
+    };
+    s.elevating = false;
+    let raw = result?;
     let dump =
         rigscope_probe::decode_dmi_dump(&raw).map_err(|e| EngineError::Probe(e.to_string()))?;
     rigscope_smbios::decode(&dump.entry, &dump.table)
