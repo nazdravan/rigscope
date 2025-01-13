@@ -17,6 +17,8 @@ pub struct RealEnv {
     pub source: SystemSource,
     /// Opened on first use; kept alive so X11/Wayland keep serving the copied text.
     clipboard: Option<arboard::Clipboard>,
+    /// Result channel of the helper thread while it runs.
+    elevation: Option<std::sync::mpsc::Receiver<Result<Vec<u8>, EngineError>>>,
 }
 
 impl RealEnv {
@@ -24,6 +26,7 @@ impl RealEnv {
         RealEnv {
             source: SystemSource::Fixture(FixtureSource::new(dir)),
             clipboard: None,
+            elevation: None,
         }
     }
 
@@ -32,6 +35,7 @@ impl RealEnv {
         RealEnv {
             source: SystemSource::Real(rigscope_probe::FsSource),
             clipboard: None,
+            elevation: None,
         }
     }
 }
@@ -52,15 +56,35 @@ impl Env for RealEnv {
             .unwrap_or(0)
     }
 
-    fn elevate_dump(&self) -> Result<Vec<u8>, EngineError> {
-        #[cfg(target_os = "linux")]
-        {
-            crate::dump_dmi::run_helper()
+    fn start_elevate(&mut self) -> Result<(), EngineError> {
+        if self.elevation.is_some() {
+            return Err(EngineError::Disabled(
+                "already waiting for authentication".into(),
+            ));
         }
-        #[cfg(not(target_os = "linux"))]
-        {
-            Err(EngineError::Io("elevated reading needs Linux".into()))
-        }
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            #[cfg(target_os = "linux")]
+            let result = crate::dump_dmi::run_helper();
+            #[cfg(not(target_os = "linux"))]
+            let result = Err(EngineError::Io("elevated reading needs Linux".into()));
+            let _ = tx.send(result);
+        });
+        self.elevation = Some(rx);
+        Ok(())
+    }
+
+    fn poll_elevate(&mut self) -> Option<Result<Vec<u8>, EngineError>> {
+        let rx = self.elevation.as_ref()?;
+        let result = match rx.try_recv() {
+            Ok(r) => r,
+            Err(std::sync::mpsc::TryRecvError::Empty) => return None,
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                Err(EngineError::Io("helper thread ended".into()))
+            }
+        };
+        self.elevation = None;
+        Some(result)
     }
 
     fn clipboard_set(&mut self, text: &str) -> Result<(), EngineError> {
