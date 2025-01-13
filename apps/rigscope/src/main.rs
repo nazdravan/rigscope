@@ -50,10 +50,14 @@ fn main() -> Result<()> {
                 let _ = ui.app.run("view.language", json!({ "id": lang }));
             }
             let boxed: Box<dyn eframe::App> = match control {
-                Some(port) => Box::new(control::Controlled::new(
-                    ui,
-                    control::spawn(port, cc.egui_ctx.clone())?,
-                )),
+                Some(port) => {
+                    let token = control::token_for_run();
+                    if std::env::var(control::TOKEN_ENV).is_err() {
+                        eprintln!("rigscope control channel on 127.0.0.1:{port}, token: {token}");
+                    }
+                    let rx = control::spawn(port, token, cc.egui_ctx.clone())?;
+                    Box::new(control::Controlled::new(ui, rx))
+                }
                 None => Box::new(ui),
             };
             Ok(boxed)
