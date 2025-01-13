@@ -7,7 +7,11 @@ pub trait Env {
     fn source(&self) -> &dyn Source;
     fn now_unix(&self) -> u64;
     /// Runs the privileged helper and returns its raw dump bytes.
-    fn elevate_dump(&self) -> Result<Vec<u8>, EngineError>;
+    /// Starts the privileged helper in the background (it may wait minutes for the user to
+    /// authenticate, so it must not block the UI thread).
+    fn start_elevate(&mut self) -> Result<(), EngineError>;
+    /// The helper's raw dump once it finished; `None` while it is still running.
+    fn poll_elevate(&mut self) -> Option<Result<Vec<u8>, EngineError>>;
     fn clipboard_set(&mut self, text: &str) -> Result<(), EngineError>;
     fn write_file(&self, path: &str, bytes: &[u8]) -> Result<(), EngineError>;
     fn read_file(&self, path: &str) -> Result<Vec<u8>, EngineError>;
