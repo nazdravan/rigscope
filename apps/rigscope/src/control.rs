@@ -23,7 +23,36 @@ pub enum Request {
     Quit,
 }
 
-pub fn parse_request(line: &str) -> Result<Request, String> {
+/// Environment variable that sets the control token (otherwise a random one is generated and
+/// printed to stderr at startup).
+pub const TOKEN_ENV: &str = "RIGSCOPE_CONTROL_TOKEN";
+
+/// A random 128-bit hex token. `RandomState` is seeded from the OS RNG, so no extra crate.
+pub fn generate_token() -> String {
+    use std::hash::{BuildHasher, Hasher};
+    let part = || {
+        let mut h = std::collections::hash_map::RandomState::new().build_hasher();
+        h.write_u128(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos()),
+        );
+        h.finish()
+    };
+    format!("{:016x}{:016x}", part(), part())
+}
+
+/// The token for this run: from [`TOKEN_ENV`] when set and non-empty, else generated.
+pub fn token_for_run() -> String {
+    match std::env::var(TOKEN_ENV) {
+        Ok(t) if !t.is_empty() => t,
+        _ => generate_token(),
+    }
+}
+
+/// Parses one request line. Every request must carry `"token"`: any local process (or a web
+/// page posting to 127.0.0.1) could otherwise drive the app and write files.
+pub fn parse_request(line: &str, token: &str) -> Result<Request, String> {
     if line.len() > MAX_REQUEST {
         return Err(format!("request too long (max {MAX_REQUEST} bytes)"));
     }
@@ -35,6 +64,9 @@ pub fn parse_request(line: &str) -> Result<Request, String> {
             .map(str::to_string)
             .ok_or_else(|| format!("missing string \"{key}\""))
     };
+    if obj.get("token").and_then(Value::as_str) != Some(token) {
+        return Err("missing or wrong \"token\"".into());
+    }
     match string("method")?.as_str() {
         "run" => {
             let params = obj
@@ -69,20 +101,26 @@ const REPLY_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Starts the listener thread. Requests are forwarded to the UI thread, which wakes up via
 /// `ctx.request_repaint()`.
-pub fn spawn(port: u16, ctx: egui::Context) -> std::io::Result<mpsc::Receiver<Incoming>> {
+pub fn spawn(
+    port: u16,
+    token: String,
+    ctx: egui::Context,
+) -> std::io::Result<mpsc::Receiver<Incoming>> {
     let listener = TcpListener::bind(("127.0.0.1", port))?;
     let (tx, rx) = mpsc::channel::<Incoming>();
+    let token = std::sync::Arc::new(token);
     std::thread::spawn(move || {
         for stream in listener.incoming().flatten() {
             let tx = tx.clone();
             let ctx = ctx.clone();
-            std::thread::spawn(move || serve(stream, &tx, &ctx));
+            let token = std::sync::Arc::clone(&token);
+            std::thread::spawn(move || serve(stream, &token, &tx, &ctx));
         }
     });
     Ok(rx)
 }
 
-fn serve(stream: TcpStream, tx: &mpsc::Sender<Incoming>, ctx: &egui::Context) {
+fn serve(stream: TcpStream, token: &str, tx: &mpsc::Sender<Incoming>, ctx: &egui::Context) {
     let Ok(write_half) = stream.try_clone() else {
         return;
     };
@@ -98,8 +136,13 @@ fn serve(stream: TcpStream, tx: &mpsc::Sender<Incoming>, ctx: &egui::Context) {
             Ok(0) | Err(_) => return,
             Ok(_) => {}
         }
-        let answer = match parse_request(&line) {
-            Err(e) => json!({ "error": e }).to_string(),
+        let answer = match parse_request(&line, token) {
+            // Close on the first bad line: a stray HTTP request (a web page posting to
+            // localhost) never gets as far as its body.
+            Err(e) => {
+                let _ = writeln!(writer, "{}", json!({ "error": e })).and_then(|()| writer.flush());
+                return;
+            }
             Ok(req) => {
                 let (reply_tx, reply_rx) = mpsc::channel();
                 if tx
@@ -229,8 +272,47 @@ impl eframe::App for Controlled {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{generate_token, Request, MAX_REQUEST};
     use serde_json::json;
+
+    const T: &str = "secret-token";
+
+    /// Adds the token to `{...}` requests so the protocol tests stay readable.
+    fn parse_request(line: &str) -> Result<Request, String> {
+        let with_token = match line.trim_start().strip_prefix('{') {
+            Some(rest) => format!("{{\"token\":\"{T}\",{rest}"),
+            None => line.to_string(),
+        };
+        super::parse_request(&with_token, T)
+    }
+
+    #[test]
+    fn missing_or_wrong_token_is_rejected() {
+        assert!(super::parse_request(r#"{"method":"quit"}"#, T)
+            .unwrap_err()
+            .contains("token"));
+        assert!(
+            super::parse_request(r#"{"token":"nope","method":"quit"}"#, T)
+                .unwrap_err()
+                .contains("token")
+        );
+        assert_eq!(
+            super::parse_request(r#"{"token":"secret-token","method":"quit"}"#, T),
+            Ok(Request::Quit)
+        );
+    }
+
+    #[test]
+    fn http_request_line_is_rejected() {
+        assert!(super::parse_request("POST / HTTP/1.1\r\n", T).is_err());
+    }
+
+    #[test]
+    fn generated_tokens_are_long_and_differ() {
+        let (a, b) = (generate_token(), generate_token());
+        assert!(a.len() >= 32, "{a}");
+        assert_ne!(a, b);
+    }
 
     #[test]
     fn parses_run_with_and_without_params() {
