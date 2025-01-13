@@ -2163,6 +2163,7 @@ dependencies = [
  "rigscope-engine",
  "rigscope-model",
  "rigscope-probe",
+ "rigscope-smbios",
  "serde_json",
 ]
 
