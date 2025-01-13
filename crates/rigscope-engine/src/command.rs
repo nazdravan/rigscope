@@ -34,6 +34,7 @@ impl App {
                 language: crate::Language::En,
                 status: None,
                 dmi_dump: None,
+                elevating: false,
                 env,
             },
             registry: crate::commands::builtin(),
