@@ -90,6 +90,13 @@ pub fn inner(args: &[String]) -> Result<()> {
     crate::run(crate::cargo().args(["build", "-q", "-p", "rigscope"]))?;
     let target = std::env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| "target".into());
     let bin = format!("{target}/debug/rigscope");
+    let token = format!(
+        "xtask-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_nanos())
+    );
     let mut child = Command::new("xvfb-run")
         .args([
             "-a",
@@ -102,11 +109,12 @@ pub fn inner(args: &[String]) -> Result<()> {
             &PORT.to_string(),
         ])
         .env("LIBGL_ALWAYS_SOFTWARE", "1")
+        .env("RIGSCOPE_CONTROL_TOKEN", &token)
         .current_dir(crate::root())
         .spawn()
         .context("xvfb-run")?;
 
-    let result = drive(&a);
+    let result = drive(&a, &token);
     if result.is_err() {
         let _ = child.kill();
     }
@@ -114,7 +122,7 @@ pub fn inner(args: &[String]) -> Result<()> {
     result
 }
 
-fn drive(a: &ShotArgs) -> Result<()> {
+fn drive(a: &ShotArgs, token: &str) -> Result<()> {
     let start = Instant::now();
     let stream = loop {
         match TcpStream::connect(("127.0.0.1", PORT)) {
@@ -127,7 +135,10 @@ fn drive(a: &ShotArgs) -> Result<()> {
     };
     let mut writer = stream.try_clone()?;
     let mut reader = BufReader::new(stream);
-    let mut send = |req: serde_json::Value| -> Result<serde_json::Value> {
+    let mut send = |mut req: serde_json::Value| -> Result<serde_json::Value> {
+        if let Some(obj) = req.as_object_mut() {
+            obj.insert("token".into(), token.into());
+        }
         writeln!(writer, "{req}")?;
         let mut line = String::new();
         reader.read_line(&mut line)?;
