@@ -9,6 +9,9 @@ use std::time::Duration;
 /// Seconds between live CPU-frequency updates.
 pub const LIVE_INTERVAL: Duration = Duration::from_secs(1);
 
+/// How often the UI checks whether the privileged helper finished.
+pub const ELEVATE_POLL_INTERVAL: Duration = Duration::from_millis(200);
+
 /// Parses a spec shortcut such as `"Ctrl+Shift+C"` or `"F5"`.
 pub fn parse_shortcut(s: &str) -> Option<egui::KeyboardShortcut> {
     let mut mods = egui::Modifiers::NONE;
@@ -57,6 +60,12 @@ pub type ParamsPicker<'a> = &'a dyn Fn(&str) -> Option<serde_json::Value>;
 pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
     let mut actions = Actions::default();
     let lang = app.session.language;
+
+    // The privileged helper runs in the background; collect its result without blocking.
+    if app.session.elevating {
+        actions.push("snapshot.elevate_poll", json!({}));
+        ui.ctx().request_repaint_after(ELEVATE_POLL_INTERVAL);
+    }
 
     for spec in app.specs() {
         if let Some(sc) = spec.shortcut.and_then(parse_shortcut) {
