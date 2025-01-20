@@ -19,6 +19,18 @@ fn denied_env() -> FakeEnv {
     FakeEnv::mem(src)
 }
 
+/// Starts elevation and polls until it settles (FakeEnv answers after `pending_polls` polls).
+fn elevate(a: &mut App) -> Result<serde_json::Value, EngineError> {
+    a.run("snapshot.elevate", json!({}))?;
+    for _ in 0..10 {
+        let r = a.run("snapshot.elevate_poll", json!({}))?;
+        if !a.session.elevating {
+            return Ok(r);
+        }
+    }
+    panic!("elevation never finished");
+}
+
 fn desktop_dump() -> Vec<u8> {
     let (entry, table) = rigscope_smbios::testutil::fixture_tables("desktop-ddr4").unwrap();
     encode_dmi_dump(&DmiDump { entry, table })
@@ -30,7 +42,7 @@ fn elevate_success_fills_slots_and_survives_refresh() {
     env.handle().lock().unwrap().elevate = Some(desktop_dump());
     let mut a = App::new(Box::new(env));
     assert_eq!(a.session.snapshot.dmi_source, DmiSource::SysfsIdOnly);
-    a.run("snapshot.elevate", json!({})).unwrap();
+    elevate(&mut a).unwrap();
     assert_eq!(a.session.snapshot.dmi_source, DmiSource::FullTable);
     assert_eq!(a.session.snapshot.memory.arrays[0].slots.len(), 2);
     assert_eq!(a.session.history.len(), 1);
@@ -46,10 +58,7 @@ fn elevate_success_fills_slots_and_survives_refresh() {
 fn elevate_cancelled_keeps_snapshot() {
     let mut a = App::new(Box::new(denied_env()));
     let before = a.session.snapshot.clone();
-    assert!(matches!(
-        a.run("snapshot.elevate", json!({})),
-        Err(EngineError::Io(_))
-    ));
+    assert!(matches!(elevate(&mut a), Err(EngineError::Io(_))));
     assert_eq!(a.session.snapshot, before);
     assert!(a.session.history.is_empty());
     assert!(a
@@ -66,7 +75,7 @@ fn elevate_garbage_dump_is_error() {
     env.handle().lock().unwrap().elevate = Some(b"junk".to_vec());
     let mut a = App::new(Box::new(env));
     let before = a.session.snapshot.clone();
-    assert!(a.run("snapshot.elevate", json!({})).is_err());
+    assert!(elevate(&mut a).is_err());
     assert_eq!(a.session.snapshot, before);
     assert!(a.session.dmi_dump.is_none());
 }
@@ -80,7 +89,7 @@ fn elevate_with_undecodable_table_is_error() {
     });
     env.handle().lock().unwrap().elevate = Some(dump);
     let mut a = App::new(Box::new(env));
-    assert!(a.run("snapshot.elevate", json!({})).is_err());
+    assert!(elevate(&mut a).is_err());
     assert_eq!(a.session.snapshot.dmi_source, DmiSource::SysfsIdOnly);
 }
 
@@ -102,4 +111,39 @@ fn elevate_disabled_when_platform_cannot() {
         a.run("snapshot.elevate", json!({})),
         Err(EngineError::Disabled(_))
     ));
+}
+
+#[test]
+fn elevate_runs_in_background_until_helper_finishes() {
+    let env = denied_env();
+    {
+        let h = env.handle();
+        let mut st = h.lock().unwrap();
+        st.elevate = Some(desktop_dump());
+        st.pending_polls = 2;
+    }
+    let mut a = App::new(Box::new(env));
+    a.run("snapshot.elevate", json!({})).unwrap();
+    assert!(a.session.elevating);
+    assert!(
+        matches!(
+            a.run("snapshot.elevate", json!({})),
+            Err(EngineError::Disabled(_))
+        ),
+        "no second helper"
+    );
+    a.run("snapshot.elevate_poll", json!({})).unwrap();
+    a.run("snapshot.elevate_poll", json!({})).unwrap();
+    assert!(a.session.elevating, "still waiting for authentication");
+    assert_eq!(a.session.snapshot.dmi_source, DmiSource::SysfsIdOnly);
+    a.run("snapshot.elevate_poll", json!({})).unwrap();
+    assert!(!a.session.elevating);
+    assert_eq!(a.session.snapshot.dmi_source, DmiSource::FullTable);
+}
+
+#[test]
+fn elevate_poll_without_job_is_noop() {
+    let mut a = App::new(Box::new(denied_env()));
+    a.run("snapshot.elevate_poll", json!({})).unwrap();
+    assert!(a.session.history.is_empty());
 }
