@@ -13,6 +13,8 @@ pub struct FakeState {
     /// What `elevate_dump` returns; `None` = "cancelled".
     pub elevate: Option<Vec<u8>>,
     pub elevate_calls: u32,
+    /// Polls that answer "still running" before the result is returned.
+    pub pending_polls: u32,
     pub now: u64,
 }
 
@@ -68,12 +70,21 @@ impl Env for FakeEnv {
     fn now_unix(&self) -> u64 {
         self.st().now
     }
-    fn elevate_dump(&self) -> Result<Vec<u8>, EngineError> {
+    fn start_elevate(&mut self) -> Result<(), EngineError> {
+        self.st().elevate_calls += 1;
+        Ok(())
+    }
+    fn poll_elevate(&mut self) -> Option<Result<Vec<u8>, EngineError>> {
         let mut st = self.st();
-        st.elevate_calls += 1;
-        st.elevate
-            .clone()
-            .ok_or_else(|| EngineError::Io("cancelled".into()))
+        if st.pending_polls > 0 {
+            st.pending_polls -= 1;
+            return None;
+        }
+        Some(
+            st.elevate
+                .clone()
+                .ok_or_else(|| EngineError::Io("cancelled".into())),
+        )
     }
     fn clipboard_set(&mut self, text: &str) -> Result<(), EngineError> {
         self.st().clipboard = Some(text.to_string());
