@@ -158,3 +158,31 @@ fn file_menu_save_uses_picked_path() {
     h.run();
     assert!(state.lock().unwrap().files.contains_key("/picked.json"));
 }
+
+#[test]
+fn ui_collects_elevation_result_while_waiting() {
+    let mut src = MemSource::default().with("/sys/class/dmi/id/board_vendor", "Acme\n");
+    src.denied = vec![paths::DMI_ENTRY.into(), paths::DMI_TABLE.into()];
+    let env = FakeEnv::mem(src);
+    {
+        let (entry, table) = rigscope_smbios::testutil::fixture_tables("desktop-ddr4").unwrap();
+        let h = env.handle();
+        let mut st = h.lock().unwrap();
+        st.elevate = Some(rigscope_probe::encode_dmi_dump(&rigscope_probe::DmiDump {
+            entry,
+            table,
+        }));
+        st.pending_polls = 1;
+    }
+    let mut h = harness(env, |a| {
+        a.run("snapshot.elevate", json!({})).unwrap();
+    });
+    for _ in 0..5 {
+        h.step();
+    }
+    assert!(!h.state().session.elevating);
+    assert_eq!(
+        h.state().session.snapshot.dmi_source,
+        rigscope_model::DmiSource::FullTable
+    );
+}
