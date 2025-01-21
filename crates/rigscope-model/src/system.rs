@@ -1,4 +1,4 @@
-use crate::{CpuInfo, Field, MemoryInfo};
+use crate::{CpuInfo, Field, MemoryInfo, StorageInfo};
 use serde::{Deserialize, Serialize};
 
 /// Bumped when the JSON shape changes incompatibly.
@@ -12,6 +12,9 @@ pub struct Snapshot {
     pub board: BoardInfo,
     pub memory: MemoryInfo,
     pub cpu: CpuInfo,
+    /// Added after schema 1 shipped; older files load with no disks.
+    #[serde(default)]
+    pub storage: StorageInfo,
     pub dmi_source: DmiSource,
 }
 
@@ -24,6 +27,7 @@ impl Default for Snapshot {
             board: BoardInfo::default(),
             memory: MemoryInfo::default(),
             cpu: CpuInfo::default(),
+            storage: StorageInfo::default(),
             dmi_source: DmiSource::None,
         }
     }
