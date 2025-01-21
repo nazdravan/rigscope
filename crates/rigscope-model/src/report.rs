@@ -22,6 +22,21 @@ pub fn format_bytes(n: u64) -> String {
     format!("{n} B")
 }
 
+/// Decimal size as disks are sold: `500.1 GB`, `2000 GB`.
+pub fn format_decimal_gb(n: u64) -> String {
+    let gb = n as f64 / 1e9;
+    if (gb - gb.round()).abs() < 0.05 {
+        format!("{} GB", gb.round() as u64)
+    } else {
+        format!("{gb:.1} GB")
+    }
+}
+
+/// `465.8 GiB (500.1 GB)`: binary as the OS counts, decimal as on the box.
+pub fn format_disk_size(n: u64) -> String {
+    format!("{} ({})", format_bytes(n), format_decimal_gb(n))
+}
+
 /// Keeps the last 4 characters: `"ABCD1234"` → `"****1234"`; 4 or fewer → `"****"`.
 pub fn mask(serial: &str) -> String {
     let chars: Vec<char> = serial.chars().collect();
@@ -36,6 +51,11 @@ pub fn mask(serial: &str) -> String {
 /// Copy of the snapshot with every serial number masked.
 pub fn masked(s: &Snapshot) -> Snapshot {
     let mut out = s.clone();
+    for disk in &mut out.storage.disks {
+        if let Field::Known(serial) = &disk.serial {
+            disk.serial = Field::Known(mask(serial));
+        }
+    }
     for slot in out
         .memory
         .arrays
@@ -151,6 +171,24 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
     }
 
     let c = &s.cpu;
+    out.push("\n== Storage ==".into());
+    if s.storage.disks.is_empty() {
+        out.push("No disks found".into());
+    }
+    for d in &s.storage.disks {
+        out.push(format!(
+            "{}: {}, {}, {}, {}, serial {}, firmware {}{}",
+            d.name,
+            text(&d.model),
+            show(&d.size_bytes, |v| format_disk_size(*v)),
+            show(&d.kind, |k| k.label().to_string()),
+            show(&d.interface, |i| i.label().to_string()),
+            text(&d.serial),
+            text(&d.firmware),
+            if d.removable { ", removable" } else { "" }
+        ));
+    }
+
     out.push("\n== Processor ==".into());
     out.push(format!("Model: {}", text(&c.model)));
     out.push(format!("Vendor: {}", text(&c.vendor)));
@@ -281,6 +319,41 @@ mod tests {
             panic!()
         };
         assert_eq!(module.serial, Field::Known("****2C3D".into()));
+    }
+
+    fn with_disk() -> Snapshot {
+        let mut s = sample();
+        s.storage.disks.push(Disk {
+            name: "nvme0n1".into(),
+            model: Field::Known("Samsung SSD 970 EVO Plus 500GB".into()),
+            serial: Field::Known("S4EVNX0N123456A".into()),
+            size_bytes: Field::Known(500_107_862_016),
+            kind: Field::Known(DiskKind::NvmeSsd),
+            interface: Field::Known(Interface::Nvme),
+            ..Default::default()
+        });
+        s
+    }
+
+    #[test]
+    fn report_lists_disks_and_masks_their_serials() {
+        let r = report_text(&with_disk(), true);
+        assert!(r.contains("== Storage =="), "{r}");
+        assert!(
+            r.contains(
+                "nvme0n1: Samsung SSD 970 EVO Plus 500GB, 465.8 GiB (500.1 GB), NVMe SSD, NVMe"
+            ),
+            "{r}"
+        );
+        assert!(r.contains("serial ***********456A"), "{r}");
+        assert!(!r.contains("S4EVNX0N123456A"));
+    }
+
+    #[test]
+    fn decimal_gb() {
+        assert_eq!(format_decimal_gb(500_107_862_016), "500.1 GB");
+        assert_eq!(format_decimal_gb(2_000_000_000_000), "2000 GB");
+        assert_eq!(format_decimal_gb(30_765_219_840), "30.8 GB");
     }
 
     #[test]
