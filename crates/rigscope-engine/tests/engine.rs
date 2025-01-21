@@ -113,6 +113,9 @@ fn view_section_switches_and_validates() {
     let mut a = app();
     a.run("view.section", json!({"id": "cpu"})).unwrap();
     assert_eq!(a.session.section, SectionId::Cpu);
+    a.run("view.section", json!({"id": "storage"})).unwrap();
+    assert_eq!(a.session.section, SectionId::Storage);
+    a.run("view.section", json!({"id": "cpu"})).unwrap();
     assert!(matches!(
         a.run("view.section", json!({"id": "gpu"})),
         Err(EngineError::BadParams(_))
