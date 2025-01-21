@@ -18,3 +18,11 @@ fn snapshot_json_roundtrip() {
     let back: Snapshot = serde_json::from_str(&json).expect("de");
     assert_eq!(back, s);
 }
+
+#[test]
+fn snapshot_without_storage_still_loads() {
+    let mut v = serde_json::to_value(Snapshot::default()).expect("ser");
+    v.as_object_mut().expect("object").remove("storage");
+    let s: Snapshot = serde_json::from_value(v).expect("old snapshot loads");
+    assert!(s.storage.disks.is_empty());
+}
