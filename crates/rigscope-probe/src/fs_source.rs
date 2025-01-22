@@ -13,4 +13,10 @@ impl Source for FsSource {
     fn list(&self, dir: &str) -> Result<Vec<String>, ReadError> {
         list_dir(std::path::Path::new(dir))
     }
+
+    fn canonical(&self, path: &str) -> Result<String, ReadError> {
+        std::fs::canonicalize(path)
+            .map(|p| p.to_string_lossy().into_owned())
+            .map_err(crate::fsutil::map_io)
+    }
 }
