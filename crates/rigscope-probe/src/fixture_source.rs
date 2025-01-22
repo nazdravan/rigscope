@@ -1,4 +1,4 @@
-use crate::fsutil::{list_dir, read_capped};
+use crate::fsutil::{list_dir, map_io, read_capped};
 use crate::{ReadError, Source};
 use std::path::PathBuf;
 
@@ -35,5 +35,13 @@ impl Source for FixtureSource {
 
     fn list(&self, dir: &str) -> Result<Vec<String>, ReadError> {
         list_dir(&self.resolve(dir)?)
+    }
+
+    fn canonical(&self, path: &str) -> Result<String, ReadError> {
+        let root = std::fs::canonicalize(&self.root).map_err(map_io)?;
+        let real = std::fs::canonicalize(self.resolve(path)?).map_err(map_io)?;
+        // Links that leave the fixture root are treated as missing.
+        let rel = real.strip_prefix(&root).map_err(|_| ReadError::NotFound)?;
+        Ok(format!("/{}", rel.to_string_lossy()))
     }
 }
