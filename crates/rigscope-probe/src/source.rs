@@ -16,6 +16,8 @@ pub trait Source {
     fn read(&self, path: &str) -> Result<Vec<u8>, ReadError>;
     /// Entry names (not paths) in a directory.
     fn list(&self, dir: &str) -> Result<Vec<String>, ReadError>;
+    /// The path with symlinks resolved (sysfs links reveal the bus: `/usb`, `/ata`, `/virtio`).
+    fn canonical(&self, path: &str) -> Result<String, ReadError>;
 }
 
 /// In-memory source for tests and the web build.
@@ -24,6 +26,8 @@ pub struct MemSource {
     pub files: BTreeMap<String, Vec<u8>>,
     /// Paths that answer `PermissionDenied`.
     pub denied: Vec<String>,
+    /// Symlinks: path → canonical target.
+    pub links: BTreeMap<String, String>,
 }
 
 impl MemSource {
@@ -59,5 +63,17 @@ impl Source for MemSource {
             return Err(ReadError::NotFound);
         }
         Ok(names)
+    }
+
+    fn canonical(&self, path: &str) -> Result<String, ReadError> {
+        if let Some(target) = self.links.get(path) {
+            return Ok(target.clone());
+        }
+        let prefix = format!("{}/", path.trim_end_matches('/'));
+        if self.files.contains_key(path) || self.files.keys().any(|k| k.starts_with(&prefix)) {
+            Ok(path.to_string())
+        } else {
+            Err(ReadError::NotFound)
+        }
     }
 }
