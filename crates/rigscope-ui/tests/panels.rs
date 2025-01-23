@@ -186,3 +186,28 @@ fn ui_collects_elevation_result_while_waiting() {
         rigscope_model::DmiSource::FullTable
     );
 }
+
+#[test]
+fn storage_panel_lists_disks() {
+    let h = harness(FakeEnv::fixture("desktop-ddr4"), |a| {
+        a.run("view.section", json!({"id": "storage"})).unwrap();
+    });
+    assert!(has(&h, "Samsung SSD 970 EVO Plus 500GB"));
+    assert!(has(&h, "465.8 GiB (500.1 GB)"));
+    assert!(has(&h, "NVMe SSD"));
+    assert!(has(&h, "WDC WD10EZEX-08W"));
+    assert!(has(&h, "HDD"));
+    assert!(has(&h, "not exposed by the kernel without root"));
+}
+
+#[test]
+fn storage_sidebar_in_romanian() {
+    let h = harness(FakeEnv::fixture("laptop-ddr5"), |a| {
+        a.run("view.language", json!({"id": "ro"})).unwrap();
+        a.run("view.section", json!({"id": "storage"})).unwrap();
+    });
+    assert!(has(&h, "Stocare"));
+    assert!(has(&h, "Detașabil"));
+    assert!(has(&h, "nu e expus de kernel fără root"));
+    assert!(!has(&h, "not exposed by the kernel"));
+}
