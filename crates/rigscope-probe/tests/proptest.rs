@@ -28,4 +28,16 @@ proptest! {
             .with(paths::DMI_TABLE, table);
         let _ = build_snapshot(&src, None, 0);
     }
+
+    #[test]
+    fn read_storage_never_panics(name in "[a-z]{1,8}[0-9]{0,3}", size in ".{0,24}", rot in ".{0,4}",
+                                 model in proptest::collection::vec(any::<u8>(), 0..64), link in ".{0,80}") {
+        let mut src = MemSource::default()
+            .with(&format!("/sys/block/{name}/size"), size)
+            .with(&format!("/sys/block/{name}/queue/rotational"), rot)
+            .with(&format!("/sys/block/{name}/device/model"), model);
+        src.links.insert(format!("/sys/block/{name}"), link);
+        let s = read_storage(&src);
+        prop_assert!(s.disks.len() <= 1);
+    }
 }
