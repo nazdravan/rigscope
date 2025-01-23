@@ -64,6 +64,15 @@ pub enum Key {
     Refresh,
     Undo,
     DemoMode,
+    Storage,
+    DiskSize,
+    DiskKind,
+    Interface,
+    Firmware,
+    Removable,
+    Yes,
+    No,
+    NoDisks,
 }
 
 pub fn tr(lang: Language, key: Key) -> &'static str {
@@ -130,6 +139,15 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Refresh => "Refresh",
             Undo => "Undo",
             DemoMode => "Demo mode: showing a sample machine, not this computer.",
+            Storage => "Storage",
+            DiskSize => "Capacity",
+            DiskKind => "Type",
+            Interface => "Interface",
+            Firmware => "Firmware",
+            Removable => "Removable",
+            Yes => "yes",
+            No => "no",
+            NoDisks => "No disks found in /sys/block.",
         },
         Language::Ro => match key {
             Memory => "Memorie",
@@ -192,6 +210,15 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Refresh => "Reîmprospătează",
             Undo => "Anulează",
             DemoMode => "Mod demonstrativ: se afișează o mașină de exemplu, nu acest calculator.",
+            Storage => "Stocare",
+            DiskSize => "Capacitate",
+            DiskKind => "Tip",
+            Interface => "Interfață",
+            Firmware => "Firmware",
+            Removable => "Detașabil",
+            Yes => "da",
+            No => "nu",
+            NoDisks => "Nu s-au găsit discuri în /sys/block.",
         },
     }
 }
@@ -201,6 +228,21 @@ pub fn slots_free(lang: Language, free: u16, total: u16) -> String {
     match lang {
         Language::En => format!("{free} of {total} slots free"),
         Language::Ro => format!("{free} din {total} sloturi libere"),
+    }
+}
+
+/// Reasons the probe records in `Field::Unavailable` are English; translate the known ones.
+pub fn reason(lang: Language, reason: &str) -> String {
+    let ro = match reason {
+        "not exposed by the kernel without root" => "nu e expus de kernel fără root",
+        "no DMI table (virtual machine or container?)" => {
+            "nu există tabelă DMI (mașină virtuală sau container?)"
+        }
+        other => other,
+    };
+    match lang {
+        Language::En => reason.to_string(),
+        Language::Ro => ro.to_string(),
     }
 }
 
