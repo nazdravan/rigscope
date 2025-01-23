@@ -32,7 +32,7 @@ pub fn field<T>(lang: Language, f: &Field<T>, show: impl Fn(&T) -> String) -> St
         Field::Known(v) => show(v),
         Field::Unknown => tr(lang, Key::Unknown).to_string(),
         Field::NeedsRoot => tr(lang, Key::NeedsRoot).to_string(),
-        Field::Unavailable(reason) => reason.clone(),
+        Field::Unavailable(reason) => crate::i18n::reason(lang, reason),
     }
 }
 
