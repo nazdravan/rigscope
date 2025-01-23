@@ -6,6 +6,7 @@ pub mod fmt;
 pub mod i18n;
 mod memory_panel;
 mod shell;
+mod storage_panel;
 mod system_panel;
 mod widgets;
 
