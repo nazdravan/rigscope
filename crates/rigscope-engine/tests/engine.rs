@@ -115,9 +115,11 @@ fn view_section_switches_and_validates() {
     assert_eq!(a.session.section, SectionId::Cpu);
     a.run("view.section", json!({"id": "storage"})).unwrap();
     assert_eq!(a.session.section, SectionId::Storage);
+    a.run("view.section", json!({"id": "gpu"})).unwrap();
+    assert_eq!(a.session.section, SectionId::Gpu);
     a.run("view.section", json!({"id": "cpu"})).unwrap();
     assert!(matches!(
-        a.run("view.section", json!({"id": "gpu"})),
+        a.run("view.section", json!({"id": "toaster"})),
         Err(EngineError::BadParams(_))
     ));
     assert!(matches!(
