@@ -13,6 +13,7 @@ pub enum SectionId {
     Cpu,
     System,
     Storage,
+    Gpu,
 }
 
 /// UI language (the UI owns the strings; the engine only remembers the choice).
