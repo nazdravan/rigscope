@@ -5,6 +5,7 @@
 pub mod compat;
 pub mod cpu;
 pub mod field;
+pub mod gpu;
 pub mod memory;
 pub mod report;
 pub mod storage;
@@ -14,6 +15,7 @@ pub mod text;
 pub use compat::{compat_summary, CompatLine};
 pub use cpu::{CacheKind, CacheLevel, CoreFreq, CpuInfo};
 pub use field::Field;
+pub use gpu::{Gpu, GpuInfo};
 pub use memory::{
     FormFactor, MemType, MemoryArray, MemoryInfo, MemoryModule, MemorySlot, SlotState, VoltageMv,
 };
