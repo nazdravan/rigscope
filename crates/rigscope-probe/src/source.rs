@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 /// Largest file a source returns; bigger files are an error, not a truncated read.
-pub const MAX_FILE_LEN: usize = 1024 * 1024;
+pub const MAX_FILE_LEN: usize = 4 * 1024 * 1024;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ReadError {
