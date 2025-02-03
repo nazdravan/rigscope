@@ -40,4 +40,18 @@ proptest! {
         let s = read_storage(&src);
         prop_assert!(s.disks.len() <= 1);
     }
+
+    #[test]
+    fn read_gpus_never_panics(card in "card[0-9]{1,2}(-[A-Z]{1,4}-[0-9])?", vendor in ".{0,10}", vram in ".{0,24}",
+                              speed in ".{0,20}", width in ".{0,4}", ids in ".{0,200}", drv in ".{0,40}") {
+        let mut src = MemSource::default()
+            .with(&format!("/sys/class/drm/{card}/device/vendor"), vendor)
+            .with(&format!("/sys/class/drm/{card}/device/device"), "0x2484")
+            .with(&format!("/sys/class/drm/{card}/device/mem_info_vram_total"), vram)
+            .with(&format!("/sys/class/drm/{card}/device/current_link_speed"), speed)
+            .with(&format!("/sys/class/drm/{card}/device/current_link_width"), width)
+            .with("/usr/share/hwdata/pci.ids", ids);
+        src.links.insert(format!("/sys/class/drm/{card}/device/driver"), drv);
+        prop_assert!(read_gpus(&src).gpus.len() <= 1);
+    }
 }
