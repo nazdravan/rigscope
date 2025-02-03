@@ -189,6 +189,32 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
         ));
     }
 
+    out.push("\n== Graphics ==".into());
+    if s.gpu.gpus.is_empty() {
+        out.push("No graphics cards found".into());
+    }
+    for g in &s.gpu.gpus {
+        let name = [g.vendor_name.known(), g.device_name.known()]
+            .into_iter()
+            .flatten()
+            .cloned()
+            .collect::<Vec<_>>()
+            .join(" ");
+        let name = if name.is_empty() {
+            "unknown card".to_string()
+        } else {
+            name
+        };
+        let id = g.pci_id().map(|i| format!(" [{i}]")).unwrap_or_default();
+        out.push(format!(
+            "{}: {name}{id}, driver {}, VRAM {}{}",
+            g.card,
+            text(&g.driver),
+            show(&g.vram_bytes, |v| format_bytes(*v)),
+            if g.boot_vga { ", primary" } else { "" }
+        ));
+    }
+
     out.push("\n== Processor ==".into());
     out.push(format!("Model: {}", text(&c.model)));
     out.push(format!("Vendor: {}", text(&c.vendor)));
@@ -347,6 +373,25 @@ mod tests {
         );
         assert!(r.contains("serial ***********456A"), "{r}");
         assert!(!r.contains("S4EVNX0N123456A"));
+    }
+
+    #[test]
+    fn report_lists_gpus() {
+        let mut s = Snapshot::default();
+        s.gpu.gpus.push(Gpu {
+            card: "card0".into(),
+            vendor_id: Field::Known(0x10de),
+            device_id: Field::Known(0x2484),
+            vendor_name: Field::Known("NVIDIA Corporation".into()),
+            device_name: Field::Known("GA104 [GeForce RTX 3070]".into()),
+            driver: Field::Known("nvidia".into()),
+            vram_bytes: Field::Unavailable("not exposed by the nvidia driver".into()),
+            boot_vga: true,
+            ..Default::default()
+        });
+        let r = report_text(&s, true);
+        assert!(r.contains("== Graphics =="), "{r}");
+        assert!(r.contains("card0: NVIDIA Corporation GA104 [GeForce RTX 3070] [10de:2484], driver nvidia, VRAM not exposed by the nvidia driver, primary"), "{r}");
     }
 
     #[test]
