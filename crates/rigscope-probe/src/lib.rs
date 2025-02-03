@@ -7,6 +7,7 @@ mod fixture_source;
 #[cfg(target_os = "linux")]
 mod fs_source;
 mod fsutil;
+mod gpu;
 mod source;
 mod storage;
 
@@ -16,5 +17,6 @@ pub use error::ProbeError;
 pub use fixture_source::FixtureSource;
 #[cfg(target_os = "linux")]
 pub use fs_source::FsSource;
+pub use gpu::{read_gpus, MAX_GPUS, NO_PCI_IDS, NVIDIA_NO_VRAM, SHARED_MEMORY};
 pub use source::{MemSource, ReadError, Source, MAX_FILE_LEN};
 pub use storage::{interface_for, kind_for, read_storage, MAX_DISKS};
