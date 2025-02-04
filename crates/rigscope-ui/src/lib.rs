@@ -3,6 +3,7 @@
 
 mod cpu_panel;
 pub mod fmt;
+mod gpu_panel;
 pub mod i18n;
 mod memory_panel;
 mod shell;
