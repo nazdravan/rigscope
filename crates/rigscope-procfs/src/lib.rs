@@ -3,6 +3,7 @@
 //! All functions take text already read (and size-capped) by the caller; none do IO.
 
 mod cpuinfo;
+pub mod pci_ids;
 mod values;
 
 pub use cpuinfo::{parse_cpuinfo, CpuinfoSummary};
