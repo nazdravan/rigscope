@@ -24,6 +24,12 @@ proptest! {
     }
 
     #[test]
+    fn pci_ids_lookup_never_panics(text in "(\\t{0,2}[0-9a-fA-FC ]{0,10} {0,2}.{0,12}\n){0,40}",
+                                   v in any::<u16>(), d in any::<u16>(), sv in any::<u16>(), sd in any::<u16>()) {
+        let _ = rigscope_procfs::pci_ids::lookup(&text, v, d, Some((sv, sd)));
+    }
+
+    #[test]
     fn cpu_list_ranges_are_capped(a in any::<u32>(), b in any::<u32>()) {
         let list = format!("{a}-{b}");
         prop_assert!(parse_cpu_list(&list).len() <= MAX_CPUS);
