@@ -73,6 +73,15 @@ pub enum Key {
     Yes,
     No,
     NoDisks,
+    Graphics,
+    PciId,
+    PciAddress,
+    Driver,
+    Vram,
+    PcieLink,
+    BoardVariant,
+    PrimaryDisplay,
+    NoGpus,
 }
 
 pub fn tr(lang: Language, key: Key) -> &'static str {
@@ -148,6 +157,15 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Yes => "yes",
             No => "no",
             NoDisks => "No disks found in /sys/block.",
+            Graphics => "Graphics",
+            PciId => "PCI ID",
+            PciAddress => "PCI address",
+            Driver => "Driver",
+            Vram => "Video memory",
+            PcieLink => "PCIe link",
+            BoardVariant => "Board variant",
+            PrimaryDisplay => "Primary display (boot)",
+            NoGpus => "No graphics cards found in /sys/class/drm.",
         },
         Language::Ro => match key {
             Memory => "Memorie",
@@ -219,6 +237,15 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Yes => "da",
             No => "nu",
             NoDisks => "Nu s-au găsit discuri în /sys/block.",
+            Graphics => "Placă video",
+            PciId => "ID PCI",
+            PciAddress => "Adresă PCI",
+            Driver => "Driver",
+            Vram => "Memorie video",
+            PcieLink => "Legătură PCIe",
+            BoardVariant => "Varianta plăcii",
+            PrimaryDisplay => "Afișaj principal (la pornire)",
+            NoGpus => "Nu s-au găsit plăci video în /sys/class/drm.",
         },
     }
 }
@@ -238,6 +265,9 @@ pub fn reason(lang: Language, reason: &str) -> String {
         "no DMI table (virtual machine or container?)" => {
             "nu există tabelă DMI (mașină virtuală sau container?)"
         }
+        "pci.ids not installed (hwdata package)" => "pci.ids nu e instalat (pachetul hwdata)",
+        "not exposed by the nvidia driver" => "nu e expusă de driverul nvidia",
+        "uses system memory" => "folosește memoria sistemului",
         other => other,
     };
     match lang {
