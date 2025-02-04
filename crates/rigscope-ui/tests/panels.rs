@@ -211,3 +211,35 @@ fn storage_sidebar_in_romanian() {
     assert!(has(&h, "nu e expus de kernel fără root"));
     assert!(!has(&h, "not exposed by the kernel"));
 }
+
+#[test]
+fn gpu_panel_shows_card() {
+    let h = harness(FakeEnv::fixture("desktop-ddr4"), |a| {
+        a.run("view.section", json!({"id": "gpu"})).unwrap();
+    });
+    assert!(has(&h, "GA104 [GeForce RTX 3070]"));
+    assert!(has(&h, "TUF RTX 3070 OC"));
+    assert!(has(&h, "10de:2484"));
+    assert!(has(&h, "nvidia"));
+    assert!(has(&h, "16.0 GT/s PCIe x16"));
+    assert!(has(&h, "not exposed by the nvidia driver"));
+}
+
+#[test]
+fn gpu_panel_romanian_and_vram() {
+    let h = harness(FakeEnv::fixture("laptop-ddr5"), |a| {
+        a.run("view.language", json!({"id": "ro"})).unwrap();
+        a.run("view.section", json!({"id": "gpu"})).unwrap();
+    });
+    assert!(has(&h, "Placă video"));
+    assert!(has(&h, "512 MiB"));
+    assert!(has(&h, "da"), "primary display: yes");
+}
+
+#[test]
+fn vm_gpu_panel_says_none_found() {
+    let h = harness(FakeEnv::fixture("minimal-vm"), |a| {
+        a.run("view.section", json!({"id": "gpu"})).unwrap();
+    });
+    assert!(has(&h, "No graphics cards found"));
+}
