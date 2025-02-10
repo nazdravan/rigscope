@@ -1,0 +1,4 @@
+# Synthetic excerpt in pci.ids format for the rigscope fixtures.
+1002  Advanced Micro Devices, Inc. [AMD/ATI]
+	15bf  Phoenix1
+		17aa 3d12  Radeon 780M
