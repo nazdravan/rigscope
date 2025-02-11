@@ -48,9 +48,26 @@ pub fn mask(serial: &str) -> String {
     format!("{}{tail}", "*".repeat(keep))
 }
 
+/// Keeps the last two octets: `a8:a1:59:12:34:56` → `**:**:**:**:34:56`.
+pub fn mask_mac(mac: &str) -> String {
+    let parts: Vec<&str> = mac.split(':').collect();
+    let keep = parts.len().saturating_sub(2);
+    parts
+        .iter()
+        .enumerate()
+        .map(|(i, p)| if i < keep { "**" } else { p })
+        .collect::<Vec<_>>()
+        .join(":")
+}
+
 /// Copy of the snapshot with every serial number masked.
 pub fn masked(s: &Snapshot) -> Snapshot {
     let mut out = s.clone();
+    for iface in &mut out.net.interfaces {
+        if let Field::Known(mac) = &iface.mac {
+            iface.mac = Field::Known(mask_mac(mac));
+        }
+    }
     for disk in &mut out.storage.disks {
         if let Field::Known(serial) = &disk.serial {
             disk.serial = Field::Known(mask(serial));
@@ -212,6 +229,29 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
             text(&g.driver),
             show(&g.vram_bytes, |v| format_bytes(*v)),
             if g.boot_vga { ", primary" } else { "" }
+        ));
+    }
+
+    out.push("\n== Network ==".into());
+    if s.net.interfaces.is_empty() {
+        out.push("No physical network interfaces found".into());
+    }
+    for n in &s.net.interfaces {
+        let mut parts = vec![show(&n.kind, |k| k.label().to_string())];
+        if let Some(d) = n.device_name.known() {
+            parts.push(d.clone());
+        }
+        if let Some(sp) = n.speed_mbps.known() {
+            parts.push(crate::format_speed(*sp));
+        }
+        parts.push(format!("driver {}", text(&n.driver)));
+        parts.push(format!("MAC {}", text(&n.mac)));
+        out.push(format!("{}: {}", n.name, parts.join(", ")));
+    }
+    if s.net.hidden_virtual > 0 {
+        out.push(format!(
+            "({} virtual interfaces not listed)",
+            s.net.hidden_virtual
         ));
     }
 
@@ -392,6 +432,27 @@ mod tests {
         let r = report_text(&s, true);
         assert!(r.contains("== Graphics =="), "{r}");
         assert!(r.contains("card0: NVIDIA Corporation GA104 [GeForce RTX 3070] [10de:2484], driver nvidia, VRAM not exposed by the nvidia driver, primary"), "{r}");
+    }
+
+    #[test]
+    fn report_lists_network_and_masks_mac() {
+        let mut s = Snapshot::default();
+        s.net.hidden_virtual = 2;
+        s.net.interfaces.push(NetInterface {
+            name: "enp4s0".into(),
+            kind: Field::Known(NetKind::Ethernet),
+            mac: Field::Known("a8:a1:59:12:34:56".into()),
+            speed_mbps: Field::Known(1000),
+            driver: Field::Known("igb".into()),
+            device_name: Field::Known("I211 Gigabit Network Connection".into()),
+            ..Default::default()
+        });
+        let r = report_text(&s, true);
+        assert!(r.contains("== Network =="), "{r}");
+        assert!(r.contains("enp4s0: Ethernet, I211 Gigabit Network Connection, 1 Gb/s, driver igb, MAC **:**:**:**:34:56"), "{r}");
+        assert!(r.contains("(2 virtual interfaces not listed)"), "{r}");
+        assert!(!report_text(&s, true).contains("a8:a1"));
+        assert!(report_text(&s, false).contains("a8:a1:59:12:34:56"));
     }
 
     #[test]
