@@ -7,6 +7,7 @@ pub mod cpu;
 pub mod field;
 pub mod gpu;
 pub mod memory;
+pub mod net;
 pub mod report;
 pub mod storage;
 pub mod system;
@@ -19,7 +20,10 @@ pub use gpu::{Gpu, GpuInfo};
 pub use memory::{
     FormFactor, MemType, MemoryArray, MemoryInfo, MemoryModule, MemorySlot, SlotState, VoltageMv,
 };
-pub use report::{format_bytes, format_decimal_gb, format_disk_size, mask, masked, report_text};
+pub use net::{format_speed, NetInfo, NetInterface, NetKind};
+pub use report::{
+    format_bytes, format_decimal_gb, format_disk_size, mask, mask_mac, masked, report_text,
+};
 pub use storage::{Disk, DiskKind, Interface, StorageInfo};
 pub use system::{BoardInfo, DmiSource, Snapshot, SystemInfo, SCHEMA_VERSION};
 pub use text::clean_text;
