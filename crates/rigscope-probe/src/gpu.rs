@@ -5,12 +5,6 @@ use rigscope_model::{clean_text, Field, Gpu, GpuInfo};
 use rigscope_procfs::pci_ids;
 
 pub const DRM_DIR: &str = "/sys/class/drm";
-/// Where distributions install the PCI id database (hwdata / pciutils).
-pub const PCI_IDS_PATHS: &[&str] = &[
-    "/usr/share/hwdata/pci.ids",
-    "/usr/share/misc/pci.ids",
-    "/usr/share/pci.ids",
-];
 /// Most cards listed.
 pub const MAX_GPUS: usize = 32;
 
@@ -18,19 +12,7 @@ pub const NO_PCI_IDS: &str = "pci.ids not installed (hwdata package)";
 pub const NVIDIA_NO_VRAM: &str = "not exposed by the nvidia driver";
 pub const SHARED_MEMORY: &str = "uses system memory";
 
-fn text(src: &dyn Source, path: &str) -> Option<String> {
-    src.read(path)
-        .ok()
-        .map(|b| String::from_utf8_lossy(&b).trim().to_string())
-}
-
-fn hex_id(s: Option<String>) -> Option<u16> {
-    u16::from_str_radix(s?.trim().trim_start_matches("0x"), 16).ok()
-}
-
-fn basename(path: &str) -> Option<&str> {
-    path.rsplit('/').next().filter(|s| !s.is_empty())
-}
+use crate::sysfs::{basename, hex_id, text};
 
 /// `0000:01:00.0`
 fn is_pci_address(s: &str) -> bool {
@@ -54,7 +36,7 @@ pub fn read_gpus(src: &dyn Source) -> GpuInfo {
     let Ok(entries) = src.list(DRM_DIR) else {
         return GpuInfo::default();
     };
-    let ids = PCI_IDS_PATHS.iter().find_map(|p| text(src, p));
+    let ids = crate::sysfs::pci_ids(src);
     let gpus = entries
         .iter()
         .filter(|n| is_card(n))
@@ -70,10 +52,7 @@ fn read_gpu(src: &dyn Source, card: &str, ids: Option<&str>) -> Gpu {
     let vendor_id = hex_id(read("vendor"));
     let device_id = hex_id(read("device"));
     let subsystem = hex_id(read("subsystem_vendor")).zip(hex_id(read("subsystem_device")));
-    let driver = src
-        .canonical(&format!("{dev}/driver"))
-        .ok()
-        .and_then(|p| basename(&p).map(str::to_string));
+    let driver = crate::sysfs::driver(src, &dev);
     let pci_address = src.canonical(&dev).ok().and_then(|p| {
         basename(&p)
             .filter(|b| is_pci_address(b))
