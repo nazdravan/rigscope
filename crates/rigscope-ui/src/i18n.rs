@@ -82,6 +82,14 @@ pub enum Key {
     BoardVariant,
     PrimaryDisplay,
     NoGpus,
+    Network,
+    NetKind,
+    Mac,
+    State,
+    Speed,
+    Duplex,
+    Mtu,
+    NoInterfaces,
 }
 
 pub fn tr(lang: Language, key: Key) -> &'static str {
@@ -166,6 +174,14 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             BoardVariant => "Board variant",
             PrimaryDisplay => "Primary display (boot)",
             NoGpus => "No graphics cards found in /sys/class/drm.",
+            Network => "Network",
+            NetKind => "Type",
+            Mac => "MAC address",
+            State => "State",
+            Speed => "Link speed",
+            Duplex => "Duplex",
+            Mtu => "MTU",
+            NoInterfaces => "No physical network interfaces found.",
         },
         Language::Ro => match key {
             Memory => "Memorie",
@@ -246,6 +262,14 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             BoardVariant => "Varianta plăcii",
             PrimaryDisplay => "Afișaj principal (la pornire)",
             NoGpus => "Nu s-au găsit plăci video în /sys/class/drm.",
+            Network => "Rețea",
+            NetKind => "Tip",
+            Mac => "Adresă MAC",
+            State => "Stare",
+            Speed => "Viteza legăturii",
+            Duplex => "Duplex",
+            Mtu => "MTU",
+            NoInterfaces => "Nu s-au găsit interfețe de rețea fizice.",
         },
     }
 }
@@ -268,6 +292,7 @@ pub fn reason(lang: Language, reason: &str) -> String {
         "pci.ids not installed (hwdata package)" => "pci.ids nu e instalat (pachetul hwdata)",
         "not exposed by the nvidia driver" => "nu e expusă de driverul nvidia",
         "uses system memory" => "folosește memoria sistemului",
+        "not reported for Wi-Fi" => "nu e raportată pentru Wi-Fi",
         other => other,
     };
     match lang {
@@ -311,5 +336,15 @@ pub fn ecc(lang: Language, value: &str) -> String {
     match lang {
         Language::En => value.to_string(),
         Language::Ro => ro.to_string(),
+    }
+}
+
+/// "1 virtual interface not listed" / "2 interfețe virtuale nelistate".
+pub fn hidden_virtual(lang: Language, n: u32) -> String {
+    match (lang, n) {
+        (Language::En, 1) => "1 virtual interface not listed".into(),
+        (Language::En, n) => format!("{n} virtual interfaces not listed"),
+        (Language::Ro, 1) => "1 interfață virtuală nelistată".into(),
+        (Language::Ro, n) => format!("{n} interfețe virtuale nelistate"),
     }
 }
