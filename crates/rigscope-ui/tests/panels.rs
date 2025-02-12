@@ -243,3 +243,27 @@ fn vm_gpu_panel_says_none_found() {
     });
     assert!(has(&h, "No graphics cards found"));
 }
+
+#[test]
+fn network_panel_shows_interfaces() {
+    let h = harness(FakeEnv::fixture("desktop-ddr4"), |a| {
+        a.run("view.section", json!({"id": "network"})).unwrap();
+    });
+    assert!(has(&h, "enp4s0"));
+    assert!(has(&h, "I211 Gigabit Network Connection"));
+    assert!(has(&h, "1 Gb/s"));
+    assert!(has(&h, "igb"));
+    assert!(has(&h, "1 virtual interface not listed"));
+    assert!(!has(&h, "docker0"));
+}
+
+#[test]
+fn network_panel_wifi_in_romanian() {
+    let h = harness(FakeEnv::fixture("laptop-ddr5"), |a| {
+        a.run("view.language", json!({"id": "ro"})).unwrap();
+        a.run("view.section", json!({"id": "network"})).unwrap();
+    });
+    assert!(has(&h, "Rețea"));
+    assert!(has(&h, "Wi-Fi"));
+    assert!(has(&h, "nu e raportată pentru Wi-Fi"));
+}
