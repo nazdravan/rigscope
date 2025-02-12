@@ -54,4 +54,15 @@ proptest! {
         src.links.insert(format!("/sys/class/drm/{card}/device/driver"), drv);
         prop_assert!(read_gpus(&src).gpus.len() <= 1);
     }
+
+    #[test]
+    fn read_net_never_panics(name in "[a-z]{2,6}[0-9]{0,2}", speed in ".{0,12}", mtu in ".{0,8}",
+                             mac in proptest::collection::vec(any::<u8>(), 0..40), link in ".{0,60}") {
+        let mut src = MemSource::default()
+            .with(&format!("/sys/class/net/{name}/speed"), speed)
+            .with(&format!("/sys/class/net/{name}/mtu"), mtu)
+            .with(&format!("/sys/class/net/{name}/address"), mac);
+        src.links.insert(format!("/sys/class/net/{name}"), link);
+        prop_assert!(read_net(&src).interfaces.len() <= 1);
+    }
 }
