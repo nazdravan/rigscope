@@ -1,7 +1,7 @@
 //! Window layout, menus, shortcuts and the eframe entry point.
 
 use crate::i18n::{command_label, tr, Key};
-use crate::{cpu_panel, gpu_panel, memory_panel, storage_panel, system_panel, Actions};
+use crate::{cpu_panel, gpu_panel, memory_panel, net_panel, storage_panel, system_panel, Actions};
 use rigscope_engine::{App, Language, SectionId};
 use serde_json::json;
 use std::time::Duration;
@@ -89,6 +89,7 @@ pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
                 (SectionId::Cpu, Key::Processor),
                 (SectionId::Storage, Key::Storage),
                 (SectionId::Gpu, Key::Graphics),
+                (SectionId::Network, Key::Network),
                 (SectionId::System, Key::System),
             ] {
                 let selected = app.session.section == id;
@@ -109,6 +110,7 @@ pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
                 SectionId::Cpu => cpu_panel::show(ui, app),
                 SectionId::Storage => storage_panel::show(ui, app),
                 SectionId::Gpu => gpu_panel::show(ui, app),
+                SectionId::Network => net_panel::show(ui, app),
                 SectionId::System => system_panel::show(ui, app),
             });
     });
