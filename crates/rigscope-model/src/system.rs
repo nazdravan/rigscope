@@ -1,4 +1,4 @@
-use crate::{CpuInfo, Field, GpuInfo, MemoryInfo, NetInfo, StorageInfo};
+use crate::{CpuInfo, Field, GpuInfo, MemoryInfo, NetInfo, PowerInfo, StorageInfo};
 use serde::{Deserialize, Serialize};
 
 /// Bumped when the JSON shape changes incompatibly.
@@ -19,6 +19,8 @@ pub struct Snapshot {
     pub gpu: GpuInfo,
     #[serde(default)]
     pub net: NetInfo,
+    #[serde(default)]
+    pub power: PowerInfo,
     pub dmi_source: DmiSource,
 }
 
@@ -34,6 +36,7 @@ impl Default for Snapshot {
             storage: StorageInfo::default(),
             gpu: GpuInfo::default(),
             net: NetInfo::default(),
+            power: PowerInfo::default(),
             dmi_source: DmiSource::None,
         }
     }
