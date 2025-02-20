@@ -68,6 +68,11 @@ pub fn masked(s: &Snapshot) -> Snapshot {
             iface.mac = Field::Known(mask_mac(mac));
         }
     }
+    for battery in &mut out.power.batteries {
+        if let Field::Known(serial) = &battery.serial {
+            battery.serial = Field::Known(mask(serial));
+        }
+    }
     for disk in &mut out.storage.disks {
         if let Field::Known(serial) = &disk.serial {
             disk.serial = Field::Known(mask(serial));
@@ -252,6 +257,37 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
         out.push(format!(
             "({} virtual interfaces not listed)",
             s.net.hidden_virtual
+        ));
+    }
+
+    out.push("\n== Battery ==".into());
+    if let Field::Known(on) = s.power.ac_online {
+        out.push(format!("On mains power: {}", if on { "yes" } else { "no" }));
+    }
+    if s.power.batteries.is_empty() {
+        out.push("No battery".into());
+    }
+    for b in &s.power.batteries {
+        let health = match (b.health_percent(), b.full_mwh.known(), b.design_mwh.known()) {
+            (Some(h), Some(f), Some(d)) => {
+                format!(
+                    "health {h:.1} % ({:.1} of {}, derived)",
+                    *f as f64 / 1000.0,
+                    crate::format_mwh(*d)
+                )
+            }
+            _ => "health unknown".into(),
+        };
+        out.push(format!(
+            "{}: {} {} ({}), {}, {}, {health}, {} cycles, serial {}",
+            b.name,
+            text(&b.manufacturer),
+            text(&b.model),
+            text(&b.technology),
+            show(&b.charge_percent, |c| format!("{c} %")),
+            text(&b.status),
+            show(&b.cycles, |c| c.to_string()),
+            text(&b.serial),
         ));
     }
 
@@ -453,6 +489,29 @@ mod tests {
         assert!(r.contains("(2 virtual interfaces not listed)"), "{r}");
         assert!(!report_text(&s, true).contains("a8:a1"));
         assert!(report_text(&s, false).contains("a8:a1:59:12:34:56"));
+    }
+
+    #[test]
+    fn report_lists_battery_with_health() {
+        let mut s = Snapshot::default();
+        s.power.ac_online = Field::Known(false);
+        s.power.batteries.push(Battery {
+            name: "BAT0".into(),
+            manufacturer: Field::Known("SMP".into()),
+            model: Field::Known("5B10W51867".into()),
+            serial: Field::Known("41234567".into()),
+            technology: Field::Known("Li-poly".into()),
+            status: Field::Known("Discharging".into()),
+            charge_percent: Field::Known(76),
+            design_mwh: Field::Known(57_000),
+            full_mwh: Field::Known(52_440),
+            cycles: Field::Known(87),
+            ..Default::default()
+        });
+        let r = report_text(&s, true);
+        assert!(r.contains("== Battery =="), "{r}");
+        assert!(r.contains("On mains power: no"), "{r}");
+        assert!(r.contains("BAT0: SMP 5B10W51867 (Li-poly), 76 %, Discharging, health 92.0 % (52.4 of 57.0 Wh, derived), 87 cycles, serial ****4567"), "{r}");
     }
 
     #[test]
