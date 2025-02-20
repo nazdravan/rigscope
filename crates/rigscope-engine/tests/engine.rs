@@ -119,6 +119,8 @@ fn view_section_switches_and_validates() {
     assert_eq!(a.session.section, SectionId::Gpu);
     a.run("view.section", json!({"id": "network"})).unwrap();
     assert_eq!(a.session.section, SectionId::Network);
+    a.run("view.section", json!({"id": "battery"})).unwrap();
+    assert_eq!(a.session.section, SectionId::Battery);
     a.run("view.section", json!({"id": "cpu"})).unwrap();
     assert!(matches!(
         a.run("view.section", json!({"id": "toaster"})),
