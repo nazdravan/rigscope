@@ -8,6 +8,7 @@ pub mod field;
 pub mod gpu;
 pub mod memory;
 pub mod net;
+pub mod power;
 pub mod report;
 pub mod storage;
 pub mod system;
@@ -21,6 +22,7 @@ pub use memory::{
     FormFactor, MemType, MemoryArray, MemoryInfo, MemoryModule, MemorySlot, SlotState, VoltageMv,
 };
 pub use net::{format_speed, NetInfo, NetInterface, NetKind};
+pub use power::{format_mwh, Battery, PowerInfo};
 pub use report::{
     format_bytes, format_decimal_gb, format_disk_size, mask, mask_mac, masked, report_text,
 };
