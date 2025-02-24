@@ -65,4 +65,20 @@ proptest! {
         src.links.insert(format!("/sys/class/net/{name}"), link);
         prop_assert!(read_net(&src).interfaces.len() <= 1);
     }
+
+    #[test]
+    fn read_power_never_panics(t in "(Battery|Mains|UPS|.{0,6})", full in ".{0,14}", design in ".{0,14}",
+                               volt in ".{0,14}", cap in ".{0,5}", cyc in ".{0,8}") {
+        let src = MemSource::default()
+            .with("/sys/class/power_supply/BAT0/type", t)
+            .with("/sys/class/power_supply/BAT0/charge_full", full)
+            .with("/sys/class/power_supply/BAT0/charge_full_design", design)
+            .with("/sys/class/power_supply/BAT0/voltage_min_design", volt)
+            .with("/sys/class/power_supply/BAT0/capacity", cap)
+            .with("/sys/class/power_supply/BAT0/cycle_count", cyc);
+        let p = read_power(&src);
+        for b in &p.batteries {
+            prop_assert!(b.charge_percent.known().is_none_or(|c| *c <= 100));
+        }
+    }
 }
