@@ -96,6 +96,7 @@ pub fn build_snapshot(src: &dyn Source, dmi: Option<&DmiDump>, now_unix: u64) ->
         storage: crate::read_storage(src),
         gpu: crate::read_gpus(src),
         net: crate::read_net(src),
+        power: crate::read_power(src),
         dmi_source,
         ..Snapshot::default()
     }
