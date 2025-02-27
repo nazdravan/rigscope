@@ -267,3 +267,26 @@ fn network_panel_wifi_in_romanian() {
     assert!(has(&h, "Wi-Fi"));
     assert!(has(&h, "nu e raportată pentru Wi-Fi"));
 }
+
+#[test]
+fn battery_panel_shows_health() {
+    let h = harness(FakeEnv::fixture("laptop-ddr5"), |a| {
+        a.run("view.section", json!({"id": "battery"})).unwrap();
+    });
+    assert!(has(&h, "BAT0"));
+    assert!(has(&h, "92.0 % (derived)"));
+    assert!(has(&h, "52.4 Wh"));
+    assert!(has(&h, "57.0 Wh"));
+    assert!(has(&h, "87"));
+    assert!(has(&h, "Discharging"));
+}
+
+#[test]
+fn desktop_battery_panel_says_none() {
+    let h = harness(FakeEnv::fixture("desktop-ddr4"), |a| {
+        a.run("view.language", json!({"id": "ro"})).unwrap();
+        a.run("view.section", json!({"id": "battery"})).unwrap();
+    });
+    assert!(has(&h, "Baterie"));
+    assert!(has(&h, "Nu există baterie"));
+}
