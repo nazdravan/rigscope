@@ -7,6 +7,9 @@ pub struct CpuInfo {
     pub vendor: Field<String>,
     pub socket: Field<String>,
     pub physical_cores: Field<u32>,
+    /// Populated sockets (packages). Added after schema 1; older files load as unknown.
+    #[serde(default)]
+    pub sockets: Field<u32>,
     pub logical_threads: Field<u32>,
     pub base_mhz: Field<u32>,
     pub max_mhz: Field<u32>,
@@ -14,6 +17,14 @@ pub struct CpuInfo {
     pub caches: Vec<CacheLevel>,
     pub microcode: Field<String>,
     pub flags: Vec<String>,
+}
+
+/// `2 × LGA4677` for multi-socket machines, else the (already formatted) socket name.
+pub fn socket_label(name: String, sockets: &Field<u32>) -> String {
+    match sockets.known() {
+        Some(n) if *n > 1 => format!("{n} × {name}"),
+        _ => name,
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
