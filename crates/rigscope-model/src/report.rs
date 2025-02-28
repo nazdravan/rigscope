@@ -294,7 +294,10 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
     out.push("\n== Processor ==".into());
     out.push(format!("Model: {}", text(&c.model)));
     out.push(format!("Vendor: {}", text(&c.vendor)));
-    out.push(format!("Socket: {}", text(&c.socket)));
+    out.push(format!(
+        "Socket: {}",
+        crate::cpu::socket_label(text(&c.socket), &c.sockets)
+    ));
     out.push(format!(
         "Cores / threads: {} / {}",
         show(&c.physical_cores, |v| v.to_string()),
@@ -512,6 +515,16 @@ mod tests {
         assert!(r.contains("== Battery =="), "{r}");
         assert!(r.contains("On mains power: no"), "{r}");
         assert!(r.contains("BAT0: SMP 5B10W51867 (Li-poly), 76 %, Discharging, health 92.0 % (52.4 of 57.0 Wh, derived), 87 cycles, serial ****4567"), "{r}");
+    }
+
+    #[test]
+    fn report_shows_socket_count() {
+        let mut s = Snapshot::default();
+        s.cpu.socket = Field::Known("LGA4677".into());
+        s.cpu.sockets = Field::Known(2);
+        assert!(report_text(&s, true).contains("Socket: 2 × LGA4677"));
+        s.cpu.sockets = Field::Known(1);
+        assert!(report_text(&s, true).contains("Socket: LGA4677\n"));
     }
 
     #[test]
