@@ -224,14 +224,15 @@ fn read_cpu(src: &dyn Source, dmi: &Dmi) -> CpuInfo {
         .first()
         .and_then(|&c| mhz(src, &freq_path(c, "base_frequency")));
 
-    let (socket, smbios_max, smbios_cores) = match dmi {
+    let (socket, smbios_max, smbios_cores, smbios_sockets) = match dmi {
         Dmi::Full(d) => (
             Field::from_option(d.cpu_socket.clone()),
             d.cpu_max_mhz,
             d.cpu_cores,
+            d.cpu_sockets,
         ),
-        Dmi::Denied => (Field::NeedsRoot, None, None),
-        Dmi::Missing => (Field::Unavailable(NO_DMI.to_string()), None, None),
+        Dmi::Denied => (Field::NeedsRoot, None, None, None),
+        Dmi::Missing => (Field::Unavailable(NO_DMI.to_string()), None, None, None),
     };
 
     let logical = if info.logical > 0 {
@@ -245,6 +246,7 @@ fn read_cpu(src: &dyn Source, dmi: &Dmi) -> CpuInfo {
         vendor: Field::from_option(info.vendor),
         socket,
         physical_cores: Field::from_option(info.physical_cores.or(smbios_cores)),
+        sockets: Field::from_option(info.packages.or(smbios_sockets)),
         logical_threads: Field::from_option(logical),
         base_mhz: Field::from_option(base),
         max_mhz: Field::from_option(cpufreq_max.or(smbios_max)),
