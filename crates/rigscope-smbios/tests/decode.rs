@@ -353,3 +353,25 @@ fn structures_lists_types_and_strings() {
     assert_eq!(s[0].strings, vec![b"Acme".as_slice()]);
     assert_eq!(s[1].kind, 127);
 }
+
+#[test]
+fn two_populated_sockets_are_summed() {
+    let socket = |h: u16| {
+        StructBuilder::new(4, h, 0x30)
+            .string(0x04, "LGA4677")
+            .u16(0x14, 3800)
+            .u8(0x18, 0x41)
+            .u8(0x23, 32)
+            .u8(0x25, 64)
+            .build()
+    };
+    let empty = StructBuilder::new(4, 0x0006, 0x30)
+        .string(0x04, "LGA4677")
+        .u8(0x18, 0x00)
+        .build();
+    let d = decode_table(&[socket(0x0004), socket(0x0005), empty]);
+    assert_eq!(d.cpu_sockets, Some(2));
+    assert_eq!(d.cpu_cores, Some(64));
+    assert_eq!(d.cpu_threads, Some(128));
+    assert_eq!(d.cpu_socket.as_deref(), Some("LGA4677"));
+}
