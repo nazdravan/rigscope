@@ -69,7 +69,11 @@ impl App {
         let spec = self
             .spec(id)
             .ok_or_else(|| EngineError::UnknownCommand(id.to_string()))?;
-        (spec.enabled)(&self.session).map_err(EngineError::Disabled)?;
+        if let Err(reason) = (spec.enabled)(&self.session) {
+            let err = EngineError::Disabled(reason);
+            self.session.status = Some(err.to_string());
+            return Err(err);
+        }
 
         let saved = (
             self.session.snapshot.clone(),
