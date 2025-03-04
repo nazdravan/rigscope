@@ -7,6 +7,8 @@ pub struct CpuinfoSummary {
     pub logical: u32,
     /// Unique `(physical id, core id)` pairs; `None` when the kernel does not report them (ARM).
     pub physical_cores: Option<u32>,
+    /// Distinct `physical id` values (CPU packages / sockets).
+    pub packages: Option<u32>,
     pub microcode: Option<String>,
     pub flags: Vec<String>,
     /// `(processor number, cpu MHz)` for entries that report a frequency.
@@ -71,6 +73,10 @@ pub fn parse_cpuinfo(text: &str) -> CpuinfoSummary {
     }
     if saw_topology {
         out.physical_cores = u32::try_from(cores.len()).ok();
+        let mut packages: Vec<&String> = cores.iter().map(|(p, _)| p).collect();
+        packages.sort();
+        packages.dedup();
+        out.packages = u32::try_from(packages.len()).ok();
     }
     out
 }
@@ -142,6 +148,16 @@ Features\t: fp asimd evtstrm aes
         assert_eq!(s.physical_cores, None);
         assert_eq!(s.model, None);
         assert!(s.flags.contains(&"asimd".to_string()));
+    }
+
+    #[test]
+    fn two_packages_counted() {
+        let text = "processor\t: 0\nphysical id\t: 0\ncore id\t: 0\n\nprocessor\t: 1\nphysical id\t: 1\ncore id\t: 0\n\n";
+        let s = parse_cpuinfo(text);
+        assert_eq!(s.packages, Some(2));
+        assert_eq!(s.physical_cores, Some(2));
+        assert_eq!(parse_cpuinfo(INTEL).packages, Some(1));
+        assert_eq!(parse_cpuinfo(ARM).packages, None);
     }
 
     #[test]
