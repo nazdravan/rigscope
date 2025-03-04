@@ -171,6 +171,21 @@ fn refresh_live_updates_frequency() {
 }
 
 #[test]
+fn dual_socket_from_cpuinfo() {
+    let mut cpuinfo = String::new();
+    for cpu in 0..4 {
+        cpuinfo += &format!(
+            "processor\t: {cpu}\nmodel name\t: Xeon\nphysical id\t: {}\ncore id\t: {}\n\n",
+            cpu / 2,
+            cpu % 2
+        );
+    }
+    let s = build_snapshot(&MemSource::default().with(paths::CPUINFO, cpuinfo), None, 0);
+    assert_eq!(s.cpu.sockets, Field::Known(2));
+    assert_eq!(s.cpu.physical_cores, Field::Known(4));
+}
+
+#[test]
 fn dmi_dump_roundtrip() {
     let d = DmiDump {
         entry: vec![1, 2, 3],
