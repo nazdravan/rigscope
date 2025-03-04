@@ -17,7 +17,10 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
             &[
                 (tr(lang, Key::Model), fmt::text(lang, &cpu.model)),
                 (tr(lang, Key::Vendor), fmt::text(lang, &cpu.vendor)),
-                (tr(lang, Key::Socket), fmt::text(lang, &cpu.socket)),
+                (
+                    tr(lang, Key::Socket),
+                    rigscope_model::cpu::socket_label(fmt::text(lang, &cpu.socket), &cpu.sockets),
+                ),
                 (tr(lang, Key::CoresThreads), format!("{cores} / {threads}")),
                 (
                     tr(lang, Key::BaseClock),
