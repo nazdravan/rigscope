@@ -59,6 +59,10 @@ fn undo_with_empty_history_is_disabled() {
         a.run("snapshot.undo", json!({})),
         Err(EngineError::Disabled(_))
     ));
+    assert_eq!(
+        a.session.status.as_deref(),
+        Some("command not available: nothing to undo")
+    );
 }
 
 #[test]
