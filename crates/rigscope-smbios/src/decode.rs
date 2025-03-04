@@ -15,6 +15,8 @@ pub struct Decoded {
     pub cpu_max_mhz: Option<u32>,
     pub cpu_cores: Option<u32>,
     pub cpu_threads: Option<u32>,
+    /// Populated processor sockets.
+    pub cpu_sockets: Option<u32>,
 }
 
 const KIND_BIOS: u8 = 0;
@@ -54,11 +56,9 @@ pub fn decode(entry: &[u8], table: &[u8]) -> Result<Decoded, SmbiosError> {
                 out.board.version = Field::from_option(s.string_at(0x06));
             }
             // Status byte 0x18 bit 6: socket populated. Skip empty sockets.
-            KIND_PROCESSOR
-                if !processor_seen && u8_at(s.formatted, 0x18).is_some_and(|st| st & 0x40 != 0) =>
-            {
+            KIND_PROCESSOR if u8_at(s.formatted, 0x18).is_some_and(|st| st & 0x40 != 0) => {
+                decode_processor(s, &mut out, processor_seen);
                 processor_seen = true;
-                decode_processor(s, &mut out);
             }
             KIND_MEMORY_ARRAY if u8_at(s.formatted, 0x05) == Some(USE_SYSTEM_MEMORY) => {
                 array_handles.push(s.handle);
@@ -82,11 +82,20 @@ pub fn decode(entry: &[u8], table: &[u8]) -> Result<Decoded, SmbiosError> {
     Ok(out)
 }
 
-fn decode_processor(s: &Structure<'_>, out: &mut Decoded) {
-    out.cpu_socket = s.string_at(0x04);
-    out.cpu_max_mhz = u16_at(s.formatted, 0x14).filter(|v| *v != 0).map(u32::from);
-    out.cpu_cores = count(s, 0x23, 0x2A);
-    out.cpu_threads = count(s, 0x25, 0x2E);
+/// Populated sockets add up: cores and threads are summed, the socket name and max clock are
+/// taken from the first one.
+fn decode_processor(s: &Structure<'_>, out: &mut Decoded, more: bool) {
+    let add = |acc: Option<u32>, v: Option<u32>| match (acc, v) {
+        (Some(a), Some(b)) => Some(a.saturating_add(b)),
+        (a, b) => a.or(b),
+    };
+    if !more {
+        out.cpu_socket = s.string_at(0x04);
+        out.cpu_max_mhz = u16_at(s.formatted, 0x14).filter(|v| *v != 0).map(u32::from);
+    }
+    out.cpu_cores = add(out.cpu_cores, count(s, 0x23, 0x2A));
+    out.cpu_threads = add(out.cpu_threads, count(s, 0x25, 0x2E));
+    out.cpu_sockets = Some(out.cpu_sockets.unwrap_or(0).saturating_add(1));
 }
 
 /// Core/thread count: byte field, or the 2-byte field when the byte is 0xFF. 0 = unknown.
