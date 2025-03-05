@@ -29,12 +29,18 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
                     (tr(lang, Key::Model), fmt::text(lang, &n.device_name)),
                     (tr(lang, Key::Driver), fmt::text(lang, &n.driver)),
                     (tr(lang, Key::Mac), fmt::text(lang, &n.mac)),
-                    (tr(lang, Key::State), fmt::text(lang, &n.state)),
+                    (
+                        tr(lang, Key::State),
+                        fmt::field(lang, &n.state, |v| crate::i18n::kernel_value(lang, v)),
+                    ),
                     (
                         tr(lang, Key::Speed),
                         fmt::field(lang, &n.speed_mbps, |v| rigscope_model::format_speed(*v)),
                     ),
-                    (tr(lang, Key::Duplex), fmt::text(lang, &n.duplex)),
+                    (
+                        tr(lang, Key::Duplex),
+                        fmt::field(lang, &n.duplex, |v| crate::i18n::kernel_value(lang, v)),
+                    ),
                     (
                         tr(lang, Key::Mtu),
                         fmt::field(lang, &n.mtu, |v| v.to_string()),
