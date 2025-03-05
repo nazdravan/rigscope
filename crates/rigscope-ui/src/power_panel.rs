@@ -47,7 +47,10 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
                         tr(lang, Key::Charge),
                         fmt::field(lang, &b.charge_percent, |c| format!("{c} %")),
                     ),
-                    (tr(lang, Key::Status), fmt::text(lang, &b.status)),
+                    (
+                        tr(lang, Key::Status),
+                        fmt::field(lang, &b.status, |v| crate::i18n::kernel_value(lang, v)),
+                    ),
                     (tr(lang, Key::OnMains), on_mains),
                     (
                         tr(lang, Key::Cycles),
