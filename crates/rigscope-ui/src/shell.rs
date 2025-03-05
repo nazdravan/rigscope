@@ -182,7 +182,7 @@ fn status_bar(ui: &mut egui::Ui, app: &App, actions: &mut Actions, lang: Languag
         }
         if let Some(status) = &app.session.status {
             ui.separator();
-            ui.label(status.as_str());
+            ui.label(crate::i18n::status(lang, status));
         }
     });
 }
