@@ -83,9 +83,12 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
 
     if !cpu.flags.is_empty() {
         card(ui, tr(lang, Key::Flags), |ui| {
-            egui::CollapsingHeader::new(format!("{} flags", cpu.flags.len())).show(ui, |ui| {
-                ui.label(cpu.flags.join(" "));
-            });
+            egui::CollapsingHeader::new(crate::i18n::flag_count(lang, cpu.flags.len())).show(
+                ui,
+                |ui| {
+                    ui.label(cpu.flags.join(" "));
+                },
+            );
         });
     }
 }
