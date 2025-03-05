@@ -384,3 +384,94 @@ pub fn hidden_virtual(lang: Language, n: u32) -> String {
         (Language::Ro, n) => format!("{n} interfețe virtuale nelistate"),
     }
 }
+
+/// Enumerated values the kernel writes in English (battery status, link state, duplex).
+pub fn kernel_value(lang: Language, value: &str) -> String {
+    let ro = match value {
+        "Charging" => "Se încarcă",
+        "Discharging" => "Se descarcă",
+        "Full" => "Încărcată complet",
+        "Not charging" => "Nu se încarcă",
+        "up" => "activă",
+        "down" => "inactivă",
+        "dormant" => "în așteptare",
+        "lowerlayerdown" => "fără legătură fizică",
+        "full" => "complet",
+        "half" => "semi",
+        other => other,
+    };
+    match lang {
+        Language::En => value.to_string(),
+        Language::Ro => ro.to_string(),
+    }
+}
+
+/// "10 flags" / "10 extensii".
+pub fn flag_count(lang: Language, n: usize) -> String {
+    match lang {
+        Language::En => format!("{n} flags"),
+        Language::Ro => format!("{n} extensii"),
+    }
+}
+
+/// Status-bar messages come from the engine in English; translate the known shapes.
+pub fn status(lang: Language, msg: &str) -> String {
+    if lang == Language::En {
+        return msg.to_string();
+    }
+    const PREFIXES: &[(&str, &str)] = &[
+        ("command not available: ", "comandă indisponibilă: "),
+        ("bad parameters: ", "parametri greșiți: "),
+        ("unknown command: ", "comandă necunoscută: "),
+        ("copied: ", "copiat: "),
+        ("saved ", "salvat "),
+        ("opened ", "deschis "),
+        ("clipboard: ", "clipboard: "),
+    ];
+    const WHOLE: &[(&str, &str)] = &[
+        ("report copied", "raport copiat"),
+        ("waiting for authentication…", "se așteaptă autentificarea…"),
+        ("cancelled", "anulat"),
+        (
+            "not authorized or pkexec not available",
+            "neautorizat sau pkexec lipsește",
+        ),
+        (
+            "timed out waiting for authentication",
+            "timpul de autentificare a expirat",
+        ),
+        (
+            "internal error; the previous state was restored",
+            "eroare internă; starea anterioară a fost restaurată",
+        ),
+        ("nothing to undo", "nimic de anulat"),
+        (
+            "the full DMI table is already loaded",
+            "tabela DMI completă e deja încărcată",
+        ),
+        (
+            "already waiting for authentication",
+            "se așteaptă deja autentificarea",
+        ),
+        (
+            "elevated reading needs Linux with pkexec",
+            "citirea cu drepturi ridicate cere Linux cu pkexec",
+        ),
+        ("no memory slot data", "nu există date despre sloturi"),
+    ];
+    let whole = |m: &str| {
+        WHOLE
+            .iter()
+            .find(|(en, _)| *en == m)
+            .map(|(_, ro)| (*ro).to_string())
+    };
+    if let Some(t) = whole(msg) {
+        return t;
+    }
+    for (en, ro) in PREFIXES {
+        if let Some(rest) = msg.strip_prefix(en) {
+            return format!("{ro}{}", whole(rest).unwrap_or_else(|| rest.to_string()));
+        }
+    }
+    msg.to_string()
+}
