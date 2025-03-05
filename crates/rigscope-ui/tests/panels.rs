@@ -290,3 +290,33 @@ fn desktop_battery_panel_says_none() {
     assert!(has(&h, "Baterie"));
     assert!(has(&h, "Nu există baterie"));
 }
+
+fn ro(fixture: &str, section: &str) -> Harness<'static, App> {
+    harness(FakeEnv::fixture(fixture), |a| {
+        a.run("view.language", json!({"id": "ro"})).unwrap();
+        a.run("view.section", json!({"id": section})).unwrap();
+    })
+}
+
+#[test]
+fn kernel_values_are_translated_in_romanian() {
+    let bat = ro("laptop-ddr5", "battery");
+    assert!(has(&bat, "Se descarcă"));
+    assert!(!has(&bat, "Discharging"));
+    let net = ro("desktop-ddr4", "network");
+    assert!(has(&net, "activă"));
+    assert!(has(&net, "complet"));
+    let cpu = ro("desktop-ddr4", "cpu");
+    assert!(has(&cpu, "10 extensii"));
+}
+
+#[test]
+fn status_messages_are_translated_in_romanian() {
+    let mut h = ro("desktop-ddr4", "memory");
+    h.state_mut().run("memory.copy_compat", json!({})).unwrap();
+    h.run();
+    assert!(has(&h, "copiat: DDR4 DIMM 2666 MT/s 32GB"));
+    let _ = h.state_mut().run("snapshot.undo", json!({}));
+    h.run();
+    assert!(has(&h, "comandă indisponibilă: nimic de anulat"));
+}
