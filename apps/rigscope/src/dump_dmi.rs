@@ -24,9 +24,15 @@ pub fn interpret(code: Option<i32>, stdout: Vec<u8>, stderr: &str) -> Result<Vec
         // pkexec: 126 = the user dismissed the authentication dialog.
         Some(126) => Err(EngineError::Io("cancelled".into())),
         // pkexec: 127 = not authorized, or pkexec itself is missing (shell convention).
-        Some(127) => Err(EngineError::Io(
-            "not authorized or pkexec not available".into(),
-        )),
+        Some(127) => {
+            let base = "not authorized or pkexec not available";
+            let detail = stderr.trim();
+            Err(EngineError::Io(if detail.is_empty() {
+                base.into()
+            } else {
+                format!("{base}: {detail}")
+            }))
+        }
         None => Err(EngineError::Io("helper was killed".into())),
         Some(code) => {
             let msg = stderr.trim();
@@ -64,7 +70,7 @@ pub fn run_helper() -> Result<Vec<u8>, EngineError> {
         std::thread::spawn(move || {
             let mut buf = Vec::new();
             if let Some(mut p) = pipe {
-                let _ = p.by_ref().take(256 * 1024).read_to_end(&mut buf);
+                let _ = p.by_ref().take(3 * 1024 * 1024).read_to_end(&mut buf);
             }
             buf
         })
@@ -148,6 +154,16 @@ mod tests {
         assert_eq!(
             interpret(None, vec![], ""),
             Err(EngineError::Io("helper was killed".into()))
+        );
+    }
+
+    #[test]
+    fn interpret_127_keeps_pkexec_message() {
+        assert_eq!(
+            interpret(Some(127), vec![], "Error executing command as another user: No authentication agent found.\n"),
+            Err(EngineError::Io(
+                "not authorized or pkexec not available: Error executing command as another user: No authentication agent found.".into()
+            ))
         );
     }
 
