@@ -120,6 +120,7 @@ fn open(s: &mut Session, params: &Value) -> Result<Value, EngineError> {
     // The opened snapshot describes another moment (or machine): stop live updates and forget
     // this machine's elevated DMI data.
     s.live = false;
+    s.opened = Some(path.clone());
     s.dmi_dump = None;
     s.status = Some(format!("opened {path}"));
     Ok(json!(null))
