@@ -17,6 +17,17 @@ pub struct Args {
 }
 
 impl Args {
+    /// Like [`Args::parse`], from raw OS strings: a non-UTF-8 argument is an error, not a panic.
+    pub fn parse_os(it: impl Iterator<Item = std::ffi::OsString>) -> Result<Self> {
+        let args: Vec<String> = it
+            .map(|a| {
+                a.into_string()
+                    .map_err(|a| anyhow::anyhow!("argument is not valid UTF-8: {a:?}"))
+            })
+            .collect::<Result<_>>()?;
+        Self::parse(args.into_iter())
+    }
+
     pub fn parse(mut it: impl Iterator<Item = String>) -> Result<Self> {
         let mut a = Args::default();
         while let Some(arg) = it.next() {
@@ -75,6 +86,14 @@ mod tests {
     fn dump_dmi_must_be_alone() {
         assert!(parse(&["--dump-dmi"]).unwrap().dump_dmi);
         assert!(parse(&["--dump-dmi", "--fixture", "x"]).is_err());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn non_utf8_argument_is_an_error_not_a_panic() {
+        use std::os::unix::ffi::OsStringExt;
+        let bad = std::ffi::OsString::from_vec(vec![b'-', b'-', 0xff]);
+        assert!(Args::parse_os(vec![bad].into_iter()).is_err());
     }
 
     #[test]
