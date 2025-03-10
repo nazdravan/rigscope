@@ -35,6 +35,7 @@ impl App {
                 status: None,
                 dmi_dump: None,
                 elevating: false,
+                opened: None,
                 env,
             },
             registry: crate::commands::builtin(),
