@@ -14,7 +14,7 @@ use serde_json::json;
 const DEMO_FIXTURE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/desktop-ddr4");
 
 fn main() -> Result<()> {
-    let args = args::Args::parse(std::env::args().skip(1))?;
+    let args = args::Args::parse_os(std::env::args_os().skip(1))?;
     if args.dump_dmi {
         return dump_dmi_main();
     }
