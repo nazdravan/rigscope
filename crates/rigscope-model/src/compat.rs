@@ -45,6 +45,9 @@ pub fn compat_summary(m: &MemoryInfo) -> Option<CompatLine> {
             match &slot.module {
                 SlotState::Empty => free = free.saturating_add(1),
                 SlotState::Unknown => {}
+                // Soldered memory (form factor other than DIMM/SO-DIMM) can't be bought or swapped.
+                SlotState::Installed(module)
+                    if matches!(module.form_factor.known(), Some(FormFactor::Other(_))) => {}
                 SlotState::Installed(module) => {
                     if let Some(t) = module.mem_type.known() {
                         if !types.contains(t) {
@@ -208,6 +211,25 @@ mod tests {
         assert!(c.mixed_types);
         assert_eq!(c.mem_type, None);
         assert_eq!(c.to_search_text(), "mixed DDR4/DDR5 DIMM 4800 MT/s 16GB");
+    }
+
+    #[test]
+    fn soldered_memory_does_not_spoil_the_socketed_line() {
+        let m = MemoryInfo {
+            os_total_bytes: Field::Unknown,
+            arrays: vec![array(
+                64 * GIB,
+                vec![
+                    module(MemType::Lpddr5, FormFactor::Other(0x0B), 6400),
+                    module(MemType::Ddr5, FormFactor::SoDimm, 5600),
+                ],
+            )],
+        };
+        let c = compat_summary(&m).expect("compat");
+        assert_eq!(c.mem_type, Some(MemType::Ddr5));
+        assert!(!c.mixed_types);
+        assert_eq!(c.form_factor, Some(FormFactor::SoDimm));
+        assert_eq!(c.max_mts, Some(5600));
     }
 
     #[test]
