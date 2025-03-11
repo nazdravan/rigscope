@@ -37,6 +37,8 @@ pub struct Session {
     pub status: Option<String>,
     /// DMI dump from the elevated helper, reused by refresh so slot details stay.
     pub dmi_dump: Option<DmiDump>,
+    /// Path of the snapshot file being shown instead of this computer.
+    pub opened: Option<String>,
     /// The privileged helper is running (waiting for authentication).
     pub elevating: bool,
     pub env: Box<dyn Env>,
