@@ -28,7 +28,12 @@ pub fn specs() -> Vec<CommandSpec> {
             menu: "View",
             shortcut: Some("Ctrl+L"),
             params_doc: "{}",
-            enabled: always,
+            enabled: |s| match &s.opened {
+                Some(path) => Err(format!(
+                    "showing {path}; refresh to return to this computer"
+                )),
+                None => Ok(()),
+            },
             run: |s, _| {
                 s.live = !s.live;
                 Ok(json!({ "live": s.live }))
@@ -68,7 +73,8 @@ fn language(s: &mut Session, params: &Value) -> Result<Value, EngineError> {
 }
 
 fn tick(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
-    if s.live {
+    // An opened snapshot is another moment or machine: never mix in local frequencies.
+    if s.live && s.opened.is_none() {
         rigscope_probe::refresh_live(s.env.source(), &mut s.snapshot.cpu);
     }
     Ok(json!(null))
