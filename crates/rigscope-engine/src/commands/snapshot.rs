@@ -42,6 +42,8 @@ pub fn specs() -> Vec<CommandSpec> {
                     Err("already waiting for authentication".into())
                 } else if s.snapshot.dmi_source == DmiSource::FullTable {
                     Err("the full DMI table is already loaded".into())
+                } else if matches!(s.snapshot.dmi_source, DmiSource::NoTable | DmiSource::None) {
+                    Err("this machine has no DMI table".into())
                 } else {
                     Ok(())
                 }
@@ -91,6 +93,7 @@ fn refresh(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
     let next =
         rigscope_probe::build_snapshot(s.env.source(), s.dmi_dump.as_ref(), s.env.now_unix());
     s.replace_snapshot(next);
+    s.opened = None;
     s.status = None;
     Ok(json!(null))
 }
@@ -98,6 +101,9 @@ fn refresh(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
 fn undo(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
     if let Some(prev) = s.history.pop() {
         s.snapshot = prev;
+        if s.snapshot.dmi_source != DmiSource::FullTable {
+            s.dmi_dump = None;
+        }
     }
     Ok(json!(null))
 }
