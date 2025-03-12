@@ -1,7 +1,7 @@
 use crate::ProbeError;
 
 /// Largest entry point or table accepted in a dump.
-pub const MAX_DMI_PART: usize = 64 * 1024;
+pub const MAX_DMI_PART: usize = 1024 * 1024;
 
 /// The two DMI files as read by the privileged helper.
 #[derive(Debug, Clone, PartialEq, Eq)]
