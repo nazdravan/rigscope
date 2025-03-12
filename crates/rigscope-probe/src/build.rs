@@ -65,7 +65,8 @@ pub fn build_snapshot(src: &dyn Source, dmi: Option<&DmiDump>, now_unix: u64) ->
 
     let dmi_source = match (&dmi, has_sysfs_id) {
         (Dmi::Full(_), _) => DmiSource::FullTable,
-        (_, true) | (Dmi::Denied, false) => DmiSource::SysfsIdOnly,
+        (Dmi::Denied, _) => DmiSource::SysfsIdOnly,
+        (Dmi::Missing, true) => DmiSource::NoTable,
         (Dmi::Missing, false) => DmiSource::None,
     };
 
