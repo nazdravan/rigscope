@@ -49,6 +49,9 @@ pub enum DmiSource {
     None,
     /// Only the world-readable `/sys/class/dmi/id/*` fields.
     SysfsIdOnly,
+    /// The `/sys/class/dmi/id` fields exist but the SMBIOS table is missing or unreadable as
+    /// SMBIOS, so elevating cannot help.
+    NoTable,
     /// The full SMBIOS table (root or elevated helper).
     FullTable,
 }
