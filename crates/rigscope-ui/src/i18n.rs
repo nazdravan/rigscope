@@ -427,6 +427,7 @@ pub fn status(lang: Language, msg: &str) -> String {
         ("saved ", "salvat "),
         ("opened ", "deschis "),
         ("clipboard: ", "clipboard: "),
+        ("showing ", "se afișează "),
     ];
     const WHOLE: &[(&str, &str)] = &[
         ("report copied", "raport copiat"),
@@ -458,6 +459,10 @@ pub fn status(lang: Language, msg: &str) -> String {
             "citirea cu drepturi ridicate cere Linux cu pkexec",
         ),
         ("no memory slot data", "nu există date despre sloturi"),
+        (
+            "this machine has no DMI table",
+            "acest calculator nu are tabelă DMI",
+        ),
     ];
     let whole = |m: &str| {
         WHOLE
@@ -468,10 +473,36 @@ pub fn status(lang: Language, msg: &str) -> String {
     if let Some(t) = whole(msg) {
         return t;
     }
+    let msg = &msg.replace(
+        "; refresh to return to this computer",
+        "; reîmprospătează ca să revii la acest calculator",
+    );
     for (en, ro) in PREFIXES {
         if let Some(rest) = msg.strip_prefix(en) {
-            return format!("{ro}{}", whole(rest).unwrap_or_else(|| rest.to_string()));
+            return format!("{ro}{}", status(lang, rest));
         }
     }
     msg.to_string()
+}
+
+/// Tooltip for a value that is missing: why, and what can be done.
+pub fn missing_hint(lang: Language, value: &str) -> Option<&'static str> {
+    if value == tr(lang, Key::Unknown) {
+        Some(match lang {
+            Language::En => "The firmware or the kernel did not report this value.",
+            Language::Ro => "Firmware-ul sau kernelul nu a raportat această valoare.",
+        })
+    } else if value == tr(lang, Key::NeedsRoot) {
+        Some(match lang {
+            Language::En => "Readable only by root: use Read with elevated rights in the Memory section.",
+            Language::Ro => "Poate fi citit doar de root: folosește Citește cu drepturi ridicate în secțiunea Memorie.",
+        })
+    } else {
+        None
+    }
+}
+
+/// [`missing_hint`] for whichever UI language the value is in.
+pub fn missing_hint_any(value: &str) -> Option<&'static str> {
+    missing_hint(Language::En, value).or_else(|| missing_hint(Language::Ro, value))
 }
