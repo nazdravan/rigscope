@@ -63,6 +63,9 @@ pub fn mask_mac(mac: &str) -> String {
 /// Copy of the snapshot with every serial number masked.
 pub fn masked(s: &Snapshot) -> Snapshot {
     let mut out = s.clone();
+    if let Field::Known(host) = &out.system.hostname {
+        out.system.hostname = Field::Known(mask(host));
+    }
     for iface in &mut out.net.interfaces {
         if let Field::Known(mac) = &iface.mac {
             iface.mac = Field::Known(mask_mac(mac));
@@ -188,6 +191,7 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
             DmiSource::SysfsIdOnly => {
                 "Slot details: need root (run rigscope with elevated rights)".into()
             }
+            DmiSource::NoTable => "Slot details: this machine has no DMI table".into(),
             _ => "Slot details: no DMI table".into(),
         });
     }
@@ -525,6 +529,14 @@ mod tests {
         assert!(report_text(&s, true).contains("Socket: 2 × LGA4677"));
         s.cpu.sockets = Field::Known(1);
         assert!(report_text(&s, true).contains("Socket: LGA4677\n"));
+    }
+
+    #[test]
+    fn masked_report_hides_hostname() {
+        let mut s = Snapshot::default();
+        s.system.hostname = Field::Known("nicu-desktop".into());
+        assert!(!report_text(&s, true).contains("nicu-desktop"));
+        assert!(report_text(&s, false).contains("nicu-desktop"));
     }
 
     #[test]
