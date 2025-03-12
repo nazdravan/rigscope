@@ -17,8 +17,8 @@ pub use entry::{parse_entry_point, EntryPoint};
 pub use error::SmbiosError;
 pub use table::{structures, Structure};
 
-/// Largest table accepted (SMBIOS 2.x caps at 65535 bytes).
-pub const MAX_TABLE_LEN: usize = 64 * 1024;
+/// Largest table accepted. SMBIOS 2.x caps at 65535 bytes; 3.x tables on big servers can be larger.
+pub const MAX_TABLE_LEN: usize = 1024 * 1024;
 /// Largest number of structures decoded.
 pub const MAX_STRUCTURES: usize = 1024;
 /// Longest string kept, in bytes.
