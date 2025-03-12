@@ -375,3 +375,11 @@ fn two_populated_sockets_are_summed() {
     assert_eq!(d.cpu_threads, Some(128));
     assert_eq!(d.cpu_socket.as_deref(), Some("LGA4677"));
 }
+
+#[test]
+fn tables_above_64_kib_are_accepted() {
+    let mut t = table(&[memory_array(0x1000, 8 * GIB, 1)]);
+    t.resize(200 * 1024, 0);
+    let d = decode(&entry_point_3(t.len() as u32), &t).expect("big table decodes");
+    assert_eq!(d.memory.arrays.len(), 1);
+}
