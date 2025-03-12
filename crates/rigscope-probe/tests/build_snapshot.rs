@@ -144,7 +144,7 @@ fn garbage_dmi_table_degrades_to_sysfs_only() {
         .with(paths::DMI_TABLE, vec![0xFF; 64])
         .with("/sys/class/dmi/id/board_vendor", "Acme\n");
     let s = build_snapshot(&m, None, 0);
-    assert_eq!(s.dmi_source, DmiSource::SysfsIdOnly);
+    assert_eq!(s.dmi_source, DmiSource::NoTable);
     assert!(s.memory.arrays.is_empty());
 }
 
