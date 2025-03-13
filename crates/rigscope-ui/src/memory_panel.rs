@@ -35,6 +35,11 @@ pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
 
     match snap.dmi_source {
         DmiSource::FullTable => {}
+        DmiSource::NoTable => {
+            card(ui, tr(lang, Key::SlotDetails), |ui| {
+                ui.label(tr(lang, Key::NoDmi));
+            });
+        }
         DmiSource::SysfsIdOnly => {
             card(ui, tr(lang, Key::SlotDetails), |ui| {
                 ui.label(tr(lang, Key::NeedsRootBanner));
