@@ -32,7 +32,10 @@ pub fn kv_grid(ui: &mut egui::Ui, id: &str, rows: &[(&str, String)]) {
         .show(ui, |ui| {
             for (k, v) in rows {
                 ui.label(egui::RichText::new(*k).strong());
-                ui.label(v.as_str());
+                let resp = ui.label(v.as_str());
+                if let Some(hint) = crate::i18n::missing_hint_any(v) {
+                    resp.on_hover_text(hint);
+                }
                 ui.end_row();
             }
         });
