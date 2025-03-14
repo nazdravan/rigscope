@@ -29,7 +29,8 @@ pub enum Language {
 
 pub struct Session {
     pub snapshot: Snapshot,
-    pub history: Vec<Snapshot>,
+    /// Shared, so the panic guard can copy the history for the price of the pointers.
+    pub history: Vec<std::sync::Arc<Snapshot>>,
     pub section: SectionId,
     pub live: bool,
     pub language: Language,
@@ -48,7 +49,7 @@ impl Session {
     /// Replaces the snapshot, keeping the old one for undo.
     pub fn replace_snapshot(&mut self, next: Snapshot) {
         let prev = std::mem::replace(&mut self.snapshot, next);
-        self.history.push(prev);
+        self.history.push(std::sync::Arc::new(prev));
         if self.history.len() > HISTORY_LIMIT {
             self.history.remove(0);
         }
