@@ -100,7 +100,7 @@ fn refresh(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
 
 fn undo(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
     if let Some(prev) = s.history.pop() {
-        s.snapshot = prev;
+        s.snapshot = std::sync::Arc::unwrap_or_clone(prev);
         if s.snapshot.dmi_source != DmiSource::FullTable {
             s.dmi_dump = None;
         }
