@@ -295,6 +295,45 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
         ));
     }
 
+    out.push("\n== Sensors ==".into());
+    if s.sensors.chips.is_empty() {
+        out.push("No sensors found".into());
+    }
+    for chip in &s.sensors.chips {
+        let mut parts: Vec<String> = chip
+            .temps
+            .iter()
+            .map(|t| {
+                let mut limits = Vec::new();
+                if let Some(m) = t.max_mc.known() {
+                    limits.push(format!("max {}", crate::format_celsius(*m)));
+                }
+                if let Some(c) = t.crit_mc.known() {
+                    limits.push(format!("critical {}", crate::format_celsius(*c)));
+                }
+                let limits = if limits.is_empty() {
+                    String::new()
+                } else {
+                    format!(" ({})", limits.join(", "))
+                };
+                format!(
+                    "{} {}{limits}",
+                    t.label,
+                    show(&t.millicelsius, |v| crate::format_celsius(*v))
+                )
+            })
+            .collect();
+        parts.extend(
+            chip.fans
+                .iter()
+                .map(|f| format!("{} {}", f.label, show(&f.rpm, |r| format!("{r} RPM")))),
+        );
+        let kind = crate::chip_kind(&chip.name)
+            .map(|k| format!(" ({k})"))
+            .unwrap_or_default();
+        out.push(format!("{}{kind}: {}", chip.name, parts.join("; ")));
+    }
+
     out.push("\n== Processor ==".into());
     out.push(format!("Model: {}", text(&c.model)));
     out.push(format!("Vendor: {}", text(&c.vendor)));
@@ -537,6 +576,30 @@ mod tests {
         s.system.hostname = Field::Known("nicu-desktop".into());
         assert!(!report_text(&s, true).contains("nicu-desktop"));
         assert!(report_text(&s, false).contains("nicu-desktop"));
+    }
+
+    #[test]
+    fn report_lists_sensors() {
+        let mut s = Snapshot::default();
+        s.sensors.chips.push(SensorChip {
+            hwmon: "hwmon0".into(),
+            name: "coretemp".into(),
+            temps: vec![Temperature {
+                index: 1,
+                label: "Package id 0".into(),
+                millicelsius: Field::Known(45_000),
+                max_mc: Field::Known(80_000),
+                crit_mc: Field::Known(100_000),
+            }],
+            fans: vec![Fan {
+                index: 1,
+                label: "fan1".into(),
+                rpm: Field::Known(1180),
+            }],
+        });
+        let r = report_text(&s, true);
+        assert!(r.contains("== Sensors =="), "{r}");
+        assert!(r.contains("coretemp (CPU (Intel)): Package id 0 45.0 °C (max 80.0 °C, critical 100.0 °C); fan1 1180 RPM"), "{r}");
     }
 
     #[test]
