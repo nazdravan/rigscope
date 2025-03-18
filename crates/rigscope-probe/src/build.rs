@@ -98,6 +98,7 @@ pub fn build_snapshot(src: &dyn Source, dmi: Option<&DmiDump>, now_unix: u64) ->
         gpu: crate::read_gpus(src),
         net: crate::read_net(src),
         power: crate::read_power(src),
+        sensors: crate::read_sensors(src),
         dmi_source,
         ..Snapshot::default()
     }
