@@ -2,8 +2,8 @@
 
 use crate::i18n::{command_label, tr, Key};
 use crate::{
-    cpu_panel, gpu_panel, memory_panel, net_panel, power_panel, storage_panel, system_panel,
-    Actions,
+    cpu_panel, gpu_panel, memory_panel, net_panel, power_panel, sensors_panel, storage_panel,
+    system_panel, Actions,
 };
 use rigscope_engine::{App, Language, SectionId};
 use serde_json::json;
@@ -94,6 +94,7 @@ pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
                 (SectionId::Gpu, Key::Graphics),
                 (SectionId::Network, Key::Network),
                 (SectionId::Battery, Key::Battery),
+                (SectionId::Sensors, Key::Sensors),
                 (SectionId::System, Key::System),
             ] {
                 let selected = app.session.section == id;
@@ -116,6 +117,7 @@ pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
                 SectionId::Gpu => gpu_panel::show(ui, app),
                 SectionId::Network => net_panel::show(ui, app),
                 SectionId::Battery => power_panel::show(ui, app),
+                SectionId::Sensors => sensors_panel::show(ui, app),
                 SectionId::System => system_panel::show(ui, app),
             });
     });
