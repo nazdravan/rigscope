@@ -102,6 +102,9 @@ pub enum Key {
     Cycles,
     NoBattery,
     Derived,
+    Sensors,
+    Fans,
+    NoSensors,
 }
 
 pub fn tr(lang: Language, key: Key) -> &'static str {
@@ -206,6 +209,9 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Cycles => "Charge cycles",
             NoBattery => "No battery: this machine runs from mains power only.",
             Derived => "derived",
+            Sensors => "Sensors",
+            Fans => "Fans",
+            NoSensors => "No sensors found in /sys/class/hwmon.",
         },
         Language::Ro => match key {
             Memory => "Memorie",
@@ -306,6 +312,9 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Cycles => "Cicluri de încărcare",
             NoBattery => "Nu există baterie: calculatorul funcționează doar de la rețea.",
             Derived => "derivat",
+            Sensors => "Senzori",
+            Fans => "Ventilatoare",
+            NoSensors => "Nu s-au găsit senzori în /sys/class/hwmon.",
         },
     }
 }
