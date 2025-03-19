@@ -8,6 +8,7 @@ pub mod i18n;
 mod memory_panel;
 mod net_panel;
 mod power_panel;
+mod sensors_panel;
 mod shell;
 mod storage_panel;
 mod system_panel;
