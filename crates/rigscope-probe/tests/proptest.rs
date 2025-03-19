@@ -81,4 +81,16 @@ proptest! {
             prop_assert!(b.charge_percent.known().is_none_or(|c| *c <= 100));
         }
     }
+
+    #[test]
+    fn read_sensors_never_panics(name in ".{0,12}", t in ".{0,14}", f in ".{0,10}", label in ".{0,20}", n in 0u32..200) {
+        let src = MemSource::default()
+            .with("/sys/class/hwmon/hwmon0/name", name)
+            .with(&format!("/sys/class/hwmon/hwmon0/temp{n}_input"), t)
+            .with(&format!("/sys/class/hwmon/hwmon0/temp{n}_label"), label)
+            .with(&format!("/sys/class/hwmon/hwmon0/fan{n}_input"), f);
+        let mut s = read_sensors(&src);
+        refresh_sensors(&src, &mut s);
+        prop_assert!(s.chips.len() <= 1);
+    }
 }
