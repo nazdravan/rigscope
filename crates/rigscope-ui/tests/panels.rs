@@ -320,3 +320,23 @@ fn status_messages_are_translated_in_romanian() {
     h.run();
     assert!(has(&h, "comandă indisponibilă: nimic de anulat"));
 }
+
+#[test]
+fn sensors_panel_shows_temperatures_and_fans() {
+    let h = harness(FakeEnv::fixture("desktop-ddr4"), |a| {
+        a.run("view.section", json!({"id": "sensors"})).unwrap();
+    });
+    assert!(has(&h, "CPU (Intel)"));
+    assert!(has(&h, "Package id 0"));
+    assert!(has(&h, "45.0 °C"));
+    assert!(has(&h, "max 80.0 °C"));
+    assert!(has(&h, "1180 RPM"));
+    assert!(has(&h, "NVMe disk"));
+}
+
+#[test]
+fn sensors_panel_romanian_and_empty() {
+    let h = ro("minimal-vm", "sensors");
+    assert!(has(&h, "Senzori"));
+    assert!(has(&h, "Nu s-au găsit senzori"));
+}
