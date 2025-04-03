@@ -33,7 +33,11 @@ fn elevate(a: &mut App) -> Result<serde_json::Value, EngineError> {
 
 fn desktop_dump() -> Vec<u8> {
     let (entry, table) = rigscope_smbios::testutil::fixture_tables("desktop-ddr4").unwrap();
-    encode_dmi_dump(&DmiDump { entry, table })
+    encode_dmi_dump(&DmiDump {
+        entry,
+        table,
+        smart: Vec::new(),
+    })
 }
 
 #[test]
@@ -86,6 +90,7 @@ fn elevate_with_undecodable_table_is_error() {
     let dump = encode_dmi_dump(&DmiDump {
         entry: b"nope".to_vec(),
         table: vec![1, 2, 3],
+        smart: Vec::new(),
     });
     env.handle().lock().unwrap().elevate = Some(dump);
     let mut a = App::new(Box::new(env));
@@ -94,12 +99,70 @@ fn elevate_with_undecodable_table_is_error() {
 }
 
 #[test]
-fn elevate_disabled_when_table_already_full() {
-    let mut a = App::new(Box::new(FakeEnv::fixture("desktop-ddr4")));
+fn elevate_disabled_when_table_full_and_no_disk_needs_root() {
+    let (entry, table) = rigscope_smbios::testutil::fixture_tables("desktop-ddr4").unwrap();
+    let m = MemSource::default()
+        .with(paths::DMI_ENTRY, entry)
+        .with(paths::DMI_TABLE, table);
+    let mut a = App::new(Box::new(FakeEnv::mem(m)));
+    assert_eq!(a.session.snapshot.dmi_source, DmiSource::FullTable);
     assert!(matches!(
         a.run("snapshot.elevate", json!({})),
         Err(EngineError::Disabled(_))
     ));
+}
+
+#[test]
+fn elevate_reads_smart_even_when_dmi_is_full() {
+    let env = FakeEnv::fixture("desktop-ddr4");
+    let nvme = std::fs::read(format!(
+        "{}/../../fixtures/smart/nvme-healthy.json",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap();
+    let (entry, table) = rigscope_smbios::testutil::fixture_tables("desktop-ddr4").unwrap();
+    env.handle().lock().unwrap().elevate = Some(encode_dmi_dump(&DmiDump {
+        entry,
+        table,
+        smart: vec![("nvme0n1".into(), nvme)],
+    }));
+    let mut a = App::new(Box::new(env));
+    assert!(
+        a.is_enabled("snapshot.elevate").is_ok(),
+        "disks still need root for SMART"
+    );
+    elevate(&mut a).unwrap();
+    let d = a
+        .session
+        .snapshot
+        .storage
+        .disks
+        .iter()
+        .find(|d| d.name == "nvme0n1")
+        .unwrap();
+    assert_eq!(d.health.known().and_then(|h| h.power_on_hours), Some(4321));
+}
+
+#[test]
+fn elevate_with_smart_only_succeeds_without_a_dmi_table() {
+    let mut src = MemSource::default()
+        .with("/sys/block/nvme0n1/size", "1000\n")
+        .with("/sys/class/dmi/id/board_vendor", "Acme\n");
+    src.denied = vec![paths::DMI_ENTRY.into(), paths::DMI_TABLE.into()];
+    let env = FakeEnv::mem(src);
+    let nvme = std::fs::read(format!(
+        "{}/../../fixtures/smart/nvme-healthy.json",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap();
+    env.handle().lock().unwrap().elevate = Some(encode_dmi_dump(&DmiDump {
+        entry: vec![],
+        table: vec![],
+        smart: vec![("nvme0n1".into(), nvme)],
+    }));
+    let mut a = App::new(Box::new(env));
+    elevate(&mut a).unwrap();
+    assert!(a.session.snapshot.storage.disks[0].health.known().is_some());
 }
 
 #[test]
