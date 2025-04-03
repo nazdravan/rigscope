@@ -4,6 +4,9 @@ use rigscope_engine::{EngineError, Env};
 use rigscope_probe::{FixtureSource, Source};
 use std::io::Read;
 
+/// In a fixture directory, the smartctl JSON the simulated helper returns per disk.
+pub const FIXTURE_SMART_DIR: &str = "/root/smart";
+
 /// Largest file `read_file` accepts.
 pub const MAX_READ: u64 = 4 * 1024 * 1024;
 
@@ -63,13 +66,23 @@ impl Env for RealEnv {
             ));
         }
         let (tx, rx) = std::sync::mpsc::channel();
-        std::thread::spawn(move || {
+        match &self.source {
+            // Fixture mode simulates the helper with the fixture's `root/smart/<disk>.json`.
+            SystemSource::Fixture(f) => {
+                let smart = |name: &str| {
+                    f.read(&format!("{FIXTURE_SMART_DIR}/{name}.json"))
+                        .unwrap_or_default()
+                };
+                let result = crate::dump_dmi::dump(f, &smart).map_err(EngineError::Io);
+                let _ = tx.send(result);
+            }
             #[cfg(target_os = "linux")]
-            let result = crate::dump_dmi::run_helper();
-            #[cfg(not(target_os = "linux"))]
-            let result = Err(EngineError::Io("elevated reading needs Linux".into()));
-            let _ = tx.send(result);
-        });
+            SystemSource::Real(_) => {
+                std::thread::spawn(move || {
+                    let _ = tx.send(crate::dump_dmi::run_helper());
+                });
+            }
+        }
         self.elevation = Some(rx);
         Ok(())
     }
@@ -116,10 +129,10 @@ impl Env for RealEnv {
     }
 
     fn can_elevate(&self) -> bool {
-        match self.source {
+        match &self.source {
             #[cfg(target_os = "linux")]
             SystemSource::Real(_) => true,
-            SystemSource::Fixture(_) => false,
+            SystemSource::Fixture(f) => f.list(FIXTURE_SMART_DIR).is_ok(),
         }
     }
 }
