@@ -25,9 +25,10 @@ pub use memory::{
 pub use net::{format_speed, NetInfo, NetInterface, NetKind};
 pub use power::{format_mwh, Battery, PowerInfo};
 pub use report::{
-    format_bytes, format_decimal_gb, format_disk_size, mask, mask_mac, masked, report_text,
+    format_bytes, format_decimal_gb, format_disk_size, format_written, health_summary, mask,
+    mask_mac, masked, report_text,
 };
 pub use sensors::{chip_kind, format_celsius, Fan, SensorChip, SensorInfo, Temperature};
-pub use storage::{Disk, DiskKind, Interface, StorageInfo};
+pub use storage::{Disk, DiskHealth, DiskKind, Interface, StorageInfo};
 pub use system::{BoardInfo, DmiSource, Snapshot, SystemInfo, SCHEMA_VERSION};
 pub use text::clean_text;
