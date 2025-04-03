@@ -37,6 +37,54 @@ pub fn format_disk_size(n: u64) -> String {
     format!("{} ({})", format_bytes(n), format_decimal_gb(n))
 }
 
+/// Bytes written to a disk, decimal like drive specs: `10.0 TB`, `512 GB`.
+pub fn format_written(n: u64) -> String {
+    if n >= 1_000_000_000_000 {
+        format!("{:.1} TB", n as f64 / 1e12)
+    } else {
+        format_decimal_gb(n)
+    }
+}
+
+/// The SMART facts that are present, in a fixed order.
+pub fn health_summary(h: &crate::DiskHealth) -> Vec<String> {
+    let mut out = Vec::new();
+    match h.passed {
+        Some(true) => out.push("SMART passed".to_string()),
+        Some(false) => out.push("SMART FAILED".to_string()),
+        None => {}
+    }
+    if let Some(t) = h.temperature_c {
+        out.push(format!("{t} °C"));
+    }
+    if let Some(v) = h.power_on_hours {
+        out.push(format!("{v} h powered on"));
+    }
+    if let Some(v) = h.power_cycles {
+        out.push(format!("{v} power cycles"));
+    }
+    if let Some(v) = h.percent_used {
+        out.push(format!("{v} % endurance used"));
+    }
+    if let Some(v) = h.available_spare {
+        out.push(format!("{v} % spare"));
+    }
+    if let Some(v) = h.written_bytes {
+        out.push(format!("{} written", format_written(v)));
+    }
+    for (v, what) in [
+        (h.reallocated_sectors, "reallocated sectors"),
+        (h.pending_sectors, "pending sectors"),
+        (h.uncorrectable_sectors, "uncorrectable sectors"),
+        (h.media_errors, "media errors"),
+    ] {
+        if let Some(n) = v.filter(|n| *n > 0) {
+            out.push(format!("{n} {what}"));
+        }
+    }
+    out
+}
+
 /// Keeps the last 4 characters: `"ABCD1234"` → `"****1234"`; 4 or fewer → `"****"`.
 pub fn mask(serial: &str) -> String {
     let chars: Vec<char> = serial.chars().collect();
@@ -213,6 +261,18 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
             text(&d.firmware),
             if d.removable { ", removable" } else { "" }
         ));
+        match &d.health {
+            Field::Known(h) => {
+                out.push(format!("  health: {}", health_summary(h).join(", ")));
+                for w in h.warnings() {
+                    out.push(format!("  WARNING: {w}"));
+                }
+            }
+            other => out.push(format!(
+                "  health: {}",
+                show(other, |_: &crate::DiskHealth| String::new())
+            )),
+        }
     }
 
     out.push("\n== Graphics ==".into());
@@ -600,6 +660,31 @@ mod tests {
         let r = report_text(&s, true);
         assert!(r.contains("== Sensors =="), "{r}");
         assert!(r.contains("coretemp (CPU (Intel)): Package id 0 45.0 °C (max 80.0 °C, critical 100.0 °C); fan1 1180 RPM"), "{r}");
+    }
+
+    #[test]
+    fn report_shows_disk_health_and_warnings() {
+        let mut s = with_disk();
+        s.storage.disks[0].health = Field::Known(DiskHealth {
+            passed: Some(true),
+            temperature_c: Some(39),
+            power_on_hours: Some(4321),
+            power_cycles: Some(512),
+            percent_used: Some(2),
+            available_spare: Some(100),
+            written_bytes: Some(10_000_000_000_000),
+            reallocated_sectors: Some(8),
+            ..Default::default()
+        });
+        let r = report_text(&s, true);
+        assert!(r.contains("  health: SMART passed, 39 °C, 4321 h powered on, 512 power cycles, 2 % endurance used, 100 % spare, 10.0 TB written, 8 reallocated sectors"), "{r}");
+        assert!(r.contains("  WARNING: reallocated sectors"), "{r}");
+    }
+
+    #[test]
+    fn decimal_tb() {
+        assert_eq!(format_written(10_000_000_000_000), "10.0 TB");
+        assert_eq!(format_written(512_000_000_000), "512 GB");
     }
 
     #[test]
