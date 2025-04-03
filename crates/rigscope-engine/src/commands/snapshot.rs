@@ -34,18 +34,20 @@ pub fn specs() -> Vec<CommandSpec> {
             label_key: "cmd.elevate",
             menu: "File",
             shortcut: None,
-            params_doc: "{} — runs the privileged helper (pkexec) to read the SMBIOS table",
+            params_doc:
+                "{} — runs the privileged helper (pkexec) to read the SMBIOS table and SMART",
             enabled: |s| {
                 if !s.env.can_elevate() {
                     Err("elevated reading needs Linux with pkexec".into())
                 } else if s.elevating {
                     Err("already waiting for authentication".into())
+                } else if s.snapshot.dmi_source == DmiSource::SysfsIdOnly || needs_root_for_smart(s)
+                {
+                    Ok(())
                 } else if s.snapshot.dmi_source == DmiSource::FullTable {
                     Err("the full DMI table is already loaded".into())
-                } else if matches!(s.snapshot.dmi_source, DmiSource::NoTable | DmiSource::None) {
-                    Err("this machine has no DMI table".into())
                 } else {
-                    Ok(())
+                    Err("this machine has no DMI table".into())
                 }
             },
             run: elevate,
@@ -80,8 +82,12 @@ fn elevate_poll(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
     let raw = result?;
     let dump =
         rigscope_probe::decode_dmi_dump(&raw).map_err(|e| EngineError::Probe(e.to_string()))?;
-    rigscope_smbios::decode(&dump.entry, &dump.table)
-        .map_err(|e| EngineError::Probe(e.to_string()))?;
+    // A dump is useful if its DMI table decodes or it carries SMART data.
+    if let Err(e) = rigscope_smbios::decode(&dump.entry, &dump.table) {
+        if dump.smart.is_empty() {
+            return Err(EngineError::Probe(e.to_string()));
+        }
+    }
     let next = rigscope_probe::build_snapshot(s.env.source(), Some(&dump), s.env.now_unix());
     s.dmi_dump = Some(dump);
     s.replace_snapshot(next);
@@ -106,4 +112,12 @@ fn undo(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
         }
     }
     Ok(json!(null))
+}
+
+fn needs_root_for_smart(s: &Session) -> bool {
+    s.snapshot
+        .storage
+        .disks
+        .iter()
+        .any(|d| d.health == rigscope_model::Field::NeedsRoot)
 }
