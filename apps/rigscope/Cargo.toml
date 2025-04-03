@@ -10,6 +10,7 @@ description = "Detailed hardware configuration viewer for Linux"
 anyhow.workspace = true
 eframe.workspace = true
 rigscope-engine.workspace = true
+rigscope-model.workspace = true
 rigscope-probe.workspace = true
 rigscope-ui.workspace = true
 serde_json.workspace = true
