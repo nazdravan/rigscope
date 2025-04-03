@@ -79,7 +79,7 @@ fn default_env() -> (env::RealEnv, bool) {
 /// `--dump-dmi`: the only code that runs as root.
 fn dump_dmi_main() -> Result<()> {
     #[cfg(target_os = "linux")]
-    let result = dump_dmi::dump(&rigscope_probe::FsSource);
+    let result = dump_dmi::dump(&rigscope_probe::FsSource, &dump_dmi::smartctl_json);
     #[cfg(not(target_os = "linux"))]
     let result: std::result::Result<Vec<u8>, String> = Err("--dump-dmi works only on Linux".into());
     match result {
