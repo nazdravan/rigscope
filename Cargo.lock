@@ -2096,6 +2096,7 @@ dependencies = [
  "eframe",
  "image",
  "rigscope-engine",
+ "rigscope-model",
  "rigscope-probe",
  "rigscope-ui",
  "serde_json",
@@ -2131,6 +2132,7 @@ dependencies = [
  "rigscope-model",
  "rigscope-procfs",
  "rigscope-smbios",
+ "serde_json",
  "thiserror 2.0.21",
 ]
 
