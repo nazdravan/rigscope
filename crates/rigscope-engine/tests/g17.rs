@@ -47,7 +47,11 @@ fn undo_after_elevate_forgets_the_dump() {
     src.denied = vec![paths::DMI_ENTRY.into(), paths::DMI_TABLE.into()];
     let env = FakeEnv::mem(src);
     let (entry, table) = rigscope_smbios::testutil::fixture_tables("desktop-ddr4").unwrap();
-    env.handle().lock().unwrap().elevate = Some(encode_dmi_dump(&DmiDump { entry, table }));
+    env.handle().lock().unwrap().elevate = Some(encode_dmi_dump(&DmiDump {
+        entry,
+        table,
+        smart: Vec::new(),
+    }));
     let mut a = App::new(Box::new(env));
     a.run("snapshot.elevate", json!({})).unwrap();
     a.run("snapshot.elevate_poll", json!({})).unwrap();
