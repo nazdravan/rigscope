@@ -93,4 +93,12 @@ proptest! {
         refresh_sensors(&src, &mut s);
         prop_assert!(s.chips.len() <= 1);
     }
+
+    #[test]
+    fn parse_smartctl_never_panics(bytes in proptest::collection::vec(any::<u8>(), 0..512),
+                                   n in any::<i64>(), id in 0u64..300) {
+        let _ = parse_smartctl(&bytes);
+        let doc = format!(r#"{{"smartctl":{{"exit_status":{n}}},"temperature":{{"current":{n}}},"ata_smart_attributes":{{"table":[{{"id":{id},"raw":{{"value":{n}}}}}]}},"nvme_smart_health_information_log":{{"data_units_written":{n},"percentage_used":{n}}}}}"#);
+        let _ = parse_smartctl(doc.as_bytes());
+    }
 }
