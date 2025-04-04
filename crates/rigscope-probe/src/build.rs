@@ -58,7 +58,29 @@ fn read_dmi(src: &dyn Source, dump: Option<&DmiDump>) -> Dmi {
 
 /// Builds a snapshot. `dmi` (from the elevated helper) takes precedence over reading the
 /// DMI table through `src`.
+/// Fills disk health from the helper's smartctl output, matched by disk name.
+fn with_smart(
+    mut storage: rigscope_model::StorageInfo,
+    dump: Option<&DmiDump>,
+) -> rigscope_model::StorageInfo {
+    let Some(dump) = dump else { return storage };
+    for disk in &mut storage.disks {
+        let Some((_, json)) = dump.smart.iter().find(|(n, _)| *n == disk.name) else {
+            continue;
+        };
+        disk.health = match crate::parse_smartctl(json) {
+            Ok(h) => Field::Known(h),
+            Err(crate::SmartError::DeviceError(msg)) => Field::Unavailable(msg),
+            Err(crate::SmartError::NotJson) => {
+                Field::Unavailable("smartctl output could not be read".into())
+            }
+        };
+    }
+    storage
+}
+
 pub fn build_snapshot(src: &dyn Source, dmi: Option<&DmiDump>, now_unix: u64) -> Snapshot {
+    let dump = dmi;
     let dmi = read_dmi(src, dmi);
     let sysfs_board = read_sysfs_board(src);
     let has_sysfs_id = sysfs_board.is_some();
@@ -94,7 +116,7 @@ pub fn build_snapshot(src: &dyn Source, dmi: Option<&DmiDump>, now_unix: u64) ->
         board,
         memory,
         cpu: read_cpu(src, &dmi),
-        storage: crate::read_storage(src),
+        storage: with_smart(crate::read_storage(src), dump),
         gpu: crate::read_gpus(src),
         net: crate::read_net(src),
         power: crate::read_power(src),
