@@ -4,6 +4,7 @@ use crate::{ReadError, Source};
 use rigscope_model::{clean_text, Disk, DiskKind, Field, Interface, StorageInfo};
 
 pub const BLOCK_DIR: &str = "/sys/block";
+pub const NO_SMART: &str = "this kind of device has no SMART data";
 /// Most disks listed.
 pub const MAX_DISKS: usize = 256;
 const SECTOR: u64 = 512;
@@ -112,6 +113,12 @@ fn read_disk(src: &dyn Source, name: &str) -> Option<Disk> {
         kind: Field::from_option(kind_for(interface, rotational.as_deref())),
         interface: Field::from_option(interface),
         removable: text(src, &format!("{base}/removable")).as_deref() == Some("1"),
+        health: match interface {
+            Some(Interface::Nvme | Interface::Sata | Interface::Scsi | Interface::Usb) => {
+                Field::NeedsRoot
+            }
+            _ => Field::Unavailable(NO_SMART.to_string()),
+        },
     })
 }
 
