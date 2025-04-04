@@ -131,7 +131,15 @@ fn probe_permission_denied_dmi_is_needs_root() {
 #[test]
 fn explicit_dump_overrides_denied_table() {
     let (entry, table) = rigscope_smbios::testutil::fixture_tables("desktop-ddr4").unwrap();
-    let s = build_snapshot(&denied_source(), Some(&DmiDump { entry, table }), 0);
+    let s = build_snapshot(
+        &denied_source(),
+        Some(&DmiDump {
+            entry,
+            table,
+            smart: Vec::new(),
+        }),
+        0,
+    );
     assert_eq!(s.dmi_source, DmiSource::FullTable);
     assert_eq!(s.memory.arrays[0].slots.len(), 2);
     assert_eq!(s.cpu.socket, Field::Known("LGA1151".into()));
@@ -190,6 +198,7 @@ fn dmi_dump_roundtrip() {
     let d = DmiDump {
         entry: vec![1, 2, 3],
         table: vec![9; 100],
+        smart: Vec::new(),
     };
     assert_eq!(decode_dmi_dump(&encode_dmi_dump(&d)), Ok(d));
 }
@@ -203,6 +212,7 @@ fn decode_dmi_dump_rejects_oversize_and_garbage() {
     let mut short = encode_dmi_dump(&DmiDump {
         entry: vec![1; 10],
         table: vec![2; 10],
+        smart: Vec::new(),
     });
     short.pop();
     assert_eq!(decode_dmi_dump(&short), Err(ProbeError::BadDump));
@@ -263,4 +273,82 @@ fn hybrid_cpu_caches_keep_each_size() {
         .map(|c| (c.size_bytes, c.instances))
         .collect();
     assert_eq!(l2, vec![(1280 * 1024, 2), (2048 * 1024, 1)]);
+}
+
+fn smart_sample(name: &str) -> Vec<u8> {
+    std::fs::read(format!(
+        "{}/../../fixtures/smart/{name}.json",
+        env!("CARGO_MANIFEST_DIR")
+    ))
+    .unwrap()
+}
+
+#[test]
+fn dmi_dump_v2_roundtrip_with_smart() {
+    let d = DmiDump {
+        entry: vec![1],
+        table: vec![2, 3],
+        smart: vec![("nvme0n1".into(), b"{}".to_vec()), ("sda".into(), vec![])],
+    };
+    let bytes = encode_dmi_dump(&d);
+    assert!(bytes.starts_with(b"RSDMI2"));
+    assert_eq!(decode_dmi_dump(&bytes), Ok(d));
+}
+
+#[test]
+fn dmi_dump_v1_still_decodes() {
+    let mut b = b"RSDMI1".to_vec();
+    for part in [&[7u8][..], &[8, 9][..]] {
+        b.extend((part.len() as u32).to_le_bytes());
+        b.extend_from_slice(part);
+    }
+    assert_eq!(
+        decode_dmi_dump(&b),
+        Ok(DmiDump {
+            entry: vec![7],
+            table: vec![8, 9],
+            smart: vec![]
+        })
+    );
+}
+
+#[test]
+fn smart_from_the_dump_reaches_the_disks() {
+    let (entry, table) = rigscope_smbios::testutil::fixture_tables("desktop-ddr4").unwrap();
+    let dump = DmiDump {
+        entry,
+        table,
+        smart: vec![
+            ("nvme0n1".into(), smart_sample("nvme-healthy")),
+            (
+                "sda".into(),
+                br#"{"rigscope_error":"smartctl not installed (smartmontools package)"}"#.to_vec(),
+            ),
+            ("zz9".into(), b"{}".to_vec()),
+        ],
+    };
+    let s = build_snapshot(&fixture("desktop-ddr4"), Some(&dump), 0);
+    let nvme = s
+        .storage
+        .disks
+        .iter()
+        .find(|d| d.name == "nvme0n1")
+        .unwrap();
+    assert_eq!(nvme.health.known().and_then(|h| h.percent_used), Some(2));
+    let sda = s.storage.disks.iter().find(|d| d.name == "sda").unwrap();
+    assert_eq!(
+        sda.health,
+        Field::Unavailable("smartctl not installed (smartmontools package)".into())
+    );
+}
+
+#[test]
+fn without_a_dump_disks_need_root_for_smart() {
+    let s = build_snapshot(&fixture("desktop-ddr4"), None, 0);
+    assert!(s.storage.disks.iter().all(|d| d.health == Field::NeedsRoot));
+    let vm = build_snapshot(&fixture("minimal-vm"), None, 0);
+    assert!(
+        matches!(vm.storage.disks[0].health, Field::Unavailable(_)),
+        "virtio has no SMART"
+    );
 }
