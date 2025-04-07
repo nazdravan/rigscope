@@ -1,11 +1,27 @@
 use crate::fmt;
 use crate::i18n::{tr, Key};
-use crate::widgets::{card, kv_grid};
+use crate::widgets::{card, command_button, kv_grid};
+use crate::Actions;
 use rigscope_engine::App;
+use rigscope_model::Field;
+use serde_json::json;
 
-pub fn show(ui: &mut egui::Ui, app: &App) {
+pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
     let lang = app.session.language;
     let disks = &app.session.snapshot.storage.disks;
+    if disks.iter().any(|d| d.health == Field::NeedsRoot) {
+        card(ui, tr(lang, Key::DiskHealth), |ui| {
+            ui.label(tr(lang, Key::SmartNeedsRoot));
+            command_button(
+                ui,
+                app,
+                actions,
+                "snapshot.elevate",
+                tr(lang, Key::ReadElevated),
+                json!({}),
+            );
+        });
+    }
     if disks.is_empty() {
         card(ui, tr(lang, Key::Storage), |ui| {
             ui.label(tr(lang, Key::NoDisks));
@@ -42,8 +58,24 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
                     (tr(lang, Key::Serial), fmt::text(lang, &d.serial)),
                     (tr(lang, Key::Firmware), fmt::text(lang, &d.firmware)),
                     (tr(lang, Key::Removable), tr(lang, removable).to_string()),
+                    (
+                        tr(lang, Key::DiskHealth),
+                        fmt::field(lang, &d.health, |h| crate::i18n::health_line(lang, h)),
+                    ),
                 ],
             );
+            if let Field::Known(h) = &d.health {
+                for w in h.warnings() {
+                    ui.colored_label(
+                        ui.visuals().warn_fg_color,
+                        format!(
+                            "{}: {}",
+                            tr(lang, Key::Warning),
+                            crate::i18n::warning(lang, w)
+                        ),
+                    );
+                }
+            }
         });
     }
 }
