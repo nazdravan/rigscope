@@ -104,6 +104,9 @@ pub enum Key {
     Derived,
     Sensors,
     Fans,
+    DiskHealth,
+    SmartNeedsRoot,
+    Warning,
     NoSensors,
 }
 
@@ -210,6 +213,9 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             NoBattery => "No battery: this machine runs from mains power only.",
             Derived => "derived",
             Sensors => "Sensors",
+            DiskHealth => "Health (SMART)",
+            SmartNeedsRoot => "Disk health (SMART) needs root: smartctl reads it through the elevated helper.",
+            Warning => "Warning",
             Fans => "Fans",
             NoSensors => "No sensors found in /sys/class/hwmon.",
         },
@@ -313,6 +319,9 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             NoBattery => "Nu există baterie: calculatorul funcționează doar de la rețea.",
             Derived => "derivat",
             Sensors => "Senzori",
+            DiskHealth => "Sănătate (SMART)",
+            SmartNeedsRoot => "Sănătatea discurilor (SMART) necesită root: smartctl o citește prin helperul cu drepturi ridicate.",
+            Warning => "Atenție",
             Fans => "Ventilatoare",
             NoSensors => "Nu s-au găsit senzori în /sys/class/hwmon.",
         },
@@ -338,6 +347,12 @@ pub fn reason(lang: Language, reason: &str) -> String {
         "not exposed by the nvidia driver" => "nu e expusă de driverul nvidia",
         "uses system memory" => "folosește memoria sistemului",
         "not reported for Wi-Fi" => "nu e raportată pentru Wi-Fi",
+        "this kind of device has no SMART data" => "acest tip de dispozitiv nu are date SMART",
+        "smartctl not installed (smartmontools package)" => {
+            "smartctl nu e instalat (pachetul smartmontools)"
+        }
+        "smartctl timed out" => "smartctl nu a răspuns la timp",
+        "smartctl output could not be read" => "rezultatul smartctl nu a putut fi citit",
         other => other,
     };
     match lang {
@@ -514,4 +529,63 @@ pub fn missing_hint(lang: Language, value: &str) -> Option<&'static str> {
 /// [`missing_hint`] for whichever UI language the value is in.
 pub fn missing_hint_any(value: &str) -> Option<&'static str> {
     missing_hint(Language::En, value).or_else(|| missing_hint(Language::Ro, value))
+}
+
+/// SMART summary for the UI: the model's English summary, or a Romanian one.
+pub fn health_line(lang: Language, h: &rigscope_model::DiskHealth) -> String {
+    if lang == Language::En {
+        return rigscope_model::health_summary(h).join(", ");
+    }
+    let mut out = Vec::new();
+    match h.passed {
+        Some(true) => out.push("SMART: OK".to_string()),
+        Some(false) => out.push("SMART: DEFECT".to_string()),
+        None => {}
+    }
+    if let Some(t) = h.temperature_c {
+        out.push(format!("{t} °C"));
+    }
+    if let Some(v) = h.power_on_hours {
+        out.push(format!("{v} h de funcționare"));
+    }
+    if let Some(v) = h.power_cycles {
+        out.push(format!("{v} porniri"));
+    }
+    if let Some(v) = h.percent_used {
+        out.push(format!("{v} % din durabilitate consumată"));
+    }
+    if let Some(v) = h.available_spare {
+        out.push(format!("{v} % rezervă"));
+    }
+    if let Some(v) = h.written_bytes {
+        out.push(format!("{} scriși", rigscope_model::format_written(v)));
+    }
+    for (v, what) in [
+        (h.reallocated_sectors, "sectoare realocate"),
+        (h.pending_sectors, "sectoare în așteptare"),
+        (h.uncorrectable_sectors, "sectoare necorectabile"),
+        (h.media_errors, "erori de mediu"),
+    ] {
+        if let Some(n) = v.filter(|n| *n > 0) {
+            out.push(format!("{n} {what}"));
+        }
+    }
+    out.join(", ")
+}
+
+/// A [`rigscope_model::DiskHealth::warnings`] item in the UI language.
+pub fn warning(lang: Language, w: &str) -> String {
+    let ro = match w {
+        "drive reports SMART failure" => "discul raportează defect SMART",
+        "rated endurance nearly used up" => "durabilitatea nominală e aproape consumată",
+        "reallocated sectors" => "sectoare realocate",
+        "sectors pending reallocation" => "sectoare care așteaptă realocarea",
+        "uncorrectable sectors" => "sectoare necorectabile",
+        "media errors" => "erori de mediu",
+        other => other,
+    };
+    match lang {
+        Language::En => w.to_string(),
+        Language::Ro => ro.to_string(),
+    }
 }
