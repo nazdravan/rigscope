@@ -171,6 +171,7 @@ fn ui_collects_elevation_result_while_waiting() {
         st.elevate = Some(rigscope_probe::encode_dmi_dump(&rigscope_probe::DmiDump {
             entry,
             table,
+            smart: Vec::new(),
         }));
         st.pending_polls = 1;
     }
@@ -339,4 +340,60 @@ fn sensors_panel_romanian_and_empty() {
     let h = ro("minimal-vm", "sensors");
     assert!(has(&h, "Senzori"));
     assert!(has(&h, "Nu s-au găsit senzori"));
+}
+
+#[test]
+fn storage_panel_offers_smart_then_shows_it() {
+    let env = FakeEnv::fixture("desktop-ddr4");
+    {
+        let nvme = std::fs::read(format!(
+            "{}/../../fixtures/smart/nvme-healthy.json",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap();
+        let sda = std::fs::read(format!(
+            "{}/../../fixtures/smart/sata-hdd-reallocated.json",
+            env!("CARGO_MANIFEST_DIR")
+        ))
+        .unwrap();
+        let (entry, table) = rigscope_smbios::testutil::fixture_tables("desktop-ddr4").unwrap();
+        env.handle().lock().unwrap().elevate =
+            Some(rigscope_probe::encode_dmi_dump(&rigscope_probe::DmiDump {
+                entry,
+                table,
+                smart: vec![("nvme0n1".into(), nvme), ("sda".into(), sda)],
+            }));
+    }
+    let mut h = harness(env, |a| {
+        a.run("view.section", json!({"id": "storage"})).unwrap();
+    });
+    assert!(has(&h, "Disk health (SMART) needs root"));
+    h.get_by_label("Read with elevated rights").click();
+    for _ in 0..5 {
+        h.step();
+    }
+    assert!(has(&h, "SMART passed"));
+    assert!(has(&h, "4321 h"));
+    assert!(has(&h, "10.0 TB"));
+    assert!(has(&h, "reallocated sectors"));
+    assert!(!has(&h, "Disk health (SMART) needs root"));
+}
+
+#[test]
+fn smart_summary_in_romanian() {
+    use rigscope_model::DiskHealth;
+    let h = DiskHealth {
+        passed: Some(true),
+        power_on_hours: Some(4321),
+        reallocated_sectors: Some(8),
+        ..Default::default()
+    };
+    assert_eq!(
+        rigscope_ui::i18n::health_line(rigscope_engine::Language::Ro, &h),
+        "SMART: OK, 4321 h de funcționare, 8 sectoare realocate"
+    );
+    assert_eq!(
+        rigscope_ui::i18n::warning(rigscope_engine::Language::Ro, "reallocated sectors"),
+        "sectoare realocate"
+    );
 }
