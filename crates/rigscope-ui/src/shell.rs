@@ -113,7 +113,7 @@ pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
             .show(ui, |ui| match app.session.section {
                 SectionId::Memory => memory_panel::show(ui, app, &mut actions),
                 SectionId::Cpu => cpu_panel::show(ui, app),
-                SectionId::Storage => storage_panel::show(ui, app),
+                SectionId::Storage => storage_panel::show(ui, app, &mut actions),
                 SectionId::Gpu => gpu_panel::show(ui, app),
                 SectionId::Network => net_panel::show(ui, app),
                 SectionId::Battery => power_panel::show(ui, app),
