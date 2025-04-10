@@ -16,6 +16,8 @@ pub struct ShotArgs {
     pub lang: String,
     /// Repository-relative output path.
     pub out: String,
+    /// Extra commands to run before the screenshot (`--command snapshot.elevate`).
+    pub commands: Vec<String>,
 }
 
 impl ShotArgs {
@@ -25,6 +27,7 @@ impl ShotArgs {
             section: "memory".into(),
             lang: "en".into(),
             out: String::new(),
+            commands: Vec::new(),
         };
         let mut it = args.iter();
         while let Some(flag) = it.next() {
@@ -37,6 +40,7 @@ impl ShotArgs {
                 "--section" => a.section = v,
                 "--lang" => a.lang = v,
                 "--out" => a.out = v,
+                "--command" => a.commands.push(v),
                 other => bail!("unknown flag {other}"),
             }
         }
@@ -47,7 +51,7 @@ impl ShotArgs {
     }
 
     fn to_args(&self) -> Vec<String> {
-        [
+        let mut v: Vec<String> = [
             "--fixture",
             &self.fixture,
             "--section",
@@ -59,7 +63,12 @@ impl ShotArgs {
         ]
         .iter()
         .map(|s| s.to_string())
-        .collect()
+        .collect();
+        for c in &self.commands {
+            v.push("--command".into());
+            v.push(c.clone());
+        }
+        v
     }
 }
 
@@ -148,6 +157,9 @@ fn drive(a: &ShotArgs, token: &str) -> Result<()> {
         }
         Ok(v)
     };
+    for c in &a.commands {
+        send(serde_json::json!({"method": "run", "command": c, "params": {}}))?;
+    }
     let path = crate::root().join(&a.out);
     send(
         serde_json::json!({"method": "run", "command": "view.language", "params": {"id": a.lang}}),
