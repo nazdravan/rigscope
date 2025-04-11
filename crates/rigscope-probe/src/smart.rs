@@ -34,7 +34,20 @@ fn ata_raw(v: &Value, id: u64) -> Option<u64> {
         .as_u64()
 }
 
+/// Health plus the identity smartctl reports (SATA serials are not in sysfs).
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct SmartReport {
+    pub health: DiskHealth,
+    pub serial: Option<String>,
+    pub model: Option<String>,
+    pub firmware: Option<String>,
+}
+
 pub fn parse_smartctl(json: &[u8]) -> Result<DiskHealth, SmartError> {
+    parse_smartctl_report(json).map(|r| r.health)
+}
+
+pub fn parse_smartctl_report(json: &[u8]) -> Result<SmartReport, SmartError> {
     if json.len() > MAX_SMART_JSON {
         return Err(SmartError::NotJson);
     }
@@ -64,7 +77,12 @@ pub fn parse_smartctl(json: &[u8]) -> Result<DiskHealth, SmartError> {
     }
     let nvme = |k: &str| u64_at(&v, &["nvme_smart_health_information_log", k]);
     let small = |n: Option<u64>| n.and_then(|n| u32::try_from(n).ok());
-    Ok(DiskHealth {
+    let text = |k: &str| {
+        v.get(k)
+            .and_then(Value::as_str)
+            .and_then(rigscope_model::clean_text)
+    };
+    let health = DiskHealth {
         passed: v
             .get("smart_status")
             .and_then(|s| s.get("passed"))
@@ -83,5 +101,11 @@ pub fn parse_smartctl(json: &[u8]) -> Result<DiskHealth, SmartError> {
         reallocated_sectors: ata_raw(&v, 5),
         pending_sectors: ata_raw(&v, 197),
         uncorrectable_sectors: ata_raw(&v, 198),
+    };
+    Ok(SmartReport {
+        health,
+        serial: text("serial_number"),
+        model: text("model_name"),
+        firmware: text("firmware_version"),
     })
 }
