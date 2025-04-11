@@ -57,3 +57,12 @@ fn garbage_is_not_json() {
     assert_eq!(parse_smartctl(b"\xff\xfe"), Err(SmartError::NotJson));
     assert_eq!(parse_smartctl(b"[1,2]"), Err(SmartError::NotJson));
 }
+
+#[test]
+fn identity_comes_with_the_report() {
+    let r = parse_smartctl_report(&sample("sata-hdd-reallocated")).unwrap();
+    assert_eq!(r.serial.as_deref(), Some("WD-WCC6Y1234567"));
+    assert_eq!(r.firmware.as_deref(), Some("01.01A01"));
+    assert_eq!(r.model.as_deref(), Some("WDC WD10EZEX-08W"));
+    assert_eq!(r.health.reallocated_sectors, Some(8));
+}
