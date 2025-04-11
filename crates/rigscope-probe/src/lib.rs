@@ -26,6 +26,6 @@ pub use gpu::{read_gpus, MAX_GPUS, NO_PCI_IDS, NVIDIA_NO_VRAM, SHARED_MEMORY};
 pub use hwmon::{read_sensors, refresh_sensors, MAX_CHIPS};
 pub use net::{read_net, MAX_INTERFACES, WIFI_NO_SPEED};
 pub use power::{read_power, MAX_SUPPLIES};
-pub use smart::{parse_smartctl, SmartError, MAX_SMART_JSON};
+pub use smart::{parse_smartctl, parse_smartctl_report, SmartError, SmartReport, MAX_SMART_JSON};
 pub use source::{MemSource, ReadError, Source, MAX_FILE_LEN};
 pub use storage::{interface_for, kind_for, read_storage, MAX_DISKS, NO_SMART};
