@@ -68,8 +68,21 @@ fn with_smart(
         let Some((_, json)) = dump.smart.iter().find(|(n, _)| *n == disk.name) else {
             continue;
         };
-        disk.health = match crate::parse_smartctl(json) {
-            Ok(h) => Field::Known(h),
+        disk.health = match crate::parse_smartctl_report(json) {
+            Ok(r) => {
+                // sysfs values win; smartctl fills what the kernel does not expose.
+                let fill = |f: &mut Field<String>, v: Option<String>| {
+                    if f.known().is_none() {
+                        if let Some(v) = v {
+                            *f = Field::Known(v);
+                        }
+                    }
+                };
+                fill(&mut disk.serial, r.serial);
+                fill(&mut disk.model, r.model);
+                fill(&mut disk.firmware, r.firmware);
+                Field::Known(r.health)
+            }
             Err(crate::SmartError::DeviceError(msg)) => Field::Unavailable(msg),
             Err(crate::SmartError::NotJson) => {
                 Field::Unavailable("smartctl output could not be read".into())
