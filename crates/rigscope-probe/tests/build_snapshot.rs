@@ -352,3 +352,21 @@ fn without_a_dump_disks_need_root_for_smart() {
         "virtio has no SMART"
     );
 }
+
+#[test]
+fn smart_fills_the_sata_serial_but_keeps_sysfs_values() {
+    let (entry, table) = rigscope_smbios::testutil::fixture_tables("desktop-ddr4").unwrap();
+    let dump = DmiDump {
+        entry,
+        table,
+        smart: vec![("sda".into(), smart_sample("sata-hdd-reallocated"))],
+    };
+    let s = build_snapshot(&fixture("desktop-ddr4"), Some(&dump), 0);
+    let sda = s.storage.disks.iter().find(|d| d.name == "sda").unwrap();
+    assert_eq!(sda.serial, Field::Known("WD-WCC6Y1234567".into()));
+    assert_eq!(
+        sda.firmware,
+        Field::Known("1A01".into()),
+        "sysfs firmware stays"
+    );
+}
