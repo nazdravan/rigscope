@@ -12,6 +12,7 @@ mod sensors_panel;
 mod shell;
 mod storage_panel;
 mod system_panel;
+pub mod theme;
 mod widgets;
 
 pub use shell::{draw, draw_with, params_for, ParamsPicker, RigscopeUi};
