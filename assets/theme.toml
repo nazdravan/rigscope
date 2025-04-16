@@ -1,0 +1,16 @@
+# rigscope visual identity. Read by the app (crates/rigscope-ui/src/theme.rs), the icon
+# generator (assets/icon.py), the README banner and the landing page. Change it here only.
+
+name = "rigscope"
+# Accent: buttons, selection, links. Derived from egui's default selection blue the app used
+# before S1 (#005C80), lifted for contrast on dark backgrounds.
+accent = "#1F8FC8"
+accent_press = "#005C80"
+bg_light = "#F8F8F8"
+fg_light = "#1B1B1B"
+bg_dark = "#1B1B1B"
+fg_dark = "#DCDCDC"
+# Warnings (SMART, reallocated sectors…).
+warn = "#E8A33D"
+font = "Noto Sans"   # assets/fonts/NotoSans-*.ttf, SIL OFL 1.1 (assets/fonts/OFL.txt)
+motif = "a RAM module: chips on a board with gold contacts"
