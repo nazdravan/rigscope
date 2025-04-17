@@ -26,10 +26,11 @@ fn main() -> Result<()> {
         "wasm" => wasm(),
         "linux" => linux(rest),
         "gen-fixtures" => gen_fixtures(),
+        "icons" => run(Command::new("python3").args(["-I", "assets/icon.py"])),
         "screenshot" => screenshot::screenshot(rest),
         "screenshot-inner" => screenshot::inner(rest),
         _ => {
-            eprintln!("usage: cargo xtask <ci|layers|wasm|linux [cmd...]|gen-fixtures|screenshot [--fixture D --section S --lang L --out P]>");
+            eprintln!("usage: cargo xtask <ci|layers|wasm|linux [cmd...]|gen-fixtures|icons|screenshot [--fixture D --section S --lang L --out P]>");
             Ok(())
         }
     }
