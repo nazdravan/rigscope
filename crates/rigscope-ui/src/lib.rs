@@ -26,3 +26,26 @@ impl Actions {
         self.0.push((id.to_string(), params));
     }
 }
+
+/// Markdown table of the keyboard shortcuts, generated from the command registry.
+pub fn shortcut_table(lang: rigscope_engine::Language) -> String {
+    let (key, action) = match lang {
+        rigscope_engine::Language::En => ("Shortcut", "Action"),
+        rigscope_engine::Language::Ro => ("Scurtătură", "Acțiune"),
+    };
+    let mut rows: Vec<(String, String)> = rigscope_engine::builtin_commands()
+        .iter()
+        .filter_map(|c| {
+            Some((
+                c.shortcut?.to_string(),
+                i18n::command_label(lang, c.label_key),
+            ))
+        })
+        .collect();
+    rows.sort();
+    let mut out = format!("| {key} | {action} |\n|---|---|\n");
+    for (k, a) in rows {
+        out.push_str(&format!("| `{k}` | {a} |\n"));
+    }
+    out
+}
