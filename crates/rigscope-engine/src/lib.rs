@@ -10,6 +10,11 @@ mod session;
 pub mod testutil;
 
 pub use command::{App, CommandSpec};
+
+/// Every built-in command (for docs: the README shortcut table is generated from this).
+pub fn builtin_commands() -> Vec<CommandSpec> {
+    commands::builtin()
+}
 pub use env::Env;
 pub use error::EngineError;
 pub use session::{Language, SectionId, Session, HISTORY_LIMIT};
