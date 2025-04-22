@@ -29,8 +29,10 @@ fn main() -> Result<()> {
         "icons" => run(Command::new("python3").args(["-I", "assets/icon.py"])),
         "screenshot" => screenshot::screenshot(rest),
         "screenshot-inner" => screenshot::inner(rest),
+        "shots" => screenshot::readme_shots(),
+        "banner" => run(Command::new("python3").args(["-I", "assets/banner.py"])),
         _ => {
-            eprintln!("usage: cargo xtask <ci|layers|wasm|linux [cmd...]|gen-fixtures|icons|screenshot [--fixture D --section S --lang L --out P]>");
+            eprintln!("usage: cargo xtask <ci|layers|wasm|linux [cmd...]|gen-fixtures|icons|banner|shots|screenshot [--fixture D --section S --lang L --out P]>");
             Ok(())
         }
     }
