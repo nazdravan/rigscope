@@ -173,3 +173,60 @@ fn drive(a: &ShotArgs, token: &str) -> Result<()> {
     send(serde_json::json!({"method": "quit"}))?;
     Ok(())
 }
+
+/// The README screenshots: (file in docs/assets, fixture, section, language, commands).
+pub const README_SHOTS: &[(&str, &str, &str, &str, &[&str])] = &[
+    ("screenshot-memory.png", "desktop-ddr4", "memory", "en", &[]),
+    (
+        "screenshot-memory-ro.png",
+        "desktop-ddr4",
+        "memory",
+        "ro",
+        &[],
+    ),
+    ("screenshot-cpu.png", "desktop-ddr4", "cpu", "en", &[]),
+    (
+        "screenshot-storage.png",
+        "desktop-ddr4",
+        "storage",
+        "en",
+        &["snapshot.elevate"],
+    ),
+    ("screenshot-gpu.png", "desktop-ddr4", "gpu", "en", &[]),
+    (
+        "screenshot-network.png",
+        "desktop-ddr4",
+        "network",
+        "en",
+        &[],
+    ),
+    (
+        "screenshot-battery.png",
+        "laptop-ddr5",
+        "battery",
+        "en",
+        &[],
+    ),
+    (
+        "screenshot-sensors.png",
+        "desktop-ddr4",
+        "sensors",
+        "en",
+        &[],
+    ),
+];
+
+/// `cargo xtask shots`: every README screenshot in one container run.
+pub fn readme_shots() -> Result<()> {
+    let mut script = Vec::new();
+    for (file, fixture, section, lang, commands) in README_SHOTS {
+        let mut cmd = format!(
+            "cargo run -q -p xtask -- screenshot-inner --fixture fixtures/{fixture} --section {section} --lang {lang} --out docs/assets/{file}"
+        );
+        for c in *commands {
+            cmd.push_str(&format!(" --command {c}"));
+        }
+        script.push(cmd);
+    }
+    crate::linux(&["bash".to_string(), "-c".to_string(), script.join(" && ")])
+}
