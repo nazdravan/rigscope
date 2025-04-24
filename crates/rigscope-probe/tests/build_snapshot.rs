@@ -370,3 +370,30 @@ fn smart_fills_the_sata_serial_but_keeps_sysfs_values() {
         "sysfs firmware stays"
     );
 }
+
+/// Git does not store empty directories, so a fixture symlink pointing at one works locally and
+/// dangles after a clone (it broke CI once). Every fixture directory must hold a file.
+#[test]
+fn fixtures_have_no_empty_directories() {
+    fn walk(dir: &std::path::Path, empty: &mut Vec<String>) {
+        let entries: Vec<_> = std::fs::read_dir(dir).unwrap().flatten().collect();
+        if entries.is_empty() {
+            empty.push(dir.display().to_string());
+        }
+        for e in entries {
+            let p = e.path();
+            if e.file_type().unwrap().is_dir() {
+                walk(&p, empty);
+            }
+        }
+    }
+    let mut empty = Vec::new();
+    walk(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures"),
+        &mut empty,
+    );
+    assert!(
+        empty.is_empty(),
+        "empty fixture directories (add a file such as `uevent`): {empty:#?}"
+    );
+}
