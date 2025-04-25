@@ -137,14 +137,56 @@ pub fn interpret(code: Option<i32>, stdout: Vec<u8>, stderr: &str) -> Result<Vec
     }
 }
 
-/// Runs `pkexec <this binary> --dump-dmi`, giving up after [`HELPER_TIMEOUT`].
+/// Where the packages install the root-owned copy of the binary that polkit authorizes
+/// (`packaging/linux/org.rigscope.dump-dmi.policy` names the same path).
+pub const INSTALLED_HELPER: &str = "/usr/libexec/rigscope/rigscope-helper";
+
+/// Set to `1` to let pkexec run a binary that is not root-owned (development builds only).
+pub const ALLOW_USER_HELPER_ENV: &str = "RIGSCOPE_ALLOW_USER_HELPER";
+
+/// A helper may run as root only if root owns it and nobody else can write to it: otherwise any
+/// process of the user could swap the binary after the authentication dialog was approved.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+pub fn helper_is_trusted(uid: u32, mode: u32) -> bool {
+    uid == 0 && mode & 0o022 == 0
+}
+
+/// Picks the program pkexec runs: the installed helper if it is trusted, else the running binary
+/// if that one is trusted, else the running binary when `allow_user` (development) is set.
+/// `stat` returns `(uid, mode)` of a path, `None` when it is missing.
+#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+pub fn choose_helper(
+    exe: &str,
+    allow_user: bool,
+    stat: impl Fn(&str) -> Option<(u32, u32)>,
+) -> Result<String, EngineError> {
+    let trusted = |p: &str| stat(p).is_some_and(|(uid, mode)| helper_is_trusted(uid, mode));
+    if trusted(INSTALLED_HELPER) {
+        Ok(INSTALLED_HELPER.into())
+    } else if trusted(exe) || allow_user {
+        Ok(exe.into())
+    } else {
+        Err(EngineError::Io(format!(
+            "elevated reading needs the installed package: {INSTALLED_HELPER} is missing or not \
+             root-owned (for a development build set {ALLOW_USER_HELPER_ENV}=1)"
+        )))
+    }
+}
+
+/// Runs `pkexec <helper> --dump-dmi`, giving up after [`HELPER_TIMEOUT`].
 #[cfg(target_os = "linux")]
 pub fn run_helper() -> Result<Vec<u8>, EngineError> {
     use std::io::Read;
+    use std::os::unix::fs::MetadataExt;
     use std::process::{Command, Stdio};
     let exe = std::env::current_exe().map_err(|e| EngineError::Io(e.to_string()))?;
+    let exe = exe.to_string_lossy().into_owned();
+    let allow_user = std::env::var(ALLOW_USER_HELPER_ENV).is_ok_and(|v| v == "1");
+    let helper = choose_helper(&exe, allow_user, |p| {
+        std::fs::metadata(p).ok().map(|m| (m.uid(), m.mode()))
+    })?;
     let mut child = match Command::new("pkexec")
-        .arg(exe)
+        .arg(helper)
         .arg("--dump-dmi")
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -272,6 +314,43 @@ mod tests {
             Some("/usr/bin/smartctl")
         );
         assert_eq!(find_smartctl(|_| false), None);
+    }
+
+    #[test]
+    fn helper_trust_needs_root_and_no_foreign_write() {
+        assert!(helper_is_trusted(0, 0o100755));
+        assert!(!helper_is_trusted(0, 0o100775), "group-writable");
+        assert!(!helper_is_trusted(0, 0o100757), "world-writable");
+        assert!(!helper_is_trusted(1000, 0o100755), "owned by the user");
+    }
+
+    #[test]
+    fn installed_helper_wins_over_the_running_binary() {
+        let stat = |_: &str| Some((0, 0o100755));
+        assert_eq!(
+            choose_helper("/opt/x", false, stat).unwrap(),
+            INSTALLED_HELPER
+        );
+    }
+
+    #[test]
+    fn running_binary_is_used_when_it_is_root_owned() {
+        let stat = |p: &str| (p == "/usr/bin/rigscope").then_some((0, 0o100755));
+        assert_eq!(
+            choose_helper("/usr/bin/rigscope", false, stat).unwrap(),
+            "/usr/bin/rigscope"
+        );
+    }
+
+    #[test]
+    fn user_owned_binary_is_refused_unless_development_flag() {
+        let stat = |p: &str| (p == "/home/u/rigscope").then_some((1000, 0o100755));
+        let err = choose_helper("/home/u/rigscope", false, stat).unwrap_err();
+        assert!(err.to_string().contains(ALLOW_USER_HELPER_ENV), "{err}");
+        assert_eq!(
+            choose_helper("/home/u/rigscope", true, stat).unwrap(),
+            "/home/u/rigscope"
+        );
     }
 
     #[test]
