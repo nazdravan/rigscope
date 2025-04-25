@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=rigscope
+GenericName=Hardware information
+Comment=Detailed hardware configuration viewer
+Exec=rigscope
+Icon=rigscope
+Terminal=false
+Categories=System;Monitor;HardwareSettings;
+Keywords=hardware;ram;memory;cpu;disk;smart;dmi;sensors;
