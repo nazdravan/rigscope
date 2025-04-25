@@ -2,6 +2,8 @@
 
 mod args;
 mod control;
+mod demo;
+mod demo_pack;
 mod dump_dmi;
 mod env;
 
@@ -9,19 +11,17 @@ use anyhow::Result;
 use rigscope_engine::App;
 use serde_json::json;
 
-/// Sample machine shown when not running on Linux and no `--fixture` is given.
-#[cfg(not(target_os = "linux"))]
-const DEMO_FIXTURE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/desktop-ddr4");
-
 fn main() -> Result<()> {
     let args = args::Args::parse_os(std::env::args_os().skip(1))?;
     if args.dump_dmi {
         return dump_dmi_main();
     }
 
+    // Keeps the unpacked demo machine alive (and removes it on exit) when there is no Linux here.
+    let mut _demo_dir = None;
     let (env, demo) = match &args.fixture {
         Some(dir) => (env::RealEnv::fixture(dir), true),
-        None => default_env(),
+        None => default_env(&mut _demo_dir)?,
     };
     let mut app = App::new(Box::new(env));
     if let Some(lang) = &args.lang {
@@ -74,13 +74,17 @@ fn main() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-fn default_env() -> (env::RealEnv, bool) {
-    (env::RealEnv::system(), false)
+fn default_env(_demo: &mut Option<demo::DemoDir>) -> Result<(env::RealEnv, bool)> {
+    Ok((env::RealEnv::system(), false))
 }
 
 #[cfg(not(target_os = "linux"))]
-fn default_env() -> (env::RealEnv, bool) {
-    (env::RealEnv::fixture(DEMO_FIXTURE), true)
+fn default_env(demo: &mut Option<demo::DemoDir>) -> Result<(env::RealEnv, bool)> {
+    let dir = demo::DemoDir::unpack()
+        .map_err(|e| anyhow::anyhow!("cannot unpack the demo machine: {e}"))?;
+    let env = env::RealEnv::fixture(&dir.path().to_string_lossy());
+    *demo = Some(dir);
+    Ok((env, true))
 }
 
 /// `--dump-dmi`: the only code that runs as root.
