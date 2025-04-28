@@ -1,0 +1,32 @@
+{
+ "tagName": "v0.1.0",
+ "publishedAt": "2026-11-04T10:00:00Z",
+ "url": "https://github.com/nazdravan/rigscope/releases/tag/v0.1.0",
+ "assets": [
+  {
+   "name": "rigscope-0.1.0-linux-x86_64.AppImage",
+   "size": 5000000,
+   "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/rigscope-0.1.0-linux-x86_64.AppImage"
+  },
+  {
+   "name": "rigscope-0.1.0-linux-x86_64.deb",
+   "size": 5001000,
+   "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/rigscope-0.1.0-linux-x86_64.deb"
+  },
+  {
+   "name": "rigscope-0.1.0-linux-x86_64.tar.gz",
+   "size": 5002000,
+   "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/rigscope-0.1.0-linux-x86_64.tar.gz"
+  },
+  {
+   "name": "rigscope-0.1.0-macos-universal.dmg",
+   "size": 5003000,
+   "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/rigscope-0.1.0-macos-universal.dmg"
+  },
+  {
+   "name": "SHA256SUMS.txt",
+   "size": 5004000,
+   "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/SHA256SUMS.txt"
+  }
+ ]
+}
