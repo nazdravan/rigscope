@@ -8,6 +8,7 @@
 
 **A desktop app for Linux that shows your computer's hardware in detail: every RAM slot, the CPU, disks with their SMART health, graphics, network, battery and sensors, without opening a terminal.**
 
+[![CI](https://github.com/nazdravan/rigscope/actions/workflows/ci.yml/badge.svg)](https://github.com/nazdravan/rigscope/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-1F8FC8?style=flat-square)](#license)
 [![Rust](https://img.shields.io/badge/Rust-2021-1F8FC8?style=flat-square&logo=rust&logoColor=white)](Cargo.toml)
 [![egui](https://img.shields.io/badge/UI-egui%20%2F%20eframe-1F8FC8?style=flat-square)](https://github.com/emilk/egui)

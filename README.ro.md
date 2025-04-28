@@ -8,6 +8,7 @@
 
 **O aplicație grafică pentru Linux care arată în detaliu configurația calculatorului: fiecare slot de RAM, procesorul, discurile cu sănătatea lor SMART, placa video, rețeaua, bateria și senzorii, fără terminal.**
 
+[![CI](https://github.com/nazdravan/rigscope/actions/workflows/ci.yml/badge.svg)](https://github.com/nazdravan/rigscope/actions/workflows/ci.yml)
 [![Licență](https://img.shields.io/badge/licen%C8%9B%C4%83-MIT%20OR%20Apache--2.0-1F8FC8?style=flat-square)](#licență)
 [![Rust](https://img.shields.io/badge/Rust-2021-1F8FC8?style=flat-square&logo=rust&logoColor=white)](Cargo.toml)
 [![egui](https://img.shields.io/badge/UI-egui%20%2F%20eframe-1F8FC8?style=flat-square)](https://github.com/emilk/egui)
