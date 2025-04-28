@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+<meta name="description" content="{{ description }}">
+<link rel="canonical" href="https://nazdravan.github.io/rigscope/{{ path }}">
+<link rel="alternate" hreflang="en" href="https://nazdravan.github.io/rigscope/">
+<link rel="alternate" hreflang="ro" href="https://nazdravan.github.io/rigscope/ro/">
+<link rel="alternate" hreflang="x-default" href="https://nazdravan.github.io/rigscope/">
+<meta property="og:title" content="{{ title }}">
+<meta property="og:description" content="{{ description }}">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://nazdravan.github.io/rigscope/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="{{ root }}assets/favicon.png">
+<link rel="stylesheet" href="{{ root }}assets/theme.css">
+<link rel="stylesheet" href="{{ root }}assets/style.css">
+<script type="module" src="{{ root }}assets/main.js"></script>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="{{ home }}"><img src="{{ root }}assets/logo.png" alt="" width="32" height="32"><span>{{ name }}</span></a>
+  <nav class="langs" aria-label="{{ lang_label }}">
+    <a href="{{ home }}" hreflang="en" {{{ current_en }}}>EN</a>
+    <a href="{{ ro_href }}" hreflang="ro" {{{ current_ro }}}>RO</a>
+  </nav>
+</header>
+
+<main>
+<section class="hero">
+  <div class="hero-text">
+    <h1>{{ hero_title }}</h1>
+    <p class="lead">{{ hero_lead }}</p>
+    <p class="cta">
+      <a id="download-main" class="button" href="#download"
+         data-kinds="{{ kinds_json }}"
+         data-label-linux="{{ btn_linux }}" data-label-mac="{{ btn_mac }}">{{ btn_default }}</a>
+      <span class="version">v{{ version }} · {{ date }}</span>
+    </p>
+    <p class="note">{{ hero_note }}</p>
+  </div>
+  <div class="slots" aria-hidden="true">
+    <span class="slot filled"><i></i>16 GiB</span>
+    <span class="slot filled"><i></i>16 GiB</span>
+    <span class="slot">{{ slot_empty }}</span>
+    <span class="slot">{{ slot_empty }}</span>
+  </div>
+</section>
+
+<section class="shot">
+  <img src="{{ root }}assets/{{ shot_memory }}.png" alt="{{ shot_memory_alt }}" width="1100" height="800">
+</section>
+
+<section id="features">
+  <h2>{{ features_h }}</h2>
+  <ul class="cards">
+    <li><h3>{{ f1_h }}</h3><p>{{ f1_p }}</p></li>
+    <li><h3>{{ f2_h }}</h3><p>{{ f2_p }}</p></li>
+    <li><h3>{{ f3_h }}</h3><p>{{ f3_p }}</p></li>
+    <li><h3>{{ f4_h }}</h3><p>{{ f4_p }}</p></li>
+    <li><h3>{{ f5_h }}</h3><p>{{ f5_p }}</p></li>
+    <li><h3>{{ f6_h }}</h3><p>{{ f6_p }}</p></li>
+  </ul>
+</section>
+
+<section id="gallery">
+  <h2>{{ gallery_h }}</h2>
+  <div class="gallery">
+    <figure><img src="{{ root }}assets/storage.png" alt="{{ shot_storage_alt }}" loading="lazy"><figcaption>{{ cap_storage }}</figcaption></figure>
+    <figure><img src="{{ root }}assets/cpu.png" alt="{{ shot_cpu_alt }}" loading="lazy"><figcaption>{{ cap_cpu }}</figcaption></figure>
+    <figure><img src="{{ root }}assets/sensors.png" alt="{{ shot_sensors_alt }}" loading="lazy"><figcaption>{{ cap_sensors }}</figcaption></figure>
+  </div>
+</section>
+
+<section id="privileges">
+  <h2>{{ priv_h }}</h2>
+  <p>{{ priv_p1 }}</p>
+  <p>{{ priv_p2 }}</p>
+</section>
+
+<section id="news">
+  <h2>{{ news_h }}</h2>
+  {{{ news_html }}}
+</section>
+
+<section id="download">
+  <h2>{{ dl_h }}</h2>
+  <table class="downloads">
+    <thead><tr><th>{{ dl_col_file }}</th><th>{{ dl_col_for }}</th><th>{{ dl_col_size }}</th></tr></thead>
+    <tbody>
+      <tr><td><a href="{{ url_linux_deb }}">{{ name_linux_deb }}</a></td><td>{{ dl_deb }}</td><td>{{ size_linux_deb }}</td></tr>
+      <tr><td><a href="{{ url_linux_appimage }}">{{ name_linux_appimage }}</a></td><td>{{ dl_appimage }}</td><td>{{ size_linux_appimage }}</td></tr>
+      <tr><td><a href="{{ url_linux_tar }}">{{ name_linux_tar }}</a></td><td>{{ dl_tar }}</td><td>{{ size_linux_tar }}</td></tr>
+      <tr><td><a href="{{ url_mac_dmg }}">{{ name_mac_dmg }}</a></td><td>{{ dl_mac }}</td><td>{{ size_mac_dmg }}</td></tr>
+    </tbody>
+  </table>
+  <p><a href="{{ url_sha256 }}">{{ name_sha256 }}</a> · {{ dl_checksums }}</p>
+  <p>{{ dl_source }} <a href="https://github.com/nazdravan/rigscope">github.com/nazdravan/rigscope</a></p>
+</section>
+</main>
+
+<footer>
+  <p>{{ footer_license }} <a href="https://github.com/nazdravan/rigscope/blob/main/LICENSE-MIT">MIT</a> / <a href="https://github.com/nazdravan/rigscope/blob/main/LICENSE-APACHE">Apache-2.0</a>. {{ footer_font }}</p>
+</footer>
+</body>
+</html>

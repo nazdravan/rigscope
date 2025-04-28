@@ -1,0 +1,80 @@
+/* Colours come only from theme.css, generated from assets/theme.toml (a test checks that this
+   file contains no colour literal). */
+@font-face { font-family: "Noto Sans"; font-weight: 400; src: url("NotoSans-Regular.ttf") format("truetype"); font-display: swap; }
+@font-face { font-family: "Noto Sans"; font-weight: 700; src: url("NotoSans-Bold.ttf") format("truetype"); font-display: swap; }
+
+:root {
+  --muted: color-mix(in srgb, var(--fg) 62%, var(--bg));
+  --line: color-mix(in srgb, var(--fg) 16%, var(--bg));
+  --card: color-mix(in srgb, var(--fg) 5%, var(--bg));
+  --gutter: 16px;
+  --measure: 68rem;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 400 1.0625rem/1.6 "Noto Sans", system-ui, sans-serif;
+}
+a { color: var(--accent); }
+img { max-width: 100%; height: auto; display: block; }
+main, .top, footer { max-width: var(--measure); margin: 0 auto; padding-inline: var(--gutter); }
+
+.top { display: flex; align-items: center; justify-content: space-between; padding-block: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--fg); text-decoration: none; font-weight: 700; font-size: 1.25rem; }
+.langs { display: flex; gap: 4px; }
+.langs a { padding: 4px 10px; border-radius: 8px; text-decoration: none; color: var(--muted); font-weight: 700; font-size: .875rem; }
+.langs a[aria-current] { color: var(--bg); background: var(--accent); }
+
+h1 { font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.12; margin: 0 0 16px; letter-spacing: -.01em; }
+h2 { font-size: 1.75rem; margin: 64px 0 20px; }
+h3 { font-size: 1.0625rem; margin: 0 0 6px; }
+h4 { margin: 12px 0 4px; color: var(--muted); font-size: .9375rem; }
+
+.hero { display: grid; gap: 32px; padding-block: 40px 24px; align-items: center; }
+@media (min-width: 52rem) { .hero { grid-template-columns: 1.1fr 1fr; } }
+.lead { font-size: 1.25rem; color: var(--muted); margin: 0 0 24px; max-width: 34rem; }
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 0 0 16px; }
+.button {
+  display: inline-block; padding: 12px 22px; border-radius: 10px; font-weight: 700; text-decoration: none;
+  color: var(--on-accent); background: var(--accent-press); border: 2px solid var(--accent);
+}
+.button:hover { background: var(--accent); }
+.button:focus-visible, a:focus-visible { outline: 3px solid var(--warn); outline-offset: 2px; }
+.version { color: var(--muted); font-size: .9375rem; }
+.note { font-size: .9375rem; color: var(--muted); border-left: 4px solid var(--warn); padding-left: 12px; margin: 0; max-width: 34rem; }
+
+/* The Memory panel's slot strip, as in the banner: filled = module, outline = empty slot. */
+.slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.slot {
+  position: relative; aspect-ratio: 5 / 4; display: grid; place-items: start center; padding-top: 14%;
+  border: 3px solid var(--accent); border-radius: 12px; color: var(--accent); font-weight: 700; font-size: clamp(.7rem, 1.8vw, 1rem);
+}
+.slot.filled { background: var(--accent-press); color: var(--on-accent); }
+.slot i { position: absolute; left: 10%; right: 10%; bottom: 8%; height: 9%; background: repeating-linear-gradient(90deg, var(--warn) 0 8px, transparent 8px 12px); }
+
+.shot img { border-radius: 12px; border: 1px solid var(--line); box-shadow: 0 12px 40px color-mix(in srgb, var(--fg) 18%, transparent); }
+
+.cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+.cards li { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+.cards p { margin: 0; color: var(--muted); font-size: .9688rem; }
+
+.gallery { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); }
+.gallery figure { margin: 0; }
+.gallery img { border-radius: 10px; border: 1px solid var(--line); }
+figcaption { color: var(--muted); font-size: .9375rem; margin-top: 8px; }
+
+.release { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px 20px 12px; margin-bottom: 16px; }
+.release-head { display: flex; align-items: baseline; gap: 12px; }
+.release-head time { color: var(--muted); font-size: .9375rem; }
+code { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; font-size: .9em; }
+
+.downloads { width: 100%; border-collapse: collapse; }
+.downloads th, .downloads td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+/* The size column stays on one line. */
+.downloads td:last-child, .downloads th:last-child { white-space: nowrap; }
+.downloads th { color: var(--muted); font-size: .875rem; }
+@media (max-width: 40rem) { .downloads thead { display: none; } .downloads tr { display: block; padding: 8px 0; } .downloads td { display: block; border: 0; padding: 2px 0; word-break: break-all; } }
+
+footer { padding-block: 48px 40px; color: var(--muted); font-size: .9375rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
