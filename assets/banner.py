@@ -2,6 +2,7 @@
 Memory panel's slot strip (filled = module, outline = empty slot).
 
 Usage: python3 assets/banner.py    ->  docs/assets/rigscope-banner.png (2430x420, transparent)
+                                       docs/assets/rigscope-og.png (1200x630, social preview)
 """
 import pathlib
 import tomllib
@@ -54,5 +55,20 @@ def main():
     img.save(out, optimize=True)
 
 
+def og():
+    """1200x630 social preview: the banner's name and slot strip on the dark background."""
+    w, h = 1200, 630
+    img = Image.new("RGBA", (w, h), rgb(THEME["bg_dark"]) + (255,))
+    d = ImageDraw.Draw(img)
+    name = ImageFont.truetype(str(FONT), 190)
+    small = ImageFont.truetype(str(FONT), 44)
+    d.text((70, 90), THEME["name"], font=name, fill=ACCENT + (255,))
+    for i, (filled, label) in enumerate([(True, "16 GiB"), (True, "16 GiB"), (False, "Empty"), (False, "Empty")]):
+        slot(d, 70 + i * 270, 380, 240, 170, filled, label, small)
+    out = ROOT / "docs" / "assets" / "rigscope-og.png"
+    img.convert("RGB").save(out, optimize=True)
+
+
 if __name__ == "__main__":
     main()
+    og()
