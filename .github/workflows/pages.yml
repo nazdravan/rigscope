@@ -1,0 +1,68 @@
+name: Pages
+
+# The landing page https://nazdravan.github.io/rigscope/ (source in site/).
+# Rebuilt after every successful Release run (a release published by Release does not start other
+# workflows, so `on: release` cannot be used), when the page, the changelog or its images change
+# on `main`, and by hand. The links and the news come from the latest published release.
+
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - site/**
+      - CHANGELOG.md
+      - assets/theme.toml
+      - assets/icon.png
+      - assets/fonts/**
+      - docs/assets/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tests
+        run: |
+          node --test 'site/tests/*.test.mjs'
+          python3 -m unittest discover -s site/tests
+      # No tag: the latest published release (not a draft, not a pre-release).
+      - name: Latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view --repo "$GITHUB_REPOSITORY" --json tagName,publishedAt,url,assets > release.json
+      - name: Page
+        run: python3 site/build.py --release release.json --out _site
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
