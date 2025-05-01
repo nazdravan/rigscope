@@ -22,7 +22,7 @@ pub use error::ProbeError;
 pub use fixture_source::FixtureSource;
 #[cfg(target_os = "linux")]
 pub use fs_source::FsSource;
-pub use gpu::{read_gpus, MAX_GPUS, NO_PCI_IDS, NVIDIA_NO_VRAM, SHARED_MEMORY};
+pub use gpu::{read_gpus, MAX_GPUS, NO_PCIE_LINK, NO_PCI_IDS, NVIDIA_NO_VRAM, SHARED_MEMORY};
 pub use hwmon::{read_sensors, refresh_sensors, MAX_CHIPS};
 pub use net::{read_net, MAX_INTERFACES, WIFI_NO_DUPLEX, WIFI_NO_SPEED};
 pub use power::{read_power, MAX_SUPPLIES};

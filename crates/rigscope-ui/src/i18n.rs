@@ -355,6 +355,7 @@ pub fn reason(lang: Language, reason: &str) -> String {
         "pci.ids not installed (hwdata package)" => "pci.ids nu e instalat (pachetul hwdata)",
         "not exposed by the nvidia driver" => "nu e expusă de driverul nvidia",
         "uses system memory" => "folosește memoria sistemului",
+        "built in, no PCIe link" => "integrat, fără legătură PCIe",
         "not reported for Wi-Fi" => "nu e raportată pentru Wi-Fi",
         "does not apply to Wi-Fi" => "nu se aplică la Wi-Fi",
         "this kind of device has no SMART data" => "acest tip de dispozitiv nu are date SMART",

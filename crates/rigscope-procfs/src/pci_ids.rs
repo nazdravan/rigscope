@@ -51,6 +51,23 @@ pub fn lookup(text: &str, vendor: u16, device: u16, subsystem: Option<(u16, u16)
     out
 }
 
+/// The name of a vendor id alone (a board maker named by a subsystem id the database does not
+/// list under the device).
+pub fn vendor_name(text: &str, vendor: u16) -> Option<String> {
+    for line in text.lines() {
+        if line.starts_with('#') || line.starts_with('\t') || line.trim().is_empty() {
+            continue;
+        }
+        if line.starts_with("C ") {
+            break;
+        }
+        if hex(line.split_whitespace().next()) == Some(vendor) {
+            return name_after_ids(line, 1);
+        }
+    }
+    None
+}
+
 fn hex(s: Option<&str>) -> Option<u16> {
     let s = s?;
     if s.len() != 4 {
@@ -109,6 +126,24 @@ C 03  Display controller
     #[test]
     fn device_ids_are_not_matched_under_another_vendor() {
         assert_eq!(lookup(IDS, 0x1002, 0x2484, None).device, None);
+    }
+
+    #[test]
+    fn vendor_name_alone() {
+        assert_eq!(
+            vendor_name(IDS, 0x10de).as_deref(),
+            Some("NVIDIA Corporation")
+        );
+        assert_eq!(
+            vendor_name(IDS, 0x8086).as_deref(),
+            Some("Intel Corporation")
+        );
+        assert_eq!(
+            vendor_name(IDS, 0x15bf),
+            None,
+            "a device id is not a vendor"
+        );
+        assert_eq!(vendor_name(IDS, 0x0003), None, "classes are not vendors");
     }
 
     #[test]

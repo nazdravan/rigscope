@@ -11,6 +11,8 @@ pub const MAX_GPUS: usize = 32;
 pub const NO_PCI_IDS: &str = "pci.ids not installed (hwdata package)";
 pub const NVIDIA_NO_VRAM: &str = "not exposed by the nvidia driver";
 pub const SHARED_MEMORY: &str = "uses system memory";
+/// Devices on the root bus (00) are built into the processor or chipset: they have no link.
+pub const NO_PCIE_LINK: &str = "built in, no PCIe link";
 
 use crate::sysfs::{basename, hex_id, text};
 
@@ -66,10 +68,15 @@ fn read_gpu(src: &dyn Source, card: &str, ids: Option<&str>) -> Gpu {
         }
         (Some(text), Some(v), Some(d)) => {
             let n = pci_ids::lookup(text, v, d, subsystem);
+            // pci.ids lists only some boards; the maker's name alone still tells whose it is.
+            let board = n.subsystem.or_else(|| {
+                let (sv, sd) = subsystem.filter(|(sv, _)| *sv != 0)?;
+                pci_ids::vendor_name(text, sv).map(|maker| format!("{maker} ({sv:04x}:{sd:04x})"))
+            });
             (
                 Field::from_option(n.vendor),
                 Field::from_option(n.device),
-                Field::from_option(n.subsystem),
+                Field::from_option(board),
             )
         }
         _ => (Field::Unknown, Field::Unknown, Field::Unknown),
@@ -91,6 +98,9 @@ fn read_gpu(src: &dyn Source, card: &str, ids: Option<&str>) -> Gpu {
         (Some(speed), Some(width)) if width.parse::<u8>().is_ok() => {
             Field::Known(format!("{speed} x{width}"))
         }
+        _ if pci_address.as_deref().is_some_and(on_root_bus) => {
+            Field::Unavailable(NO_PCIE_LINK.to_string())
+        }
         _ => Field::Unknown,
     };
 
@@ -109,6 +119,11 @@ fn read_gpu(src: &dyn Source, card: &str, ids: Option<&str>) -> Gpu {
     }
 }
 
+/// `0000:00:02.0` → true: bus 00 of a domain.
+fn on_root_bus(address: &str) -> bool {
+    address.split(':').nth(1) == Some("00")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -120,6 +135,14 @@ mod tests {
         assert!(!is_card("card0-HDMI-A-1"));
         assert!(!is_card("renderD128"));
         assert!(!is_card("card"));
+    }
+
+    #[test]
+    fn root_bus() {
+        assert!(on_root_bus("0000:00:02.0"));
+        assert!(!on_root_bus("0000:01:00.0"));
+        assert!(!on_root_bus("0000:c1:00.0"));
+        assert!(!on_root_bus("garbage"));
     }
 
     #[test]
