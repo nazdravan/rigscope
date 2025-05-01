@@ -40,7 +40,7 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
                     for f in &chip.fans {
                         ui.label(egui::RichText::new(&f.label).strong());
                         ui.label(fmt::field(lang, &f.rpm, |r| format!("{r} RPM")));
-                        ui.label(tr(lang, Key::Fans));
+                        ui.label("");
                         ui.end_row();
                     }
                 });

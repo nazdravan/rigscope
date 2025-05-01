@@ -103,7 +103,6 @@ pub enum Key {
     NoBattery,
     Derived,
     Sensors,
-    Fans,
     DiskHealth,
     SmartNeedsRoot,
     Warning,
@@ -216,7 +215,6 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             DiskHealth => "Health (SMART)",
             SmartNeedsRoot => "Disk health (SMART) needs root: smartctl reads it through the elevated helper.",
             Warning => "Warning",
-            Fans => "Fans",
             NoSensors => "No sensors found in /sys/class/hwmon.",
         },
         Language::Ro => match key {
@@ -322,7 +320,6 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             DiskHealth => "Sănătate (SMART)",
             SmartNeedsRoot => "Sănătatea discurilor (SMART) necesită root: smartctl o citește prin helperul cu drepturi ridicate.",
             Warning => "Atenție",
-            Fans => "Ventilatoare",
             NoSensors => "Nu s-au găsit senzori în /sys/class/hwmon.",
         },
     }
