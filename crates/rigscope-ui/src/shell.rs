@@ -191,7 +191,10 @@ fn status_bar(ui: &mut egui::Ui, app: &App, actions: &mut Actions, lang: Languag
         }
         if let Some(status) = &app.session.status {
             ui.separator();
-            ui.label(crate::i18n::status(lang, status));
+            let text = crate::i18n::status(lang, status);
+            // Long messages (helper errors) are cut at the window edge; the tooltip has them all.
+            ui.add(egui::Label::new(&text).truncate())
+                .on_hover_text(&text);
         }
     });
 }
