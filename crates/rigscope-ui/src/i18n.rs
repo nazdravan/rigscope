@@ -325,6 +325,18 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
     }
 }
 
+/// Banner while a saved snapshot is shown instead of this machine.
+pub fn opened_snapshot(lang: Language, path: &str) -> String {
+    match lang {
+        Language::En => {
+            format!("Showing the saved snapshot {path}, not this computer. Refresh reads this computer again.")
+        }
+        Language::Ro => format!(
+            "Se afișează snapshot-ul salvat {path}, nu acest calculator. Reîmprospătează citește din nou acest calculator."
+        ),
+    }
+}
+
 /// "1 of 2 slots free" / "1 din 2 sloturi libere".
 pub fn slots_free(lang: Language, free: u16, total: u16) -> String {
     match lang {

@@ -82,6 +82,13 @@ pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
 
     egui::Panel::top("menu").show(ui, |ui| menu_bar(ui, app, &mut actions, lang, pick));
     egui::Panel::bottom("status").show(ui, |ui| status_bar(ui, app, &mut actions, lang));
+    // The status line is overwritten by the next action; this banner stays while the data is
+    // not this machine's.
+    if let Some(path) = &app.session.opened {
+        egui::Panel::top("opened").show(ui, |ui| {
+            ui.label(egui::RichText::new(crate::i18n::opened_snapshot(lang, path)).strong());
+        });
+    }
     egui::Panel::left("sections")
         .resizable(false)
         .exact_size(170.0)

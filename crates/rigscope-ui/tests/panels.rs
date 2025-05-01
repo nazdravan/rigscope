@@ -397,3 +397,23 @@ fn smart_summary_in_romanian() {
         "sectoare realocate"
     );
 }
+
+#[test]
+fn opened_snapshot_banner_stays_until_refresh() {
+    let env = FakeEnv::fixture("desktop-ddr4");
+    let mut app = App::new(Box::new(env));
+    app.run("snapshot.save", json!({"path": "/s.json"}))
+        .unwrap();
+    app.run("snapshot.open", json!({"path": "/s.json"}))
+        .unwrap();
+    // Another action replaces the status line; the banner must remain.
+    app.run("view.section", json!({"id": "cpu"})).unwrap();
+    let mut h = Harness::builder()
+        .with_size(egui::vec2(1100.0, 800.0))
+        .build_ui_state(rigscope_ui::draw, app);
+    h.run();
+    assert!(has(&h, "Showing the saved snapshot /s.json"));
+    h.state_mut().run("snapshot.refresh", json!({})).unwrap();
+    h.run();
+    assert!(!has(&h, "Showing the saved snapshot"));
+}
