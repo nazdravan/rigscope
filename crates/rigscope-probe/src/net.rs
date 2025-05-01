@@ -8,6 +8,8 @@ use rigscope_procfs::pci_ids as ids;
 pub const NET_DIR: &str = "/sys/class/net";
 pub const MAX_INTERFACES: usize = 128;
 pub const WIFI_NO_SPEED: &str = "not reported for Wi-Fi";
+/// Wi-Fi drivers reject reads of `duplex` (EINVAL): the notion belongs to wired links.
+pub const WIFI_NO_DUPLEX: &str = "does not apply to Wi-Fi";
 
 pub fn read_net(src: &dyn Source) -> NetInfo {
     let Ok(names) = src.list(NET_DIR) else {
@@ -46,7 +48,11 @@ fn read_interface(src: &dyn Source, name: &str, base: &str, table: Option<&str>)
         _ if wifi => Field::Unavailable(WIFI_NO_SPEED.to_string()),
         _ => Field::Unknown,
     };
-    let duplex = read("duplex").filter(|d| d == "full" || d == "half");
+    let duplex = match read("duplex").filter(|d| d == "full" || d == "half") {
+        Some(d) => Field::Known(d),
+        None if wifi => Field::Unavailable(WIFI_NO_DUPLEX.to_string()),
+        None => Field::Unknown,
+    };
     let mac = read("address")
         .as_deref()
         .and_then(clean_text)
@@ -73,7 +79,7 @@ fn read_interface(src: &dyn Source, name: &str, base: &str, table: Option<&str>)
         mac: Field::from_option(mac),
         state: Field::from_option(read("operstate").filter(|s| !s.is_empty() && s != "unknown")),
         speed_mbps: speed,
-        duplex: Field::from_option(duplex),
+        duplex,
         mtu: Field::from_option(read("mtu").and_then(|m| m.parse::<u32>().ok())),
         driver: Field::from_option(crate::sysfs::driver(src, &dev)),
         vendor_name,

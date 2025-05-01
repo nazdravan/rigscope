@@ -49,6 +49,11 @@ fn laptop_wifi_has_no_link_speed() {
         "Wi-Fi rate is not in sysfs"
     );
     assert_eq!(
+        w.duplex,
+        Field::Unavailable(WIFI_NO_DUPLEX.into()),
+        "duplex is a wired-link notion"
+    );
+    assert_eq!(
         w.device_name,
         Field::Known("MT7922 802.11ax PCI Express Wireless Network Adapter".into())
     );
