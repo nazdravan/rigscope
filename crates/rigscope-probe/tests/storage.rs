@@ -78,8 +78,8 @@ fn desktop_has_nvme_and_sata_hdd_and_skips_loop() {
     assert_eq!(h.model, Field::Known("WDC WD10EZEX-08W".into()));
     assert_eq!(
         h.vendor,
-        Field::Unknown,
-        "libata reports the vendor as 'ATA'"
+        Field::Known("Western Digital".into()),
+        "libata reports the vendor as 'ATA'; the maker comes from the model"
     );
     assert_eq!(h.firmware, Field::Known("1A01".into()));
     assert_eq!(h.kind, Field::Known(DiskKind::Hdd));

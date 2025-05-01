@@ -50,6 +50,66 @@ pub fn kind_for(interface: Option<Interface>, rotational: Option<&str>) -> Optio
     }
 }
 
+/// Makers whose model strings start with their name (compared without case), as the kernel
+/// reports them for SATA (`vendor` = "ATA") and NVMe (no `vendor` file at all).
+const MODEL_MAKERS: &[(&str, &str)] = &[
+    ("samsung", "Samsung"),
+    ("spcc", "Silicon Power"),
+    ("kingston", "Kingston"),
+    ("crucial", "Crucial"),
+    ("micron", "Micron"),
+    ("wdc", "Western Digital"),
+    ("wd", "Western Digital"),
+    ("seagate", "Seagate"),
+    ("toshiba", "Toshiba"),
+    ("kioxia", "Kioxia"),
+    ("sandisk", "SanDisk"),
+    ("intel", "Intel"),
+    ("hgst", "HGST"),
+    ("hitachi", "Hitachi"),
+    ("adata", "ADATA"),
+    ("transcend", "Transcend"),
+    ("corsair", "Corsair"),
+    ("pny", "PNY"),
+    ("lexar", "Lexar"),
+    ("patriot", "Patriot"),
+    ("apacer", "Apacer"),
+    ("netac", "Netac"),
+    ("plextor", "Plextor"),
+    ("liteon", "Lite-On"),
+    ("lite-on", "Lite-On"),
+    ("sk", "SK hynix"),
+    ("hynix", "SK hynix"),
+    ("maxtor", "Maxtor"),
+    ("ocz", "OCZ"),
+    ("teamgroup", "Team Group"),
+];
+
+/// The maker named by the first word of a disk model, or by a well-known part-number prefix
+/// (`ST1000DM003` Seagate, `CT500MX500SSD1` Crucial, `WDS500G2B0A` Western Digital).
+pub fn maker_from_model(model: &str) -> Option<&'static str> {
+    let first = model.split_whitespace().next()?;
+    let lower = first.to_ascii_lowercase();
+    if let Some((_, maker)) = MODEL_MAKERS.iter().find(|(word, _)| *word == lower) {
+        return Some(maker);
+    }
+    let digit_after = |prefix: &str| {
+        lower
+            .strip_prefix(prefix)
+            .and_then(|rest| rest.chars().next())
+            .is_some_and(|c| c.is_ascii_digit())
+    };
+    if digit_after("st") {
+        Some("Seagate")
+    } else if digit_after("ct") {
+        Some("Crucial")
+    } else if lower.starts_with("wds") || digit_after("wd") {
+        Some("Western Digital")
+    } else {
+        None
+    }
+}
+
 fn vendor(raw: Option<String>) -> Option<String> {
     let v = clean_text(&raw?)?;
     // libata always says "ATA"; virtio gives a PCI id. Neither is the maker.
@@ -98,10 +158,17 @@ fn read_disk(src: &dyn Source, name: &str) -> Option<Disk> {
         }
         Err(_) => Field::Unknown,
     };
+    let model = dev("model").as_deref().and_then(clean_text);
+    let vendor = vendor(dev("vendor")).or_else(|| {
+        model
+            .as_deref()
+            .and_then(maker_from_model)
+            .map(str::to_string)
+    });
     Some(Disk {
         name: name.to_string(),
-        model: Field::from_option(dev("model").as_deref().and_then(clean_text)),
-        vendor: Field::from_option(vendor(dev("vendor"))),
+        model: Field::from_option(model),
+        vendor: Field::from_option(vendor),
         serial,
         firmware: Field::from_option(
             dev("firmware_rev")
@@ -125,6 +192,28 @@ fn read_disk(src: &dyn Source, name: &str) -> Option<Disk> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn makers_from_model_names() {
+        for (model, maker) in [
+            ("Samsung SSD 860", Some("Samsung")),
+            ("SAMSUNG MZVL21T0HCLR-00BL2", Some("Samsung")),
+            ("SPCC Solid State", Some("Silicon Power")),
+            ("WDC WD10EZEX-08W", Some("Western Digital")),
+            ("WD Blue SN570 1TB", Some("Western Digital")),
+            ("WDS500G2B0A-00SM50", Some("Western Digital")),
+            ("ST1000DM003-1CH162", Some("Seagate")),
+            ("CT500MX500SSD1", Some("Crucial")),
+            ("KINGSTON SA400S37240G", Some("Kingston")),
+            ("SK hynix PC711", Some("SK hynix")),
+            // Words that only look like a prefix are not guessed.
+            ("STORAGE DEVICE", None),
+            ("Ultra Fit", None),
+            ("", None),
+        ] {
+            assert_eq!(maker_from_model(model), maker, "{model}");
+        }
+    }
 
     #[test]
     fn interfaces_from_paths() {
