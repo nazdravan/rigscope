@@ -2,7 +2,7 @@
 
 All notable changes to rigscope. The notes of each version are the text of its GitHub release.
 
-## [Unreleased]
+## [0.2.0] — 2026-11-03
 
 ### Changed
 - "Read with elevated rights" no longer needs a helper: it runs a fixed script through the system
