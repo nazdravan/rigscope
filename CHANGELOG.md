@@ -2,6 +2,23 @@
 
 All notable changes to rigscope. The notes of each version are the text of its GitHub release.
 
+## [Unreleased]
+
+### Changed
+- "Read with elevated rights" no longer needs a helper: it runs a fixed script through the system
+  `/bin/sh` under pkexec, so it works straight from the AppImage and the `.tar.gz`.
+  `install-helper.sh`, the polkit policy and the `--dump-dmi` mode are gone.
+- Disk makers come from the model name when the kernel says only "ATA"; the GPU board maker
+  comes from its subsystem id; built-in GPUs say they have no PCIe link.
+- A banner stays while a saved snapshot is shown; long status messages show whole on hover.
+
+### Fixed
+- Wi-Fi duplex said "Unknown" (it does not apply); a stray "Fans" column in Sensors.
+
+### Checked
+- On real hardware (ASUS laptop, Arch, KDE Wayland): the password prompt, the SMBIOS slots and
+  SMART against udev and smartctl, the clipboard on Wayland and X11, the file dialogs.
+
 ## [0.1.0] — 2026-11-03
 
 First release.
