@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # .deb for Ubuntu / Debian / Mint: dist/release/rigscope-<version>-linux-x86_64.deb
-# Install with `sudo apt install ./rigscope-*.deb`. It also installs the root-owned helper
-# (/usr/libexec/rigscope/rigscope-helper) and the polkit policy, so "Read more (root)" works.
+# Install with `sudo apt install ./rigscope-*.deb`.
 # Needs dpkg-deb (package dpkg).
 set -euo pipefail
 . "$(dirname "$0")/../env.sh"
@@ -12,16 +11,12 @@ cargo build --release --locked -p rigscope
 name=$APP-$VERSION-linux-x86_64
 root=$ROOT/dist/stage/deb
 rm -rf "$root" "$OUT/$name.deb"
-mkdir -p "$root/DEBIAN" "$root/usr/bin" "$root$(dirname "$HELPER")" \
+mkdir -p "$root/DEBIAN" "$root/usr/bin" \
     "$root/usr/share/applications" "$root/usr/share/icons/hicolor/256x256/apps" \
-    "$root/usr/share/polkit-1/actions" "$root/usr/share/doc/rigscope" "$OUT"
+    "$root/usr/share/doc/rigscope" "$OUT"
 install -m 755 target/release/rigscope "$root/usr/bin/rigscope"
-# The same binary, owned by root and not writable by anyone else: the only file pkexec runs.
-install -m 755 target/release/rigscope "$root$HELPER"
 install -m 644 packaging/linux/rigscope.desktop "$root/usr/share/applications/rigscope.desktop"
 install -m 644 assets/icon.png "$root/usr/share/icons/hicolor/256x256/apps/rigscope.png"
-install -m 644 packaging/linux/org.rigscope.dump-dmi.policy \
-    "$root/usr/share/polkit-1/actions/org.rigscope.dump-dmi.policy"
 install -m 644 README.md "$root/usr/share/doc/rigscope/README.md"
 {
     echo "Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/"
@@ -55,8 +50,8 @@ Homepage: https://github.com/nazdravan/rigscope
 Description: detailed hardware configuration viewer
  Shows every RAM slot, the CPU, disks with their SMART health, graphics,
  network, battery and sensors in one window, in English or Romanian. Reads
- /proc and /sys as a normal user; the SMBIOS table and SMART are read by a
- small root-owned helper that polkit authorizes.
+ /proc and /sys as a normal user; the SMBIOS table and SMART are read after
+ a polkit password prompt, by a fixed script that only prints them.
 CONTROL
 
 dpkg-deb --root-owner-group -Zxz --build "$root" "$OUT/$name.deb"

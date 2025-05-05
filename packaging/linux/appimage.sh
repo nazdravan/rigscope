@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # AppImage for Linux x86_64: dist/release/rigscope-<version>-linux-x86_64.AppImage
 # One file: make it executable and run it. appimagetool is downloaded to .cache/ on first use.
-# An AppImage cannot install the root-owned helper; see install-helper.sh or use the .deb.
+# "Read with elevated rights" works from it as is: pkexec runs the system /bin/sh, not a file
+# inside the AppImage (root cannot even read the AppImage's FUSE mount).
 set -euo pipefail
 . "$(dirname "$0")/../env.sh"
 cd "$ROOT"
