@@ -1,10 +1,10 @@
-//! The real environment: filesystem, clock, clipboard, files, privileged helper.
+//! The real environment: filesystem, clock, clipboard, files, the elevated read.
 
 use rigscope_engine::{EngineError, Env};
 use rigscope_probe::{FixtureSource, Source};
 use std::io::Read;
 
-/// In a fixture directory, the smartctl JSON the simulated helper returns per disk.
+/// In a fixture directory, the smartctl JSON the simulated elevated read returns per disk.
 pub const FIXTURE_SMART_DIR: &str = "/root/smart";
 
 /// Largest file `read_file` accepts.
@@ -20,7 +20,7 @@ pub struct RealEnv {
     pub source: SystemSource,
     /// Opened on first use; kept alive so X11/Wayland keep serving the copied text.
     clipboard: Option<arboard::Clipboard>,
-    /// Result channel of the helper thread while it runs.
+    /// Result channel of the elevated read while it runs.
     elevation: Option<std::sync::mpsc::Receiver<Result<Vec<u8>, EngineError>>>,
 }
 
@@ -67,7 +67,7 @@ impl Env for RealEnv {
         }
         let (tx, rx) = std::sync::mpsc::channel();
         match &self.source {
-            // Fixture mode simulates the helper with the fixture's `root/smart/<disk>.json`.
+            // Fixture mode simulates the elevated read with the fixture's `root/smart/<disk>.json`.
             SystemSource::Fixture(f) => {
                 let smart = |name: &str| {
                     f.read(&format!("{FIXTURE_SMART_DIR}/{name}.json"))
@@ -77,9 +77,11 @@ impl Env for RealEnv {
                 let _ = tx.send(result);
             }
             #[cfg(target_os = "linux")]
-            SystemSource::Real(_) => {
+            SystemSource::Real(s) => {
+                // The disk list is read here, as the user; the root side only checks it.
+                let disks = crate::dump_dmi::disks_to_query(s);
                 std::thread::spawn(move || {
-                    let _ = tx.send(crate::dump_dmi::run_helper());
+                    let _ = tx.send(crate::dump_dmi::run_elevated(&disks));
                 });
             }
         }
@@ -92,9 +94,9 @@ impl Env for RealEnv {
         let result = match rx.try_recv() {
             Ok(r) => r,
             Err(std::sync::mpsc::TryRecvError::Empty) => return None,
-            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                Err(EngineError::Io("helper thread ended".into()))
-            }
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => Err(EngineError::Io(
+                "elevated read ended without a result".into(),
+            )),
         };
         self.elevation = None;
         Some(result)

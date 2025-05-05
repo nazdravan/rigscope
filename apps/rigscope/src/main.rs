@@ -13,9 +13,6 @@ use serde_json::json;
 
 fn main() -> Result<()> {
     let args = args::Args::parse_os(std::env::args_os().skip(1))?;
-    if args.dump_dmi {
-        return dump_dmi_main();
-    }
 
     // Keeps the unpacked demo machine alive (and removes it on exit) when there is no Linux here.
     let mut _demo_dir = None;
@@ -85,25 +82,4 @@ fn default_env(demo: &mut Option<demo::DemoDir>) -> Result<(env::RealEnv, bool)>
     let env = env::RealEnv::fixture(&dir.path().to_string_lossy());
     *demo = Some(dir);
     Ok((env, true))
-}
-
-/// `--dump-dmi`: the only code that runs as root.
-fn dump_dmi_main() -> Result<()> {
-    #[cfg(target_os = "linux")]
-    let result = dump_dmi::dump(&rigscope_probe::FsSource, &dump_dmi::smartctl_json);
-    #[cfg(not(target_os = "linux"))]
-    let result: std::result::Result<Vec<u8>, String> = Err("--dump-dmi works only on Linux".into());
-    match result {
-        Ok(bytes) => {
-            use std::io::Write;
-            let mut out = std::io::stdout().lock();
-            out.write_all(&bytes)?;
-            out.flush()?;
-            Ok(())
-        }
-        Err(e) => {
-            eprintln!("{e}");
-            std::process::exit(dump_dmi::DUMP_FAILED);
-        }
-    }
 }

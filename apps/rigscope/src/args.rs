@@ -12,8 +12,6 @@ pub struct Args {
     pub section: Option<String>,
     /// Port of the local control channel.
     pub control: Option<u16>,
-    /// Privileged helper mode (run by pkexec). Must be the only argument.
-    pub dump_dmi: bool,
 }
 
 impl Args {
@@ -46,21 +44,12 @@ impl Args {
                             .map_err(|_| anyhow::anyhow!("--control: bad port {v}"))?,
                     );
                 }
-                "--dump-dmi" => a.dump_dmi = true,
                 "-h" | "--help" => {
                     println!("usage: rigscope [--fixture DIR] [--lang en|ro] [--section memory|cpu|system] [--control PORT]");
                     std::process::exit(0);
                 }
                 other => bail!("unknown argument: {other}"),
             }
-        }
-        if a.dump_dmi
-            && a != (Args {
-                dump_dmi: true,
-                ..Args::default()
-            })
-        {
-            bail!("--dump-dmi takes no other arguments");
         }
         Ok(a)
     }
@@ -83,9 +72,8 @@ mod tests {
     }
 
     #[test]
-    fn dump_dmi_must_be_alone() {
-        assert!(parse(&["--dump-dmi"]).unwrap().dump_dmi);
-        assert!(parse(&["--dump-dmi", "--fixture", "x"]).is_err());
+    fn the_old_helper_flag_is_gone() {
+        assert!(parse(&["--dump-dmi"]).is_err());
     }
 
     #[cfg(unix)]
