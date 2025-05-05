@@ -139,11 +139,13 @@ așteptare / necorectabile la ATA, cu avertismente.
 
 Fereastra nu rulează niciodată ca root. Tot ce poate citi un utilizator obișnuit se citește
 direct; tabela de memorie din BIOS (`/sys/firmware/dmi/tables/DMI`) și SMART sunt accesibile doar
-pentru root. Pentru ele, **Citește cu drepturi ridicate** pornește `pkexec rigscope --dump-dmi`:
-o singură fereastră de parolă, iar acest mod doar citește cele două fișiere DMI și rulează
-`smartctl` dintr-o cale fixă de sistem, cu argumente fixe, pentru nume de discuri validate. Nu
-interpretează nimic; fereastra neprivilegiată interpretează rezultatul. Fereastra rămâne
-responsivă cât timp e deschis dialogul de parolă.
+pentru root. Pentru ele, **Citește cu drepturi ridicate** pornește `pkexec /bin/sh -c <script>`:
+o singură fereastră de parolă, iar scriptul, inclus în rigscope, doar afișează cele două fișiere
+DMI și rulează `smartctl` dintr-o cale fixă de sistem, cu argumente fixe, pentru nume de discuri
+validate. Niciun fișier al rigscope nu rulează ca root, deci nu e nimic de instalat și merge la
+fel din AppImage, din `.tar.gz` sau din `.deb`. Scriptul nu interpretează nimic; fereastra
+neprivilegiată interpretează rezultatul. Fereastra rămâne responsivă cât timp e deschis dialogul
+de parolă.
 
 ## Decizii
 

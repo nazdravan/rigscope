@@ -136,10 +136,12 @@ warnings.
 
 The window never runs as root. Everything readable by a normal user is read directly; the BIOS
 memory table (`/sys/firmware/dmi/tables/DMI`) and SMART are root-only. For those, **Read with
-elevated rights** starts `pkexec rigscope --dump-dmi`: one password prompt, and that mode only
-reads the two DMI files and runs `smartctl` from a fixed system path, with fixed arguments, for
-validated disk names. It parses nothing; the unprivileged window parses the result. The window
-stays responsive while the password prompt is open.
+elevated rights** starts `pkexec /bin/sh -c <script>`: one password prompt, and the script, built
+into rigscope, only prints the two DMI files and runs `smartctl` from a fixed system path, with
+fixed arguments, for validated disk names. No file of rigscope runs as root, so there is nothing
+to install and it works the same from the AppImage, the `.tar.gz` or the `.deb`. The script
+parses nothing; the unprivileged window parses the result. The window stays responsive while the
+password prompt is open.
 
 ## Decisions
 

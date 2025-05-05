@@ -33,20 +33,21 @@ and tests everything and keeps the files as workflow artifacts; it publishes not
 
 | File | Where | Notes |
 |---|---|---|
-| `rigscope-<v>-linux-x86_64.deb` | Ubuntu 22.04 (glibc 2.35) | Installs `/usr/bin/rigscope`, the root-owned `/usr/libexec/rigscope/rigscope-helper` and the polkit policy, so the root-only data (SMBIOS, SMART) works. |
-| `rigscope-<v>-linux-x86_64.AppImage` | Ubuntu 22.04 | One file. Cannot install the helper: run `install-helper.sh` from the `.tar.gz` once. |
-| `rigscope-<v>-linux-x86_64.tar.gz` | Ubuntu 22.04 | Binary, licences, `install-helper.sh` and the policy. |
+| `rigscope-<v>-linux-x86_64.deb` | Ubuntu 22.04 (glibc 2.35) | Installs `/usr/bin/rigscope`, the desktop file and the icon. |
+| `rigscope-<v>-linux-x86_64.AppImage` | Ubuntu 22.04 | One file, no install; the root-only data (SMBIOS, SMART) works from it too. |
+| `rigscope-<v>-linux-x86_64.tar.gz` | Ubuntu 22.04 | Binary and licences. |
 | `rigscope-<v>-macos-universal.dmg` | macOS | arm64 + x86_64, ad-hoc signed, not notarized (right click -> Open). Shows the built-in demo machine. |
 | `SHA256SUMS.txt` | | Checksums of all of the above. |
 
 Windows is not built: it is not a supported platform.
 
-## Why the helper is a root-owned copy
+## Root without a helper
 
-`pkexec` runs the helper as root. The app refuses to elevate unless the program it would run is
-owned by root and not writable by anyone else (otherwise any process of the user could replace
-it after the password was typed). Development builds can opt out with
-`RIGSCOPE_ALLOW_USER_HELPER=1`.
+"Read with elevated rights" runs `pkexec /bin/sh -c <script>`: the system shell (root-owned)
+with a fixed script compiled into rigscope (`apps/rigscope/src/dump_dmi.rs`). No file of rigscope
+runs as root, so no package has to install anything, and nothing a user process could swap after
+the password is typed is ever executed. The script checks its arguments again (smartctl path
+from a fixed list, kernel disk names) and only prints hex; the window parses it.
 
 ## Local checks
 
