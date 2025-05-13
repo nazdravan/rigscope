@@ -1,15 +1,15 @@
 //! Packs a fixture directory into one blob (at build time, from `build.rs`) and unpacks it into a
 //! directory (at run time), so a binary built on macOS can show the demo machine without the
-//! source tree. Symlinks are kept, because the fixtures use them like /sys does.
+//! source tree. The fixtures hold no symlinks (they list them in `links.txt`, a plain file), so
+//! the blob carries files only.
 //!
 //! Blob: repeated entries `kind:u8 | path_len:u32 | path | data_len:u32 | data`, integers
-//! little-endian, kind 0 = file (data = contents), 1 = symlink (data = relative target).
+//! little-endian, kind 0 = file (data = contents).
 
 use std::io;
 use std::path::{Component, Path, PathBuf};
 
 const FILE: u8 = 0;
-const LINK: u8 = 1;
 
 fn bad(msg: &str) -> io::Error {
     io::Error::new(io::ErrorKind::InvalidData, msg.to_string())
@@ -49,9 +49,7 @@ fn walk(dir: &Path, rel: &str, out: &mut Vec<u8>) -> io::Result<()> {
         };
         let ty = entry.file_type()?;
         if ty.is_symlink() {
-            let target = std::fs::read_link(entry.path())?;
-            let target = target.to_str().ok_or_else(|| bad("link is not UTF-8"))?;
-            put(out, LINK, &path, target.as_bytes())?;
+            return Err(bad("fixtures must not contain symlinks"));
         } else if ty.is_dir() {
             walk(&entry.path(), &path, out)?;
         } else {
@@ -105,30 +103,10 @@ pub fn unpack(blob: &[u8], dest: &Path) -> io::Result<()> {
         }
         match kind {
             FILE => std::fs::write(&target, data)?,
-            LINK => {
-                let link = std::str::from_utf8(data).map_err(|_| bad("link is not UTF-8"))?;
-                if Path::new(link).is_absolute() {
-                    return Err(bad("absolute link in the blob"));
-                }
-                make_link(link, &target)?;
-            }
             _ => return Err(bad("unknown entry kind")),
         }
     }
     Ok(())
-}
-
-#[cfg(unix)]
-fn make_link(link: &str, target: &Path) -> io::Result<()> {
-    std::os::unix::fs::symlink(link, target)
-}
-
-#[cfg(not(unix))]
-fn make_link(_link: &str, _target: &Path) -> io::Result<()> {
-    Err(io::Error::new(
-        io::ErrorKind::Unsupported,
-        "symlinks are not supported here",
-    ))
 }
 
 #[cfg(test)]
@@ -136,7 +114,7 @@ mod tests {
     use super::*;
 
     fn tree(root: &Path) -> Vec<(String, String)> {
-        // (relative path, contents or "-> target"), sorted.
+        // (relative path, size and first bytes), sorted.
         fn go(dir: &Path, rel: &str, out: &mut Vec<(String, String)>) {
             let mut es: Vec<_> = std::fs::read_dir(dir)
                 .unwrap()
@@ -146,10 +124,8 @@ mod tests {
             for e in es {
                 let p = format!("{rel}/{}", e.file_name().to_string_lossy());
                 let ty = e.file_type().unwrap();
-                if ty.is_symlink() {
-                    let t = std::fs::read_link(e.path()).unwrap();
-                    out.push((p, format!("-> {}", t.display())));
-                } else if ty.is_dir() {
+                assert!(!ty.is_symlink(), "{p}");
+                if ty.is_dir() {
                     go(&e.path(), &p, out);
                 } else {
                     let b = std::fs::read(e.path()).unwrap();
@@ -193,8 +169,8 @@ mod tests {
             assert!(unpack(&blob, &dest).is_err(), "{path:?}");
         }
         let mut blob = Vec::new();
-        put(&mut blob, LINK, "l", b"/etc").unwrap();
-        assert!(unpack(&blob, &dest).is_err(), "absolute link");
+        put(&mut blob, 1, "l", b"x").unwrap();
+        assert!(unpack(&blob, &dest).is_err(), "unknown entry kind");
         let _ = std::fs::remove_dir_all(&dest);
     }
 
