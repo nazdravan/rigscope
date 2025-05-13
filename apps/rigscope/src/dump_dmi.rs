@@ -74,6 +74,7 @@ pub fn dump(src: &dyn Source, smart: &dyn Fn(&str) -> Vec<u8>) -> Result<Vec<u8>
 /// Arguments: `$1` = smartctl path or empty, then disk names. Output: `RSPART <label>` lines,
 /// each followed by `od` hex of its bytes or `RSMISSING`; `RSCODE <n>` after each smartctl;
 /// `RSEND` last, so a cut-off output is recognised.
+#[cfg(target_os = "linux")]
 pub const ROOT_SCRIPT: &str = r#"set -u
 smartctl=$1
 shift
@@ -111,9 +112,11 @@ printf 'RSEND\n'
 "#;
 
 /// `$0` of the script (shown by `ps` and in some authentication dialogs).
+#[cfg(target_os = "linux")]
 pub const SCRIPT_NAME: &str = "rigscope-read-hardware";
 
 /// The arguments after `pkexec`: `/bin/sh -c ROOT_SCRIPT rigscope-read-hardware SMARTCTL DISKS…`.
+#[cfg(target_os = "linux")]
 pub fn pkexec_args(smartctl: Option<&str>, disks: &[String]) -> Vec<String> {
     let mut args = vec![
         "/bin/sh".to_string(),
@@ -127,6 +130,7 @@ pub fn pkexec_args(smartctl: Option<&str>, disks: &[String]) -> Vec<String> {
 }
 
 /// Largest script output read (hex triples the size of what it encodes).
+#[cfg(target_os = "linux")]
 pub const MAX_SCRIPT_OUTPUT: u64 = 32 * 1024 * 1024;
 
 /// `timeout` exits with 124 when it had to stop smartctl.
@@ -405,6 +409,7 @@ mod tests {
         assert_eq!(find_smartctl(|_| false), None);
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn script_accepts_exactly_the_fixed_smartctl_paths() {
         for p in SMARTCTL_PATHS {
@@ -412,6 +417,7 @@ mod tests {
         }
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn pkexec_runs_system_sh_and_drops_bad_disk_names() {
         let args = pkexec_args(
