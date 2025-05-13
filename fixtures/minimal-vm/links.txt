@@ -1,0 +1,5 @@
+/sys/block/vda	/sys/devices/pci0000:00/0000:00:04.0/virtio1/block/vda
+/sys/class/net/eth0	/sys/devices/pci0000:00/0000:00:03.0/virtio0/net/eth0
+/sys/devices/pci0000:00/0000:00:03.0/virtio0/driver	/sys/bus/virtio/drivers/virtio_net
+/sys/devices/pci0000:00/0000:00:03.0/virtio0/net/eth0/device	/sys/devices/pci0000:00/0000:00:03.0/virtio0
+/sys/devices/pci0000:00/0000:00:04.0/virtio1/block/vda/device	/sys/devices/pci0000:00/0000:00:04.0/virtio1
