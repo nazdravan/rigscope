@@ -371,8 +371,9 @@ fn smart_fills_the_sata_serial_but_keeps_sysfs_values() {
     );
 }
 
-/// Git does not store empty directories, so a fixture symlink pointing at one works locally and
-/// dangles after a clone (it broke CI once). Every fixture directory must hold a file.
+/// Git does not store empty directories, so a fixture directory that holds nothing (for example
+/// the target of a `links.txt` entry) works locally and is missing after a clone (it broke CI
+/// once). Every fixture directory must hold a file.
 #[test]
 fn fixtures_have_no_empty_directories() {
     fn walk(dir: &std::path::Path, empty: &mut Vec<String>) {
