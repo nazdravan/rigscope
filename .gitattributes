@@ -1,0 +1,7 @@
+# Text files are checked out with LF on every OS (tests compare README text byte for byte).
+* text=auto eol=lf
+# Fixtures are raw kernel/firmware bytes: never convert line endings.
+fixtures/** -text
+*.bin binary
+*.png binary
+*.ico binary
