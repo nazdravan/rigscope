@@ -119,5 +119,5 @@ fn needs_root_for_smart(s: &Session) -> bool {
         .storage
         .disks
         .iter()
-        .any(|d| d.health == rigscope_model::Field::NeedsRoot)
+        .any(|d| d.health == rigscope_model::Field::NeedsElevation)
 }
