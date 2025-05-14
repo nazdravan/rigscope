@@ -30,5 +30,5 @@ pub use report::{
 };
 pub use sensors::{chip_kind, format_celsius, Fan, SensorChip, SensorInfo, Temperature};
 pub use storage::{Disk, DiskHealth, DiskKind, Interface, StorageInfo};
-pub use system::{BoardInfo, DmiSource, Snapshot, SystemInfo, SCHEMA_VERSION};
+pub use system::{BoardInfo, DmiSource, Platform, Snapshot, SystemInfo, SCHEMA_VERSION};
 pub use text::clean_text;
