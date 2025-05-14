@@ -6,7 +6,9 @@ pub enum Field<T> {
     Known(T),
     #[default]
     Unknown,
-    NeedsRoot,
+    /// Readable only with elevated rights (root on Linux, administrator on Windows).
+    #[serde(alias = "NeedsRoot")]
+    NeedsElevation,
     Unavailable(String),
 }
 
