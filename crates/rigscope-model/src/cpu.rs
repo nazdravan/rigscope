@@ -36,6 +36,9 @@ pub struct CoreFreq {
     pub max_mhz: Field<u32>,
     /// `cur_mhz` came from `/proc/cpuinfo` because cpufreq is missing.
     pub from_cpuinfo_fallback: bool,
+    /// The value is derived (Windows: % processor performance × base clock), not measured.
+    #[serde(default)]
+    pub estimated: bool,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
