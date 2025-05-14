@@ -30,7 +30,7 @@ pub fn disks_to_query(src: &dyn Source) -> Vec<String> {
     rigscope_probe::read_storage(src)
         .disks
         .into_iter()
-        .filter(|d| d.health == rigscope_model::Field::NeedsRoot && valid_disk_name(&d.name))
+        .filter(|d| d.health == rigscope_model::Field::NeedsElevation && valid_disk_name(&d.name))
         .map(|d| d.name)
         .collect()
 }
