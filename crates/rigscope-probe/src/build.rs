@@ -172,7 +172,7 @@ fn read_sysfs_board(src: &dyn Source) -> Option<BoardInfo> {
             }
             Err(ReadError::PermissionDenied) => {
                 any = true;
-                Field::NeedsRoot
+                Field::NeedsElevation
             }
             Err(_) => Field::Unknown,
         }
@@ -249,6 +249,7 @@ fn read_cpu(src: &dyn Source, dmi: &Dmi) -> CpuInfo {
                 min_mhz: Field::from_option(mhz(src, &freq_path(cpu, "cpuinfo_min_freq"))),
                 max_mhz: Field::from_option(mhz(src, &freq_path(cpu, "cpuinfo_max_freq"))),
                 from_cpuinfo_fallback: cur.is_none() && fallback.is_some(),
+                estimated: false,
             }
         })
         .collect();
@@ -268,7 +269,7 @@ fn read_cpu(src: &dyn Source, dmi: &Dmi) -> CpuInfo {
             d.cpu_cores,
             d.cpu_sockets,
         ),
-        Dmi::Denied => (Field::NeedsRoot, None, None, None),
+        Dmi::Denied => (Field::NeedsElevation, None, None, None),
         Dmi::Missing => (Field::Unavailable(NO_DMI.to_string()), None, None, None),
     };
 
