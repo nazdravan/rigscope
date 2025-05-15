@@ -123,7 +123,7 @@ fn probe_permission_denied_dmi_is_needs_root() {
     let s = build_snapshot(&denied_source(), None, 0);
     assert_eq!(s.dmi_source, DmiSource::SysfsIdOnly);
     assert!(s.memory.arrays.is_empty());
-    assert_eq!(s.cpu.socket, Field::NeedsRoot);
+    assert_eq!(s.cpu.socket, Field::NeedsElevation);
     assert_eq!(s.board.vendor, Field::Known("Acme".into()));
     assert_eq!(s.board.bios_version, Field::Unknown);
 }
@@ -345,7 +345,11 @@ fn smart_from_the_dump_reaches_the_disks() {
 #[test]
 fn without_a_dump_disks_need_root_for_smart() {
     let s = build_snapshot(&fixture("desktop-ddr4"), None, 0);
-    assert!(s.storage.disks.iter().all(|d| d.health == Field::NeedsRoot));
+    assert!(s
+        .storage
+        .disks
+        .iter()
+        .all(|d| d.health == Field::NeedsElevation));
     let vm = build_snapshot(&fixture("minimal-vm"), None, 0);
     assert!(
         matches!(vm.storage.disks[0].health, Field::Unavailable(_)),
