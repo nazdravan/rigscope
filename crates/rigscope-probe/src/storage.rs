@@ -41,7 +41,14 @@ pub fn kind_for(interface: Option<Interface>, rotational: Option<&str>) -> Optio
     match interface {
         Some(Interface::Nvme) => Some(DiskKind::NvmeSsd),
         // USB bridges, virtual disks and MMC report the flag unreliably.
-        Some(Interface::Usb | Interface::Virtio | Interface::Mmc) | None => None,
+        Some(
+            Interface::Usb
+            | Interface::Virtio
+            | Interface::Mmc
+            | Interface::Virtual
+            | Interface::Raid,
+        )
+        | None => None,
         Some(Interface::Sata | Interface::Scsi) => match rotational {
             Some("0") => Some(DiskKind::Ssd),
             Some("1") => Some(DiskKind::Hdd),
@@ -147,7 +154,7 @@ fn read_disk(src: &dyn Source, name: &str) -> Option<Disk> {
         .and_then(|sectors| sectors.checked_mul(SECTOR));
     let serial = match src.read(&format!("{base}/device/serial")) {
         Ok(b) => Field::from_option(clean_text(&String::from_utf8_lossy(&b))),
-        Err(ReadError::PermissionDenied) => Field::NeedsRoot,
+        Err(ReadError::PermissionDenied) => Field::NeedsElevation,
         Err(_)
             if matches!(
                 interface,
@@ -182,7 +189,7 @@ fn read_disk(src: &dyn Source, name: &str) -> Option<Disk> {
         removable: text(src, &format!("{base}/removable")).as_deref() == Some("1"),
         health: match interface {
             Some(Interface::Nvme | Interface::Sata | Interface::Scsi | Interface::Usb) => {
-                Field::NeedsRoot
+                Field::NeedsElevation
             }
             _ => Field::Unavailable(NO_SMART.to_string()),
         },
