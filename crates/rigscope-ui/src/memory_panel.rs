@@ -35,7 +35,7 @@ pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
 
     match snap.dmi_source {
         DmiSource::FullTable => {}
-        DmiSource::NoTable => {
+        DmiSource::NoTable | DmiSource::Firmware => {
             card(ui, tr(lang, Key::SlotDetails), |ui| {
                 ui.label(tr(lang, Key::NoDmi));
             });
