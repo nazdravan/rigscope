@@ -88,6 +88,8 @@ pub enum Interface {
     Scsi,
     Mmc,
     Virtio,
+    Virtual,
+    Raid,
 }
 
 impl DiskKind {
@@ -109,6 +111,8 @@ impl Interface {
             Interface::Scsi => "SCSI/SAS",
             Interface::Mmc => "MMC/SD",
             Interface::Virtio => "virtio",
+            Interface::Virtual => "virtual",
+            Interface::Raid => "RAID",
         }
     }
 }
