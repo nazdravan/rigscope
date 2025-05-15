@@ -4,6 +4,15 @@ use serde::{Deserialize, Serialize};
 /// Bumped when the JSON shape changes incompatibly.
 pub const SCHEMA_VERSION: u32 = 1;
 
+/// The OS the snapshot was taken on; decides how "needs elevation" is worded.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Platform {
+    #[default]
+    Linux,
+    Windows,
+    Other,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Snapshot {
     pub schema: u32,
@@ -24,6 +33,8 @@ pub struct Snapshot {
     #[serde(default)]
     pub sensors: SensorInfo,
     pub dmi_source: DmiSource,
+    #[serde(default)]
+    pub platform: Platform,
 }
 
 impl Default for Snapshot {
@@ -41,6 +52,7 @@ impl Default for Snapshot {
             power: PowerInfo::default(),
             sensors: SensorInfo::default(),
             dmi_source: DmiSource::None,
+            platform: Platform::Linux,
         }
     }
 }
@@ -57,6 +69,8 @@ pub enum DmiSource {
     NoTable,
     /// The full SMBIOS table (root or elevated helper).
     FullTable,
+    /// The full SMBIOS table, read through the OS firmware API (Windows `GetSystemFirmwareTable`).
+    Firmware,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
