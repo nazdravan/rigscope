@@ -1,6 +1,6 @@
 //! Plain-text report (English), for pasting into forums or chats.
 
-use crate::{compat_summary, CacheKind, DmiSource, Field, SlotState, Snapshot};
+use crate::{compat_summary, CacheKind, DmiSource, Field, Platform, SlotState, Snapshot};
 
 /// Binary size: `8 GiB`, `7.7 GiB`, `512 KiB`.
 pub fn format_bytes(n: u64) -> String {
@@ -144,57 +144,61 @@ pub fn masked(s: &Snapshot) -> Snapshot {
     out
 }
 
-fn show<T>(f: &Field<T>, fmt: impl Fn(&T) -> String) -> String {
+fn show<T>(p: Platform, f: &Field<T>, fmt: impl Fn(&T) -> String) -> String {
     match f {
         Field::Known(v) => fmt(v),
         Field::Unknown => "unknown".into(),
-        Field::NeedsRoot => "needs root".into(),
+        Field::NeedsElevation => match p {
+            Platform::Windows => "needs administrator".into(),
+            Platform::Linux | Platform::Other => "needs root".into(),
+        },
         Field::Unavailable(reason) => reason.clone(),
     }
 }
 
-fn text(f: &Field<String>) -> String {
-    show(f, Clone::clone)
+fn text(p: Platform, f: &Field<String>) -> String {
+    show(p, f, Clone::clone)
 }
 
 pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
     let s = if mask_serials { masked(s) } else { s.clone() };
+    let p = s.platform;
     let mut out: Vec<String> = vec![format!(
         "rigscope report (snapshot taken at unix time {})",
         s.taken_at_unix
     )];
 
     out.push("\n== System ==".into());
-    out.push(format!("OS: {}", text(&s.system.os_name)));
-    out.push(format!("Kernel: {}", text(&s.system.kernel)));
-    out.push(format!("Hostname: {}", text(&s.system.hostname)));
+    out.push(format!("OS: {}", text(p, &s.system.os_name)));
+    out.push(format!("Kernel: {}", text(p, &s.system.kernel)));
+    out.push(format!("Hostname: {}", text(p, &s.system.hostname)));
 
     let b = &s.board;
     out.push("\n== Motherboard ==".into());
     out.push(format!(
         "Board: {} {} (version {})",
-        text(&b.vendor),
-        text(&b.product),
-        text(&b.version)
+        text(p, &b.vendor),
+        text(p, &b.product),
+        text(p, &b.version)
     ));
     out.push(format!(
         "BIOS: {} {} ({})",
-        text(&b.bios_vendor),
-        text(&b.bios_version),
-        text(&b.bios_date)
+        text(p, &b.bios_vendor),
+        text(p, &b.bios_version),
+        text(p, &b.bios_date)
     ));
 
     out.push("\n== Memory ==".into());
     out.push(format!(
         "Installed (seen by the OS): {}",
-        show(&s.memory.os_total_bytes, |v| format_bytes(*v))
+        show(p, &s.memory.os_total_bytes, |v| format_bytes(*v))
     ));
     for a in &s.memory.arrays {
         out.push(format!(
             "Board maximum: {}, slots: {}, ECC: {}",
-            show(&a.max_capacity_bytes, |v| format_bytes(*v)),
-            show(&a.slot_count, |v| v.to_string()),
-            text(&a.ecc)
+            show(p, &a.max_capacity_bytes, |v| format_bytes(*v)),
+            show(p, &a.slot_count, |v| v.to_string()),
+            text(p, &a.ecc)
         ));
     }
     if let Some(c) = compat_summary(&s.memory) {
@@ -206,7 +210,7 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
     for slot in s.memory.arrays.iter().flat_map(|a| a.slots.iter()) {
         let head = format!(
             "Slot {} ({})",
-            text(&slot.locator),
+            text(p, &slot.locator),
             match &slot.bank {
                 Field::Known(b) => b.clone(),
                 _ => "unknown bank".to_string(),
@@ -217,18 +221,20 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
             SlotState::Unknown => "unknown".to_string(),
             SlotState::Installed(m) => format!(
                 "{} {} {}, rated {}, running at {}, {} {}, serial {}, ranks {}, {}",
-                show(&m.size_bytes, |v| format_bytes(*v)),
-                show(&m.mem_type, |t| t.label()),
-                show(&m.form_factor, |f| f.label()),
-                show(&m.rated_mts, |v| format!("{v} MT/s")),
-                show(&m.configured_mts, |v| format!("{v} MT/s")),
-                text(&m.manufacturer),
-                text(&m.part_number),
-                text(&m.serial),
-                show(&m.ranks, |r| r.to_string()),
-                show(&m.voltage_mv, |v| match v.configured.or(v.max).or(v.min) {
-                    Some(mv) => format!("{:.2} V", f64::from(mv) / 1000.0),
-                    None => "voltage unknown".into(),
+                show(p, &m.size_bytes, |v| format_bytes(*v)),
+                show(p, &m.mem_type, |t| t.label()),
+                show(p, &m.form_factor, |f| f.label()),
+                show(p, &m.rated_mts, |v| format!("{v} MT/s")),
+                show(p, &m.configured_mts, |v| format!("{v} MT/s")),
+                text(p, &m.manufacturer),
+                text(p, &m.part_number),
+                text(p, &m.serial),
+                show(p, &m.ranks, |r| r.to_string()),
+                show(p, &m.voltage_mv, |v| {
+                    match v.configured.or(v.max).or(v.min) {
+                        Some(mv) => format!("{:.2} V", f64::from(mv) / 1000.0),
+                        None => "voltage unknown".into(),
+                    }
                 }),
             ),
         };
@@ -240,6 +246,7 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
                 "Slot details: need root (run rigscope with elevated rights)".into()
             }
             DmiSource::NoTable => "Slot details: this machine has no DMI table".into(),
+            DmiSource::Firmware => "Slot details: the firmware table lists no memory slots".into(),
             _ => "Slot details: no DMI table".into(),
         });
     }
@@ -253,12 +260,12 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
         out.push(format!(
             "{}: {}, {}, {}, {}, serial {}, firmware {}{}",
             d.name,
-            text(&d.model),
-            show(&d.size_bytes, |v| format_disk_size(*v)),
-            show(&d.kind, |k| k.label().to_string()),
-            show(&d.interface, |i| i.label().to_string()),
-            text(&d.serial),
-            text(&d.firmware),
+            text(p, &d.model),
+            show(p, &d.size_bytes, |v| format_disk_size(*v)),
+            show(p, &d.kind, |k| k.label().to_string()),
+            show(p, &d.interface, |i| i.label().to_string()),
+            text(p, &d.serial),
+            text(p, &d.firmware),
             if d.removable { ", removable" } else { "" }
         ));
         match &d.health {
@@ -270,7 +277,7 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
             }
             other => out.push(format!(
                 "  health: {}",
-                show(other, |_: &crate::DiskHealth| String::new())
+                show(p, other, |_: &crate::DiskHealth| String::new())
             )),
         }
     }
@@ -295,8 +302,8 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
         out.push(format!(
             "{}: {name}{id}, driver {}, VRAM {}{}",
             g.card,
-            text(&g.driver),
-            show(&g.vram_bytes, |v| format_bytes(*v)),
+            text(p, &g.driver),
+            show(p, &g.vram_bytes, |v| format_bytes(*v)),
             if g.boot_vga { ", primary" } else { "" }
         ));
     }
@@ -306,15 +313,15 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
         out.push("No physical network interfaces found".into());
     }
     for n in &s.net.interfaces {
-        let mut parts = vec![show(&n.kind, |k| k.label().to_string())];
+        let mut parts = vec![show(p, &n.kind, |k| k.label().to_string())];
         if let Some(d) = n.device_name.known() {
             parts.push(d.clone());
         }
         if let Some(sp) = n.speed_mbps.known() {
             parts.push(crate::format_speed(*sp));
         }
-        parts.push(format!("driver {}", text(&n.driver)));
-        parts.push(format!("MAC {}", text(&n.mac)));
+        parts.push(format!("driver {}", text(p, &n.driver)));
+        parts.push(format!("MAC {}", text(p, &n.mac)));
         out.push(format!("{}: {}", n.name, parts.join(", ")));
     }
     if s.net.hidden_virtual > 0 {
@@ -345,13 +352,13 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
         out.push(format!(
             "{}: {} {} ({}), {}, {}, {health}, {} cycles, serial {}",
             b.name,
-            text(&b.manufacturer),
-            text(&b.model),
-            text(&b.technology),
-            show(&b.charge_percent, |c| format!("{c} %")),
-            text(&b.status),
-            show(&b.cycles, |c| c.to_string()),
-            text(&b.serial),
+            text(p, &b.manufacturer),
+            text(p, &b.model),
+            text(p, &b.technology),
+            show(p, &b.charge_percent, |c| format!("{c} %")),
+            text(p, &b.status),
+            show(p, &b.cycles, |c| c.to_string()),
+            text(p, &b.serial),
         ));
     }
 
@@ -379,14 +386,14 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
                 format!(
                     "{} {}{limits}",
                     t.label,
-                    show(&t.millicelsius, |v| crate::format_celsius(*v))
+                    show(p, &t.millicelsius, |v| crate::format_celsius(*v))
                 )
             })
             .collect();
         parts.extend(
             chip.fans
                 .iter()
-                .map(|f| format!("{} {}", f.label, show(&f.rpm, |r| format!("{r} RPM")))),
+                .map(|f| format!("{} {}", f.label, show(p, &f.rpm, |r| format!("{r} RPM")))),
         );
         let kind = crate::chip_kind(&chip.name)
             .map(|k| format!(" ({k})"))
@@ -395,26 +402,26 @@ pub fn report_text(s: &Snapshot, mask_serials: bool) -> String {
     }
 
     out.push("\n== Processor ==".into());
-    out.push(format!("Model: {}", text(&c.model)));
-    out.push(format!("Vendor: {}", text(&c.vendor)));
+    out.push(format!("Model: {}", text(p, &c.model)));
+    out.push(format!("Vendor: {}", text(p, &c.vendor)));
     out.push(format!(
         "Socket: {}",
-        crate::cpu::socket_label(text(&c.socket), &c.sockets)
+        crate::cpu::socket_label(text(p, &c.socket), &c.sockets)
     ));
     out.push(format!(
         "Cores / threads: {} / {}",
-        show(&c.physical_cores, |v| v.to_string()),
-        show(&c.logical_threads, |v| v.to_string())
+        show(p, &c.physical_cores, |v| v.to_string()),
+        show(p, &c.logical_threads, |v| v.to_string())
     ));
     out.push(format!(
         "Base clock: {}",
-        show(&c.base_mhz, |v| format!("{v} MHz"))
+        show(p, &c.base_mhz, |v| format!("{v} MHz"))
     ));
     out.push(format!(
         "Max clock: {}",
-        show(&c.max_mhz, |v| format!("{v} MHz"))
+        show(p, &c.max_mhz, |v| format!("{v} MHz"))
     ));
-    out.push(format!("Microcode: {}", text(&c.microcode)));
+    out.push(format!("Microcode: {}", text(p, &c.microcode)));
     if !c.caches.is_empty() {
         let caches: Vec<String> = c
             .caches
@@ -480,7 +487,7 @@ mod tests {
             ],
         });
         s.cpu.model = Field::Known("Intel(R) Core(TM) i5-7500 CPU @ 3.40GHz".into());
-        s.cpu.socket = Field::NeedsRoot;
+        s.cpu.socket = Field::NeedsElevation;
         s
     }
 
