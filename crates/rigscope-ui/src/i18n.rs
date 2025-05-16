@@ -105,6 +105,10 @@ pub enum Key {
     Sensors,
     DiskHealth,
     SmartNeedsRoot,
+    NeedsAdmin,
+    SmartNeedsAdmin,
+    EstimatedFrequency,
+    NotElevated,
     Warning,
     NoSensors,
 }
@@ -118,6 +122,10 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             System => "System",
             Unknown => "Unknown",
             NeedsRoot => "Needs root",
+            NeedsAdmin => "Needs administrator",
+            SmartNeedsAdmin => "Disk health (SMART) needs administrator rights: rigscope is running without them.",
+            EstimatedFrequency => "estimated: % processor performance × base clock",
+            NotElevated => "running without administrator rights",
             Empty => "Empty",
             Estimated => "estimated",
             Compatible => "Compatible",
@@ -223,6 +231,10 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             System => "Sistem",
             Unknown => "Necunoscut",
             NeedsRoot => "Necesită root",
+            NeedsAdmin => "Necesită administrator",
+            SmartNeedsAdmin => "Sănătatea discurilor (SMART) necesită drepturi de administrator: rigscope rulează fără ele.",
+            EstimatedFrequency => "estimat: % performanță procesor × frecvența de bază",
+            NotElevated => "rulează fără drepturi de administrator",
             Empty => "Gol",
             Estimated => "estimat",
             Compatible => "Compatibil",
@@ -531,6 +543,11 @@ pub fn missing_hint(lang: Language, value: &str) -> Option<&'static str> {
         Some(match lang {
             Language::En => "Readable only by root: use Read with elevated rights in the Memory section.",
             Language::Ro => "Poate fi citit doar de root: folosește Citește cu drepturi ridicate în secțiunea Memorie.",
+        })
+    } else if value == tr(lang, Key::NeedsAdmin) {
+        Some(match lang {
+            Language::En => "Readable only with administrator rights: run rigscope as administrator.",
+            Language::Ro => "Poate fi citit doar cu drepturi de administrator: rulează rigscope ca administrator.",
         })
     } else {
         None
