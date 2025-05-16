@@ -8,21 +8,22 @@ use serde_json::json;
 
 pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
     let lang = app.session.language;
+    let cx = crate::fmt::Ctx::of(app);
     let snap = &app.session.snapshot;
 
     card(ui, tr(lang, Key::Memory), |ui| {
         let mut rows = vec![(
             tr(lang, Key::InstalledMemory),
-            fmt::field(lang, &snap.memory.os_total_bytes, |b| fmt::bytes(*b)),
+            fmt::field(cx, &snap.memory.os_total_bytes, |b| fmt::bytes(*b)),
         )];
         for array in &snap.memory.arrays {
             rows.push((
                 tr(lang, Key::MaxCapacity),
-                fmt::field(lang, &array.max_capacity_bytes, |b| fmt::bytes(*b)),
+                fmt::field(cx, &array.max_capacity_bytes, |b| fmt::bytes(*b)),
             ));
             rows.push((
                 tr(lang, Key::Ecc),
-                fmt::field(lang, &array.ecc, |v| crate::i18n::ecc(lang, v)),
+                fmt::field(cx, &array.ecc, |v| crate::i18n::ecc(lang, v)),
             ));
         }
         kv_grid(ui, "mem-summary", &rows);
@@ -68,9 +69,9 @@ pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
         .collect();
     if !slots.is_empty() {
         card(ui, tr(lang, Key::Slots), |ui| {
-            slot_strip(ui, lang, &slots);
+            slot_strip(ui, cx, &slots);
             ui.add_space(10.0);
-            egui::ScrollArea::horizontal().show(ui, |ui| slot_table(ui, lang, &slots));
+            egui::ScrollArea::horizontal().show(ui, |ui| slot_table(ui, cx, &slots));
         });
     }
 }
@@ -133,7 +134,8 @@ fn slot_title(lang: Language, slot: &MemorySlot, n: usize) -> String {
 }
 
 /// One rectangle per slot: filled = module installed, outline = empty.
-fn slot_strip(ui: &mut egui::Ui, lang: Language, slots: &[&MemorySlot]) {
+fn slot_strip(ui: &mut egui::Ui, cx: fmt::Ctx, slots: &[&MemorySlot]) {
+    let lang = cx.lang;
     ui.horizontal_wrapped(|ui| {
         for (n, slot) in slots.iter().enumerate() {
             ui.vertical(|ui| {
@@ -146,7 +148,7 @@ fn slot_strip(ui: &mut egui::Ui, lang: Language, slots: &[&MemorySlot]) {
                     SlotState::Installed(m) => {
                         ui.painter()
                             .rect(rect, 4.0, accent, stroke, egui::StrokeKind::Inside);
-                        let text = fmt::field(lang, &m.size_bytes, |b| fmt::bytes(*b));
+                        let text = fmt::field(cx, &m.size_bytes, |b| fmt::bytes(*b));
                         ui.painter().text(
                             rect.center(),
                             egui::Align2::CENTER_CENTER,
@@ -180,8 +182,9 @@ fn slot_strip(ui: &mut egui::Ui, lang: Language, slots: &[&MemorySlot]) {
 }
 
 /// Fields as rows, slots as columns.
-fn slot_table(ui: &mut egui::Ui, lang: Language, slots: &[&MemorySlot]) {
-    type Row = (Key, fn(Language, &MemoryModule) -> String);
+fn slot_table(ui: &mut egui::Ui, cx: fmt::Ctx, slots: &[&MemorySlot]) {
+    let lang = cx.lang;
+    type Row = (Key, fn(fmt::Ctx, &MemoryModule) -> String);
     let rows: [Row; 11] = [
         (Key::Size, |l, m| {
             fmt::field(l, &m.size_bytes, |b| fmt::bytes(*b))
@@ -206,7 +209,7 @@ fn slot_table(ui: &mut egui::Ui, lang: Language, slots: &[&MemorySlot]) {
             fmt::field(l, &m.voltage_mv, |v| {
                 match v.configured.or(v.max).or(v.min) {
                     Some(mv) => format!("{:.2} V", f64::from(mv) / 1000.0),
-                    None => tr(l, Key::Unknown).to_string(),
+                    None => tr(l.lang, Key::Unknown).to_string(),
                 }
             })
         }),
@@ -225,14 +228,14 @@ fn slot_table(ui: &mut egui::Ui, lang: Language, slots: &[&MemorySlot]) {
             ui.end_row();
             ui.label(egui::RichText::new(tr(lang, Key::Bank)).strong());
             for slot in slots {
-                ui.label(fmt::text(lang, &slot.bank));
+                ui.label(fmt::text(cx, &slot.bank));
             }
             ui.end_row();
             for (key, show) in rows {
                 ui.label(egui::RichText::new(tr(lang, key)).strong());
                 for slot in slots {
                     let v = match &slot.module {
-                        SlotState::Installed(m) => show(lang, m),
+                        SlotState::Installed(m) => show(cx, m),
                         SlotState::Empty => {
                             if key == Key::Size {
                                 tr(lang, Key::Empty).to_string()
