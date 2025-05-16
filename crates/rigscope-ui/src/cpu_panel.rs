@@ -6,31 +6,32 @@ use rigscope_model::CacheKind;
 
 pub fn show(ui: &mut egui::Ui, app: &App) {
     let lang = app.session.language;
+    let cx = crate::fmt::Ctx::of(app);
     let cpu = &app.session.snapshot.cpu;
 
     card(ui, tr(lang, Key::Processor), |ui| {
-        let cores = fmt::field(lang, &cpu.physical_cores, |n| n.to_string());
-        let threads = fmt::field(lang, &cpu.logical_threads, |n| n.to_string());
+        let cores = fmt::field(cx, &cpu.physical_cores, |n| n.to_string());
+        let threads = fmt::field(cx, &cpu.logical_threads, |n| n.to_string());
         kv_grid(
             ui,
             "cpu-summary",
             &[
-                (tr(lang, Key::Model), fmt::text(lang, &cpu.model)),
-                (tr(lang, Key::Vendor), fmt::text(lang, &cpu.vendor)),
+                (tr(lang, Key::Model), fmt::text(cx, &cpu.model)),
+                (tr(lang, Key::Vendor), fmt::text(cx, &cpu.vendor)),
                 (
                     tr(lang, Key::Socket),
-                    rigscope_model::cpu::socket_label(fmt::text(lang, &cpu.socket), &cpu.sockets),
+                    rigscope_model::cpu::socket_label(fmt::text(cx, &cpu.socket), &cpu.sockets),
                 ),
                 (tr(lang, Key::CoresThreads), format!("{cores} / {threads}")),
                 (
                     tr(lang, Key::BaseClock),
-                    fmt::field(lang, &cpu.base_mhz, |v| fmt::mhz(*v)),
+                    fmt::field(cx, &cpu.base_mhz, |v| fmt::mhz(*v)),
                 ),
                 (
                     tr(lang, Key::MaxClock),
-                    fmt::field(lang, &cpu.max_mhz, |v| fmt::mhz(*v)),
+                    fmt::field(cx, &cpu.max_mhz, |v| fmt::mhz(*v)),
                 ),
-                (tr(lang, Key::Microcode), fmt::text(lang, &cpu.microcode)),
+                (tr(lang, Key::Microcode), fmt::text(cx, &cpu.microcode)),
             ],
         );
     });
@@ -65,6 +66,9 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
             if cpu.cores.iter().any(|c| c.from_cpuinfo_fallback) {
                 ui.label(tr(lang, Key::FromCpuinfo));
             }
+            if cpu.cores.iter().any(|c| c.estimated) {
+                ui.label(tr(lang, Key::EstimatedFrequency));
+            }
             let cols = 4;
             egui::Grid::new("cpu-cores")
                 .striped(true)
@@ -72,7 +76,7 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
                 .show(ui, |ui| {
                     for (i, core) in cpu.cores.iter().enumerate() {
                         ui.label(egui::RichText::new(format!("cpu{}", core.cpu)).strong());
-                        ui.label(fmt::field(lang, &core.cur_mhz, |v| fmt::mhz(*v)));
+                        ui.label(fmt::field(cx, &core.cur_mhz, |v| fmt::mhz(*v)));
                         if (i + 1) % cols == 0 {
                             ui.end_row();
                         }
