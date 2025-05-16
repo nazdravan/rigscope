@@ -5,6 +5,7 @@ use rigscope_engine::App;
 
 pub fn show(ui: &mut egui::Ui, app: &App) {
     let lang = app.session.language;
+    let cx = crate::fmt::Ctx::of(app);
     let net = &app.session.snapshot.net;
     if net.interfaces.is_empty() {
         card(ui, tr(lang, Key::Network), |ui| {
@@ -23,27 +24,27 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
                 &[
                     (
                         tr(lang, Key::NetKind),
-                        fmt::field(lang, &n.kind, |k| k.label().to_string()),
+                        fmt::field(cx, &n.kind, |k| k.label().to_string()),
                     ),
-                    (tr(lang, Key::Vendor), fmt::text(lang, &n.vendor_name)),
-                    (tr(lang, Key::Model), fmt::text(lang, &n.device_name)),
-                    (tr(lang, Key::Driver), fmt::text(lang, &n.driver)),
-                    (tr(lang, Key::Mac), fmt::text(lang, &n.mac)),
+                    (tr(lang, Key::Vendor), fmt::text(cx, &n.vendor_name)),
+                    (tr(lang, Key::Model), fmt::text(cx, &n.device_name)),
+                    (tr(lang, Key::Driver), fmt::text(cx, &n.driver)),
+                    (tr(lang, Key::Mac), fmt::text(cx, &n.mac)),
                     (
                         tr(lang, Key::State),
-                        fmt::field(lang, &n.state, |v| crate::i18n::kernel_value(lang, v)),
+                        fmt::field(cx, &n.state, |v| crate::i18n::kernel_value(lang, v)),
                     ),
                     (
                         tr(lang, Key::Speed),
-                        fmt::field(lang, &n.speed_mbps, |v| rigscope_model::format_speed(*v)),
+                        fmt::field(cx, &n.speed_mbps, |v| rigscope_model::format_speed(*v)),
                     ),
                     (
                         tr(lang, Key::Duplex),
-                        fmt::field(lang, &n.duplex, |v| crate::i18n::kernel_value(lang, v)),
+                        fmt::field(cx, &n.duplex, |v| crate::i18n::kernel_value(lang, v)),
                     ),
                     (
                         tr(lang, Key::Mtu),
-                        fmt::field(lang, &n.mtu, |v| v.to_string()),
+                        fmt::field(cx, &n.mtu, |v| v.to_string()),
                     ),
                 ],
             );
