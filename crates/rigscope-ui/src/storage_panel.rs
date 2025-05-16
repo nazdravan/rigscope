@@ -9,7 +9,7 @@ use serde_json::json;
 pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
     let lang = app.session.language;
     let disks = &app.session.snapshot.storage.disks;
-    if disks.iter().any(|d| d.health == Field::NeedsRoot) {
+    if disks.iter().any(|d| d.health == Field::NeedsElevation) {
         card(ui, tr(lang, Key::DiskHealth), |ui| {
             ui.label(tr(lang, Key::SmartNeedsRoot));
             command_button(
