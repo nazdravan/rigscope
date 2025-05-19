@@ -417,3 +417,31 @@ fn opened_snapshot_banner_stays_until_refresh() {
     h.run();
     assert!(!has(&h, "Showing the saved snapshot"));
 }
+
+#[test]
+fn needs_elevation_wording_follows_platform() {
+    use rigscope_model::{Field, Platform};
+    for (platform, wanted, other) in [
+        (Platform::Linux, "Needs root", "Needs administrator"),
+        (Platform::Windows, "Needs administrator", "Needs root"),
+    ] {
+        let h = harness(FakeEnv::fixture("desktop-ddr4"), |a| {
+            a.run("view.section", json!({"id": "cpu"})).unwrap();
+            a.session.snapshot.cpu.socket = Field::NeedsElevation;
+            a.session.snapshot.platform = platform;
+        });
+        assert!(has(&h, wanted), "{platform:?} wants {wanted}");
+        assert!(!has(&h, other), "{platform:?} must not say {other}");
+    }
+}
+
+#[test]
+fn estimated_frequency_is_marked() {
+    let h = harness(FakeEnv::fixture("desktop-ddr4"), |a| {
+        a.run("view.section", json!({"id": "cpu"})).unwrap();
+        for c in &mut a.session.snapshot.cpu.cores {
+            c.estimated = true;
+        }
+    });
+    assert!(has(&h, "estimated: % processor performance"));
+}
