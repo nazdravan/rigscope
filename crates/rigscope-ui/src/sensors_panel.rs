@@ -6,6 +6,7 @@ use rigscope_model::{chip_kind, format_celsius};
 
 pub fn show(ui: &mut egui::Ui, app: &App) {
     let lang = app.session.language;
+    let cx = crate::fmt::Ctx::of(app);
     let chips = &app.session.snapshot.sensors.chips;
     if chips.is_empty() {
         card(ui, tr(lang, Key::Sensors), |ui| {
@@ -26,7 +27,7 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
                 .show(ui, |ui| {
                     for t in &chip.temps {
                         ui.label(egui::RichText::new(&t.label).strong());
-                        ui.label(fmt::field(lang, &t.millicelsius, |v| format_celsius(*v)));
+                        ui.label(fmt::field(cx, &t.millicelsius, |v| format_celsius(*v)));
                         let mut limits = Vec::new();
                         if let Some(m) = t.max_mc.known() {
                             limits.push(format!("max {}", format_celsius(*m)));
@@ -39,7 +40,7 @@ pub fn show(ui: &mut egui::Ui, app: &App) {
                     }
                     for f in &chip.fans {
                         ui.label(egui::RichText::new(&f.label).strong());
-                        ui.label(fmt::field(lang, &f.rpm, |r| format!("{r} RPM")));
+                        ui.label(fmt::field(cx, &f.rpm, |r| format!("{r} RPM")));
                         ui.label("");
                         ui.end_row();
                     }
