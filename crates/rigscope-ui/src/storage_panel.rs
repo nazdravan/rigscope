@@ -8,10 +8,15 @@ use serde_json::json;
 
 pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
     let lang = app.session.language;
+    let cx = crate::fmt::Ctx::of(app);
     let disks = &app.session.snapshot.storage.disks;
     if disks.iter().any(|d| d.health == Field::NeedsElevation) {
+        let key = match app.session.snapshot.platform {
+            rigscope_model::Platform::Windows => Key::SmartNeedsAdmin,
+            _ => Key::SmartNeedsRoot,
+        };
         card(ui, tr(lang, Key::DiskHealth), |ui| {
-            ui.label(tr(lang, Key::SmartNeedsRoot));
+            ui.label(tr(lang, key));
             command_button(
                 ui,
                 app,
@@ -41,26 +46,24 @@ pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
                 &[
                     (
                         tr(lang, Key::DiskSize),
-                        fmt::field(lang, &d.size_bytes, |v| {
-                            rigscope_model::format_disk_size(*v)
-                        }),
+                        fmt::field(cx, &d.size_bytes, |v| rigscope_model::format_disk_size(*v)),
                     ),
                     (
                         tr(lang, Key::DiskKind),
-                        fmt::field(lang, &d.kind, |k| k.label().to_string()),
+                        fmt::field(cx, &d.kind, |k| k.label().to_string()),
                     ),
                     (
                         tr(lang, Key::Interface),
-                        fmt::field(lang, &d.interface, |i| i.label().to_string()),
+                        fmt::field(cx, &d.interface, |i| i.label().to_string()),
                     ),
-                    (tr(lang, Key::Manufacturer), fmt::text(lang, &d.vendor)),
-                    (tr(lang, Key::Model), fmt::text(lang, &d.model)),
-                    (tr(lang, Key::Serial), fmt::text(lang, &d.serial)),
-                    (tr(lang, Key::Firmware), fmt::text(lang, &d.firmware)),
+                    (tr(lang, Key::Manufacturer), fmt::text(cx, &d.vendor)),
+                    (tr(lang, Key::Model), fmt::text(cx, &d.model)),
+                    (tr(lang, Key::Serial), fmt::text(cx, &d.serial)),
+                    (tr(lang, Key::Firmware), fmt::text(cx, &d.firmware)),
                     (tr(lang, Key::Removable), tr(lang, removable).to_string()),
                     (
                         tr(lang, Key::DiskHealth),
-                        fmt::field(lang, &d.health, |h| crate::i18n::health_line(lang, h)),
+                        fmt::field(cx, &d.health, |h| crate::i18n::health_line(lang, h)),
                     ),
                 ],
             );
