@@ -1,7 +1,8 @@
 //! The real environment: filesystem, clock, clipboard, files, the elevated read.
 
 use rigscope_engine::{EngineError, Env};
-use rigscope_probe::{FixtureSource, Source};
+use rigscope_model::Collector;
+use rigscope_probe::{FixtureSource, LinuxCollector, Source};
 use std::io::Read;
 
 /// In a fixture directory, the smartctl JSON the simulated elevated read returns per disk.
@@ -10,14 +11,21 @@ pub const FIXTURE_SMART_DIR: &str = "/root/smart";
 /// Largest file `read_file` accepts.
 pub const MAX_READ: u64 = 4 * 1024 * 1024;
 
-pub enum SystemSource {
-    #[cfg(target_os = "linux")]
-    Real(rigscope_probe::FsSource),
+/// How the elevated read works in this environment.
+pub enum Elevation {
+    /// No elevated read (Windows runs as administrator; demo of a Windows fixture).
+    #[allow(dead_code, reason = "constructed by the Windows backend")]
+    None,
+    /// Fixture mode: `root/smart/<disk>.json` simulates it.
     Fixture(FixtureSource),
+    /// Real Linux: pkexec + the dump helper.
+    #[cfg(target_os = "linux")]
+    Linux(rigscope_probe::FsSource),
 }
 
 pub struct RealEnv {
-    pub source: SystemSource,
+    pub collector: Box<dyn Collector>,
+    pub elevation_kind: Elevation,
     /// Opened on first use; kept alive so X11/Wayland keep serving the copied text.
     clipboard: Option<arboard::Clipboard>,
     /// Result channel of the elevated read while it runs.
@@ -25,31 +33,35 @@ pub struct RealEnv {
 }
 
 impl RealEnv {
-    pub fn fixture(dir: &str) -> Self {
+    pub fn new(collector: Box<dyn Collector>, elevation_kind: Elevation) -> Self {
         RealEnv {
-            source: SystemSource::Fixture(FixtureSource::new(dir)),
+            collector,
+            elevation_kind,
             clipboard: None,
             elevation: None,
         }
+    }
+
+    /// A Linux-layout fixture directory.
+    pub fn fixture(dir: &str) -> Self {
+        Self::new(
+            Box::new(LinuxCollector::new(FixtureSource::new(dir))),
+            Elevation::Fixture(FixtureSource::new(dir)),
+        )
     }
 
     #[cfg(target_os = "linux")]
     pub fn system() -> Self {
-        RealEnv {
-            source: SystemSource::Real(rigscope_probe::FsSource),
-            clipboard: None,
-            elevation: None,
-        }
+        Self::new(
+            Box::new(LinuxCollector::new(rigscope_probe::FsSource)),
+            Elevation::Linux(rigscope_probe::FsSource),
+        )
     }
 }
 
 impl Env for RealEnv {
-    fn source(&self) -> &dyn Source {
-        match &self.source {
-            #[cfg(target_os = "linux")]
-            SystemSource::Real(s) => s,
-            SystemSource::Fixture(s) => s,
-        }
+    fn collector(&mut self) -> &mut dyn Collector {
+        self.collector.as_mut()
     }
 
     fn now_unix(&self) -> u64 {
@@ -66,9 +78,14 @@ impl Env for RealEnv {
             ));
         }
         let (tx, rx) = std::sync::mpsc::channel();
-        match &self.source {
+        match &self.elevation_kind {
+            Elevation::None => {
+                return Err(EngineError::Disabled(
+                    "no elevated read on this platform".into(),
+                ));
+            }
             // Fixture mode simulates the elevated read with the fixture's `root/smart/<disk>.json`.
-            SystemSource::Fixture(f) => {
+            Elevation::Fixture(f) => {
                 let smart = |name: &str| {
                     f.read(&format!("{FIXTURE_SMART_DIR}/{name}.json"))
                         .unwrap_or_default()
@@ -77,7 +94,7 @@ impl Env for RealEnv {
                 let _ = tx.send(result);
             }
             #[cfg(target_os = "linux")]
-            SystemSource::Real(s) => {
+            Elevation::Linux(s) => {
                 // The disk list is read here, as the user; the root side only checks it.
                 let disks = crate::dump_dmi::disks_to_query(s);
                 std::thread::spawn(move || {
@@ -131,10 +148,11 @@ impl Env for RealEnv {
     }
 
     fn can_elevate(&self) -> bool {
-        match &self.source {
+        match &self.elevation_kind {
+            Elevation::None => false,
             #[cfg(target_os = "linux")]
-            SystemSource::Real(_) => true,
-            SystemSource::Fixture(f) => f.list(FIXTURE_SMART_DIR).is_ok(),
+            Elevation::Linux(_) => true,
+            Elevation::Fixture(f) => f.list(FIXTURE_SMART_DIR).is_ok(),
         }
     }
 }
