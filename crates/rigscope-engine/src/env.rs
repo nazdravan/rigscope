@@ -1,10 +1,10 @@
 use crate::EngineError;
-use rigscope_probe::Source;
+use rigscope_model::Collector;
 
 /// Everything the engine needs from the outside world. The app provides the real one,
 /// tests provide `testutil::FakeEnv`.
 pub trait Env {
-    fn source(&self) -> &dyn Source;
+    fn collector(&mut self) -> &mut dyn Collector;
     fn now_unix(&self) -> u64;
     /// Runs the privileged helper and returns its raw dump bytes.
     /// Starts the privileged helper in the background (it may wait minutes for the user to
