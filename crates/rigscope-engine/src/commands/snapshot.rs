@@ -81,14 +81,15 @@ fn elevate_poll(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
     s.elevating = false;
     let raw = result?;
     let dump =
-        rigscope_probe::decode_dmi_dump(&raw).map_err(|e| EngineError::Probe(e.to_string()))?;
+        rigscope_model::decode_dmi_dump(&raw).map_err(|e| EngineError::Probe(e.to_string()))?;
     // A dump is useful if its DMI table decodes or it carries SMART data.
     if let Err(e) = rigscope_smbios::decode(&dump.entry, &dump.table) {
         if dump.smart.is_empty() {
             return Err(EngineError::Probe(e.to_string()));
         }
     }
-    let next = rigscope_probe::build_snapshot(s.env.source(), Some(&dump), s.env.now_unix());
+    let now = s.env.now_unix();
+    let next = s.env.collector().collect(Some(&dump), now);
     s.dmi_dump = Some(dump);
     s.replace_snapshot(next);
     s.status = None;
@@ -96,8 +97,8 @@ fn elevate_poll(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
 }
 
 fn refresh(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
-    let next =
-        rigscope_probe::build_snapshot(s.env.source(), s.dmi_dump.as_ref(), s.env.now_unix());
+    let now = s.env.now_unix();
+    let next = s.env.collector().collect(s.dmi_dump.as_ref(), now);
     s.replace_snapshot(next);
     s.opened = None;
     s.status = None;
