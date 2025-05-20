@@ -75,8 +75,9 @@ fn language(s: &mut Session, params: &Value) -> Result<Value, EngineError> {
 fn tick(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
     // An opened snapshot is another moment or machine: never mix in local frequencies.
     if s.live && s.opened.is_none() {
-        rigscope_probe::refresh_live(s.env.source(), &mut s.snapshot.cpu);
-        rigscope_probe::refresh_sensors(s.env.source(), &mut s.snapshot.sensors);
+        let c = s.env.collector();
+        c.refresh_live(&mut s.snapshot.cpu);
+        c.refresh_sensors(&mut s.snapshot.sensors);
     }
     Ok(json!(null))
 }
