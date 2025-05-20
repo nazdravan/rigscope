@@ -23,8 +23,9 @@ pub struct App {
 
 impl App {
     /// Creates the session and takes the first snapshot.
-    pub fn new(env: Box<dyn Env>) -> Self {
-        let snapshot = rigscope_probe::build_snapshot(env.source(), None, env.now_unix());
+    pub fn new(mut env: Box<dyn Env>) -> Self {
+        let now = env.now_unix();
+        let snapshot = env.collector().collect(None, now);
         App {
             session: Session {
                 snapshot,
