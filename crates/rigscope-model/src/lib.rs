@@ -2,8 +2,10 @@
 //!
 //! Plain data + serde, no IO. Missing values are explicit ([`Field`]), never empty strings.
 
+pub mod collector;
 pub mod compat;
 pub mod cpu;
+pub mod dump;
 pub mod field;
 pub mod gpu;
 pub mod memory;
@@ -15,8 +17,12 @@ pub mod storage;
 pub mod system;
 pub mod text;
 
+pub use collector::Collector;
 pub use compat::{compat_summary, CompatLine};
 pub use cpu::{CacheKind, CacheLevel, CoreFreq, CpuInfo};
+pub use dump::{
+    decode_dmi_dump, encode_dmi_dump, DmiDump, DumpError, MAX_DMI_PART, MAX_DUMP_DISKS,
+};
 pub use field::Field;
 pub use gpu::{Gpu, GpuInfo};
 pub use memory::{
