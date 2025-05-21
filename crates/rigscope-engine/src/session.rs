@@ -1,6 +1,6 @@
 use crate::Env;
+use rigscope_model::DmiDump;
 use rigscope_model::Snapshot;
-use rigscope_probe::DmiDump;
 use serde::{Deserialize, Serialize};
 
 /// Most snapshots kept for undo.
