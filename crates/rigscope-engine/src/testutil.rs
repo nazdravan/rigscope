@@ -1,7 +1,8 @@
 //! `FakeEnv`: an in-memory [`Env`] whose state tests can inspect through a shared handle.
 
 use crate::{EngineError, Env};
-use rigscope_probe::{FixtureSource, MemSource, Source};
+use rigscope_model::Collector;
+use rigscope_probe::{FixtureSource, LinuxCollector, MemSource};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -18,13 +19,8 @@ pub struct FakeState {
     pub now: u64,
 }
 
-pub enum FakeSource {
-    Mem(MemSource),
-    Fixture(FixtureSource),
-}
-
 pub struct FakeEnv {
-    pub source: FakeSource,
+    pub collector: Box<dyn Collector>,
     pub state: Arc<Mutex<FakeState>>,
     pub can_elevate: bool,
 }
@@ -35,16 +31,17 @@ impl FakeEnv {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures")
             .join(name);
-        FakeEnv {
-            source: FakeSource::Fixture(FixtureSource::new(root)),
-            state: Arc::default(),
-            can_elevate: true,
-        }
+        Self::with(Box::new(LinuxCollector::new(FixtureSource::new(root))))
     }
 
     pub fn mem(src: MemSource) -> Self {
+        Self::with(Box::new(LinuxCollector::new(src)))
+    }
+
+    /// A fake over any collector (the Windows collector's tests use this).
+    pub fn with(collector: Box<dyn Collector>) -> Self {
         FakeEnv {
-            source: FakeSource::Mem(src),
+            collector,
             state: Arc::default(),
             can_elevate: true,
         }
@@ -61,11 +58,8 @@ impl FakeEnv {
 }
 
 impl Env for FakeEnv {
-    fn source(&self) -> &dyn Source {
-        match &self.source {
-            FakeSource::Mem(m) => m,
-            FakeSource::Fixture(f) => f,
-        }
+    fn collector(&mut self) -> &mut dyn Collector {
+        self.collector.as_mut()
     }
     fn now_unix(&self) -> u64 {
         self.st().now
