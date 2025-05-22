@@ -10,7 +10,6 @@ description = "Collects a rigscope Snapshot from /proc, /sys and SMBIOS"
 rigscope-model.workspace = true
 rigscope-smbios.workspace = true
 rigscope-procfs.workspace = true
-thiserror.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]
