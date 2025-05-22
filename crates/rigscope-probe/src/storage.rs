@@ -6,7 +6,7 @@ use rigscope_model::{clean_text, Disk, DiskKind, Field, Interface, StorageInfo};
 pub const BLOCK_DIR: &str = "/sys/block";
 pub const NO_SMART: &str = "this kind of device has no SMART data";
 /// Most disks listed.
-pub const MAX_DISKS: usize = 256;
+pub const MAX_DISKS: usize = rigscope_model::MAX_DUMP_DISKS;
 const SECTOR: u64 = 512;
 /// Kernel names of block devices that are not disks.
 const VIRTUAL_PREFIXES: &[&str] = &["loop", "ram", "zram", "dm-", "md", "nbd", "sr", "fd"];
