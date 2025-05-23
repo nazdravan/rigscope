@@ -207,15 +207,15 @@ fn dmi_dump_roundtrip() {
 fn decode_dmi_dump_rejects_oversize_and_garbage() {
     let mut b = b"RSDMI1".to_vec();
     b.extend(((MAX_DMI_PART + 1) as u32).to_le_bytes());
-    assert_eq!(decode_dmi_dump(&b), Err(ProbeError::DumpTooLarge));
-    assert_eq!(decode_dmi_dump(b"hello"), Err(ProbeError::BadDump));
+    assert_eq!(decode_dmi_dump(&b), Err(DumpError::DumpTooLarge));
+    assert_eq!(decode_dmi_dump(b"hello"), Err(DumpError::BadDump));
     let mut short = encode_dmi_dump(&DmiDump {
         entry: vec![1; 10],
         table: vec![2; 10],
         smart: Vec::new(),
     });
     short.pop();
-    assert_eq!(decode_dmi_dump(&short), Err(ProbeError::BadDump));
+    assert_eq!(decode_dmi_dump(&short), Err(DumpError::BadDump));
 }
 
 #[test]
@@ -401,4 +401,16 @@ fn fixtures_have_no_empty_directories() {
         empty.is_empty(),
         "empty fixture directories (add a file such as `uevent`): {empty:#?}"
     );
+}
+
+#[test]
+fn linux_collector_matches_build_snapshot() {
+    let mut c = LinuxCollector::new(fixture("desktop-ddr4"));
+    let via_collector = c.collect(None, 42);
+    let direct = build_snapshot(&fixture("desktop-ddr4"), None, 42);
+    assert_eq!(via_collector, direct);
+    assert_eq!(via_collector.platform, Platform::Linux);
+    let mut cpu = via_collector.cpu.clone();
+    c.refresh_live(&mut cpu);
+    assert_eq!(cpu.cores.len(), via_collector.cpu.cores.len());
 }
