@@ -8,13 +8,15 @@ mod bytes;
 mod decode;
 mod entry;
 mod error;
+mod rsmb;
 mod table;
 #[cfg(any(test, feature = "testutil"))]
 pub mod testutil;
 
-pub use decode::{decode, Decoded};
+pub use decode::{decode, decode_table, Decoded};
 pub use entry::{parse_entry_point, EntryPoint};
 pub use error::SmbiosError;
+pub use rsmb::{decode_rsmb, mask_serials, split_rsmb, RSMB_HEADER_LEN};
 pub use table::{structures, Structure};
 
 /// Largest table accepted. SMBIOS 2.x caps at 65535 bytes; 3.x tables on big servers can be larger.
