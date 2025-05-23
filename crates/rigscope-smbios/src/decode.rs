@@ -37,6 +37,11 @@ pub fn decode(entry: &[u8], table: &[u8]) -> Result<Decoded, SmbiosError> {
     } else {
         table
     };
+    decode_table(table)
+}
+
+/// Decodes a bare structure table (no entry point: Windows hands the table over directly).
+pub fn decode_table(table: &[u8]) -> Result<Decoded, SmbiosError> {
     let structs = structures(table)?;
 
     let mut out = Decoded::default();
