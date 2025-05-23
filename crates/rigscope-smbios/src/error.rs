@@ -8,4 +8,6 @@ pub enum SmbiosError {
     TooLarge,
     #[error("SMBIOS table is truncated")]
     Truncated,
+    #[error("bad RawSMBIOSData header")]
+    BadRsmb,
 }
