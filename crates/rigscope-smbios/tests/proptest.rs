@@ -60,3 +60,13 @@ proptest! {
         let _ = decode(&entry_point_3(len as u32), &t);
     }
 }
+
+proptest! {
+    #[test]
+    fn rsmb_never_panics(buf in proptest::collection::vec(any::<u8>(), 0..4096)) {
+        let _ = rigscope_smbios::decode_rsmb(&buf);
+        let mut b = buf.clone();
+        rigscope_smbios::mask_serials(&mut b);
+        prop_assert_eq!(b.len(), buf.len());
+    }
+}
