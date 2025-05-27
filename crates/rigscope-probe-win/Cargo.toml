@@ -1,0 +1,25 @@
+[package]
+name = "rigscope-probe-win"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Collects a rigscope Snapshot on Windows (parsing is plain Rust, tested on every OS)"
+
+[features]
+# Sample machines (laptop, VM) for tests and fixture generation.
+testutil = ["rigscope-smbios/testutil"]
+
+[dependencies]
+rigscope-model.workspace = true
+rigscope-smbios.workspace = true
+rigscope-win.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+rigscope-probe-win = { path = ".", features = ["testutil"] }
+
+[lints]
+workspace = true
