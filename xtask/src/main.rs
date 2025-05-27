@@ -1,7 +1,8 @@
-//! Project automation: `cargo xtask <ci|layers|wasm|linux>`.
+//! Project automation: `cargo xtask <ci|layers|unsafe|wasm|linux>`.
 
 mod layers;
 mod screenshot;
+mod unsafe_scope;
 
 use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
@@ -23,6 +24,7 @@ fn main() -> Result<()> {
     match task {
         "ci" => ci(),
         "layers" => layers_check(),
+        "unsafe" => unsafe_scope_check(),
         "wasm" => wasm(),
         "linux" => linux(rest),
         "gen-fixtures" => gen_fixtures(),
@@ -32,7 +34,7 @@ fn main() -> Result<()> {
         "shots" => screenshot::readme_shots(),
         "banner" => run(Command::new("python3").args(["-I", "assets/banner.py"])),
         _ => {
-            eprintln!("usage: cargo xtask <ci|layers|wasm|linux [cmd...]|gen-fixtures|icons|banner|shots|screenshot [--fixture D --section S --lang L --out P]>");
+            eprintln!("usage: cargo xtask <ci|layers|unsafe|wasm|linux [cmd...]|gen-fixtures|icons|banner|shots|screenshot [--fixture D --section S --lang L --out P]>");
             Ok(())
         }
     }
@@ -73,6 +75,7 @@ fn ci() -> Result<()> {
     ]))?;
     run(cargo().args(["test", "--workspace", "--quiet"]))?;
     layers_check()?;
+    unsafe_scope_check()?;
     wasm()?;
     eprintln!("xtask ci: OK");
     Ok(())
@@ -201,6 +204,52 @@ fn gen_fixtures() -> Result<()> {
         std::fs::write(dir.join("smbios_entry_point"), entry)?;
         std::fs::write(dir.join("DMI"), table)?;
         eprintln!("wrote {}", dir.display());
+    }
+    Ok(())
+}
+
+fn unsafe_scope_check() -> Result<()> {
+    let root = root();
+    let mut manifests = Vec::new();
+    let mut files = Vec::new();
+    for dir in ["crates", "apps"] {
+        for entry in std::fs::read_dir(root.join(dir))? {
+            let krate = entry?.path();
+            let manifest = krate.join("Cargo.toml");
+            if manifest.exists() {
+                let rel = manifest
+                    .strip_prefix(&root)?
+                    .to_string_lossy()
+                    .replace('\\', "/");
+                manifests.push((rel, std::fs::read_to_string(&manifest)?));
+            }
+            collect_rs(&root, &krate.join("src"), &mut files)?;
+            collect_rs(&root, &krate.join("tests"), &mut files)?;
+        }
+    }
+    let v = unsafe_scope::check(&manifests, &files);
+    if !v.is_empty() {
+        for x in &v {
+            eprintln!("unsafe scope: {x}");
+        }
+        bail!("{} unsafe-scope violation(s)", v.len());
+    }
+    eprintln!("unsafe scope: OK");
+    Ok(())
+}
+
+fn collect_rs(root: &Path, dir: &Path, out: &mut Vec<(String, String)>) -> Result<()> {
+    let Ok(rd) = std::fs::read_dir(dir) else {
+        return Ok(());
+    };
+    for e in rd {
+        let p = e?.path();
+        if p.is_dir() {
+            collect_rs(root, &p, out)?;
+        } else if p.extension().is_some_and(|x| x == "rs") {
+            let rel = p.strip_prefix(root)?.to_string_lossy().replace('\\', "/");
+            out.push((rel, std::fs::read_to_string(&p)?));
+        }
     }
     Ok(())
 }
