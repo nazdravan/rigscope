@@ -2200,6 +2200,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "rigscope-probe-win"
+version = "0.2.0"
+dependencies = [
+ "proptest",
+ "rigscope-model",
+ "rigscope-probe-win",
+ "rigscope-smbios",
+ "rigscope-win",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "rigscope-procfs"
 version = "0.2.0"
 dependencies = [
