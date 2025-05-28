@@ -359,7 +359,22 @@ pub fn slots_free(lang: Language, free: u16, total: u16) -> String {
 
 /// Reasons the probe records in `Field::Unavailable` are English; translate the known ones.
 pub fn reason(lang: Language, reason: &str) -> String {
+    if lang == Language::Ro {
+        // Windows reasons carry a variable part: "<api> failed (0x00000005)".
+        if let Some((api, code)) = reason
+            .strip_suffix(')')
+            .and_then(|r| r.rsplit_once(" failed ("))
+        {
+            return format!("{api} a eșuat ({code})");
+        }
+        if let Some(rest) = reason.strip_prefix("SMBIOS table unreadable: ") {
+            return format!("tabela SMBIOS nu a putut fi citită: {rest}");
+        }
+    }
     let ro = match reason {
+        "the firmware has no SMBIOS table (virtual machine?)" => {
+            "firmware-ul nu are tabelă SMBIOS (mașină virtuală?)"
+        }
         "not exposed by the kernel without root" => "nu e expus de kernel fără root",
         "no DMI table (virtual machine or container?)" => {
             "nu există tabelă DMI (mașină virtuală sau container?)"
@@ -376,6 +391,7 @@ pub fn reason(lang: Language, reason: &str) -> String {
         }
         "smartctl timed out" => "smartctl nu a răspuns la timp",
         "smartctl output could not be read" => "rezultatul smartctl nu a putut fi citit",
+        "WMI did not answer" => "WMI nu a răspuns",
         other => other,
     };
     match lang {
