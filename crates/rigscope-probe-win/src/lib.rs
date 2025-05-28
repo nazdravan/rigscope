@@ -8,6 +8,7 @@
 )]
 mod cpu;
 mod errors;
+mod smart;
 mod source;
 // The readers are used by the collector added in a later task.
 #[allow(dead_code)]
@@ -15,4 +16,5 @@ mod system;
 
 pub use cpu::{microcode, parse_processors, Topology, MAX_PROCESSORS_BUF};
 pub use errors::{field_err, field_of};
+pub use smart::{parse_ata_smart, parse_nvme_health};
 pub use source::{MemWin, WinSource, R};
