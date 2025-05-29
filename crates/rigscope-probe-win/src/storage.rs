@@ -15,8 +15,8 @@ pub fn interface_of(bus: u16) -> Option<Interface> {
         7 => Interface::Usb,
         1 | 10 => Interface::Scsi,
         12 | 13 => Interface::Mmc,
-        14 | 15 => Interface::Virtual,
-        8 | 16 => Interface::Raid,
+        14..=16 => Interface::Virtual,
+        8 => Interface::Raid,
         _ => return None,
     })
 }
@@ -46,8 +46,10 @@ fn health(src: &dyn WinSource, n: u32, iface: Option<Interface>) -> Field<DiskHe
             Err(e) => from_err(e),
         },
         Some(Interface::Usb) => match src.ata_smart(n) {
-            Ok(a) => parse_ata_smart(&a.attributes, &a.thresholds)
-                .map_or(Field::Unavailable(NO_SMART_USB.into()), Field::Known),
+            Ok(a) => parse_ata_smart(&a.attributes, &a.thresholds).map_or(
+                Field::Unavailable("unreadable SMART data".into()),
+                Field::Known,
+            ),
             Err(WinError::AccessDenied) => Field::NeedsElevation,
             Err(_) => Field::Unavailable(NO_SMART_USB.into()),
         },
@@ -200,7 +202,6 @@ mod tests {
     #[test]
     fn not_elevated_means_needs_elevation() {
         let mut w = MemWin::default();
-        w.elevated = false;
         w.disks_wmi = Ok(vec![disk(0, 11, 4)]);
         w.ata.insert(0, Err(WinError::AccessDenied));
         assert_eq!(read_storage(&w).disks[0].health, Field::NeedsElevation);
@@ -225,5 +226,31 @@ mod tests {
         assert_eq!(s.disks[0].model, Field::Known("WDC WD10EZEX".into()));
         assert_eq!(s.disks[0].interface, Field::Known(Interface::Sata));
         assert_eq!(s.disks[0].kind, Field::Unknown); // fără WMI nu există MediaType
+    }
+
+    #[test]
+    fn storage_spaces_is_virtual() {
+        let mut w = MemWin::default();
+        w.disks_wmi = Ok(vec![disk(0, 16, 0)]);
+        let d = &read_storage(&w).disks[0];
+        assert_eq!(d.interface, Field::Known(Interface::Virtual));
+        assert_eq!(d.health, Field::Unavailable(NO_SMART_VIRTUAL.into()));
+    }
+
+    #[test]
+    fn usb_with_unparseable_smart_says_unreadable() {
+        let mut w = MemWin::default();
+        w.disks_wmi = Ok(vec![disk(0, 7, 0)]);
+        w.ata.insert(
+            0,
+            Ok(AtaSmartRaw {
+                attributes: vec![0; 10],
+                thresholds: vec![0; 10],
+            }),
+        );
+        assert_eq!(
+            read_storage(&w).disks[0].health,
+            Field::Unavailable("unreadable SMART data".into())
+        );
     }
 }
