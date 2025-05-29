@@ -6,11 +6,13 @@ use rigscope_model::DiskHealth;
 const NVME_DATA_UNIT: u64 = 512_000;
 const LOG_LEN: usize = 512;
 
-fn u64_lo(b: &[u8], off: usize) -> Option<u64> {
-    // u128 counters: values above u64 are not realistic; saturate instead of wrapping.
+/// Reads a little-endian u128 counter at `off` as a u64. A non-zero high half means the
+/// value does not fit in u64, which only a corrupt or unknown log produces, so it reads as
+/// absent (`None`) rather than as an invented number.
+fn u128_as_u64(b: &[u8], off: usize) -> Option<u64> {
     let lo = u64::from_le_bytes(b.get(off..off + 8)?.try_into().ok()?);
     let hi = u64::from_le_bytes(b.get(off + 8..off + 16)?.try_into().ok()?);
-    Some(if hi != 0 { u64::MAX } else { lo })
+    (hi == 0).then_some(lo)
 }
 
 pub fn parse_nvme_health(log: &[u8]) -> Option<DiskHealth> {
@@ -23,10 +25,10 @@ pub fn parse_nvme_health(log: &[u8]) -> Option<DiskHealth> {
         temperature_c: (temp_k > 0).then(|| i32::from(temp_k) - 273),
         available_spare: log.get(3).map(|v| u32::from(*v)),
         percent_used: log.get(5).map(|v| u32::from(*v)),
-        written_bytes: u64_lo(log, 48).and_then(|u| u.checked_mul(NVME_DATA_UNIT)),
-        power_cycles: u64_lo(log, 112),
-        power_on_hours: u64_lo(log, 128),
-        media_errors: u64_lo(log, 160),
+        written_bytes: u128_as_u64(log, 48).and_then(|u| u.checked_mul(NVME_DATA_UNIT)),
+        power_cycles: u128_as_u64(log, 112),
+        power_on_hours: u128_as_u64(log, 128),
+        media_errors: u128_as_u64(log, 160),
         ..DiskHealth::default()
     })
 }
@@ -133,6 +135,19 @@ pub(crate) mod tests {
                 .temperature_c,
             None
         );
+    }
+
+    #[test]
+    fn nvme_counter_above_u64_reads_as_absent() {
+        // A non-zero high half on power_on_hours (bytes 136..144 of the u128) is a corrupt log.
+        let mut log = nvme_log(312, 2, 19_531_250, 0);
+        log[136..144].copy_from_slice(&1u64.to_le_bytes());
+        let h = parse_nvme_health(&log).unwrap();
+        assert_eq!(h.power_on_hours, None);
+        // The other counters are still parsed.
+        assert_eq!(h.power_cycles, Some(512));
+        assert_eq!(h.media_errors, Some(0));
+        assert_eq!(h.written_bytes, Some(10_000_000_000_000));
     }
 
     pub(crate) fn ata_sectors(
