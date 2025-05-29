@@ -70,7 +70,9 @@ pub fn nvme_log_from_response(out: &[u8]) -> Option<&[u8]> {
     // ProtocolSpecificData starts at 8; its DataOffset/DataLength are fields 4 and 5.
     let off = usize::try_from(u32_at(out, 8 + 16)?).ok()?;
     let len = usize::try_from(u32_at(out, 8 + 20)?).ok()?;
-    if len != NVME_LOG_LEN as usize {
+    // DataOffset counts from ProtocolSpecificData, whose header is 40 bytes; a smaller
+    // offset would hand back the descriptor and protocol header as if it were the log.
+    if len != NVME_LOG_LEN as usize || off < 40 {
         return None;
     }
     let start = 8usize.checked_add(off)?;
@@ -240,6 +242,17 @@ mod tests {
         out[28..32].copy_from_slice(&4096u32.to_le_bytes()); // lying length
         assert_eq!(nvme_log_from_response(&out), None);
         assert_eq!(nvme_log_from_response(&[0; 10]), None);
+    }
+
+    #[test]
+    fn nvme_log_offset_is_bounded_below_by_the_header() {
+        let mut out = vec![0u8; 8 + 48 + 512];
+        out[24..28].copy_from_slice(&48u32.to_le_bytes());
+        out[28..32].copy_from_slice(&512u32.to_le_bytes());
+        out[56] = 0xCD;
+        assert_eq!(nvme_log_from_response(&out).unwrap()[0], 0xCD);
+        out[24..28].copy_from_slice(&0u32.to_le_bytes());
+        assert_eq!(nvme_log_from_response(&out), None);
     }
 
     #[test]
