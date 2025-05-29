@@ -392,6 +392,11 @@ pub fn reason(lang: Language, reason: &str) -> String {
         "smartctl timed out" => "smartctl nu a răspuns la timp",
         "smartctl output could not be read" => "rezultatul smartctl nu a putut fi citit",
         "WMI did not answer" => "WMI nu a răspuns",
+        "the USB bridge does not pass SMART through" => "puntea USB nu transmite SMART",
+        "behind a RAID controller" => "în spatele unui controler RAID",
+        "virtual disk (no SMART)" => "disc virtual (fără SMART)",
+        "unreadable NVMe health log" => "jurnalul de sănătate NVMe nu a putut fi citit",
+        "unreadable SMART data" => "datele SMART nu au putut fi citite",
         other => other,
     };
     match lang {
