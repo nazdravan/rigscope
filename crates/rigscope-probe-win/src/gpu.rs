@@ -1,6 +1,6 @@
 use crate::{field_err, WinSource};
 use rigscope_model::{clean_text, Field, Gpu, GpuInfo};
-use rigscope_win::DxgiAdapterRaw;
+use rigscope_win::{DxgiAdapterRaw, PciDisplayRaw};
 
 pub const MAX_GPUS: usize = 16;
 
@@ -19,7 +19,7 @@ fn gts(code: u32) -> Option<f64> {
 
 /// Same text as the Linux probe (`{speed} x{width}`, speed like `16.0 GT/s PCIe`).
 pub(crate) fn link_text(gts: f64, width: u32) -> String {
-    format!("{gts:.1} GT/s PCIe x{width}") // ajustează după Step 1 dacă Linux scrie altfel
+    format!("{gts:.1} GT/s PCIe x{width}")
 }
 
 fn hardware(src: &dyn WinSource) -> Vec<DxgiAdapterRaw> {
@@ -52,10 +52,35 @@ pub(crate) fn read_gpus(src: &dyn WinSource) -> GpuInfo {
         .map(|(i, a)| {
             let vendor = u16::try_from(a.vendor_id).ok();
             let device = u16::try_from(a.device_id).ok();
-            let dev = pci.as_ref().ok().and_then(|p| {
-                p.iter()
-                    .find(|d| Some(d.vendor_id) == vendor && Some(d.device_id) == device)
-            });
+            let matches: Vec<&PciDisplayRaw> = pci
+                .as_ref()
+                .map(|p| {
+                    p.iter()
+                        .filter(|d| Some(d.vendor_id) == vendor && Some(d.device_id) == device)
+                        .collect()
+                })
+                .unwrap_or_default();
+            // Identical cards share (vendor, device); DXGI gives no way to tell which
+            // PCI entry is which, so a second match makes location and link unknown.
+            let dev = if let [one] = matches.as_slice() {
+                Some(*one)
+            } else {
+                None
+            };
+            let driver = match matches.split_first() {
+                Some((first, rest))
+                    if rest
+                        .iter()
+                        .all(|d| d.driver_version == first.driver_version) =>
+                {
+                    Field::from_option(first.driver_version.clone())
+                }
+                Some(_) => Field::Unknown,
+                None => match &pci {
+                    Err(e) => field_err(e),
+                    Ok(_) => Field::Unknown,
+                },
+            };
             Gpu {
                 card: format!("gpu{i}"),
                 pci_address: Field::from_option(dev.and_then(|d| d.location.clone())),
@@ -64,11 +89,7 @@ pub(crate) fn read_gpus(src: &dyn WinSource) -> GpuInfo {
                 vendor_name: Field::Unknown,
                 device_name: Field::from_option(clean_text(&a.description)),
                 subsystem_name: Field::Unknown,
-                driver: match (&pci, dev) {
-                    (_, Some(d)) => Field::from_option(d.driver_version.clone()),
-                    (Err(e), None) => field_err(e),
-                    (Ok(_), None) => Field::Unknown,
-                },
+                driver,
                 vram_bytes: Field::Known(a.dedicated_video_memory),
                 pcie_link: Field::from_option(
                     dev.and_then(|d| Some(link_text(gts(d.link_speed?)?, d.link_width?))),
@@ -138,6 +159,35 @@ mod tests {
         assert_eq!(x.pcie_link, Field::Known(link_text(16.0, 16)));
         assert_eq!(x.pcie_link, Field::Known("16.0 GT/s PCIe x16".into())); // literal: Linux format
         assert!(x.boot_vga);
+    }
+
+    #[test]
+    fn identical_cards_do_not_borrow_each_others_pci_link() {
+        let mut w = MemWin::default();
+        let second = DxgiAdapterRaw {
+            luid: 0x99,
+            ..rtx()
+        };
+        w.dxgi = Ok(vec![rtx(), second]);
+        let pci = |loc: &str, speed| PciDisplayRaw {
+            vendor_id: 0x10de,
+            device_id: 0x2504,
+            driver_version: Some("32.0.15.6094".into()),
+            link_speed: Some(speed),
+            link_width: Some(16),
+            location: Some(loc.into()),
+        };
+        w.pci_display = Ok(vec![
+            pci("PCI bus 1, device 0, function 0", 4),
+            pci("PCI bus 2, device 0, function 0", 3),
+        ]);
+        let g = read_gpus(&w);
+        assert_eq!(g.gpus.len(), 2);
+        for x in &g.gpus {
+            assert_eq!(x.pcie_link, Field::Unknown);
+            assert_eq!(x.pci_address, Field::Unknown);
+            assert_eq!(x.driver, Field::Known("32.0.15.6094".into()));
+        }
     }
 
     #[test]
