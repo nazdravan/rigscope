@@ -397,6 +397,13 @@ pub fn reason(lang: Language, reason: &str) -> String {
         "virtual disk (no SMART)" => "disc virtual (fără SMART)",
         "unreadable NVMe health log" => "jurnalul de sănătate NVMe nu a putut fi citit",
         "unreadable SMART data" => "datele SMART nu au putut fi citite",
+        "not available on Windows: needs a kernel driver" => {
+            "indisponibil pe Windows: necesită un driver de kernel"
+        }
+        "the battery reports relative capacity, not mWh" => {
+            "bateria raportează capacitate relativă, nu mWh"
+        }
+        "the graphics driver reports no temperature" => "driverul grafic nu raportează temperatura",
         other => other,
     };
     match lang {
