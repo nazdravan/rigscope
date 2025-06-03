@@ -160,3 +160,17 @@ fn view_language_switches() {
         Err(EngineError::BadParams(_))
     ));
 }
+
+#[test]
+fn engine_runs_on_the_windows_collector() {
+    let env = FakeEnv::with(Box::new(rigscope_probe_win::WinCollector::new(
+        rigscope_probe_win::samples::laptop(),
+    )));
+    let mut a = App::new(Box::new(env));
+    assert_eq!(
+        a.session.snapshot.platform,
+        rigscope_model::Platform::Windows
+    );
+    a.run("live.tick", json!({})).unwrap();
+    assert!(a.session.snapshot.cpu.cores.iter().all(|c| c.estimated));
+}
