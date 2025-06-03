@@ -2174,6 +2174,7 @@ dependencies = [
  "rigscope-engine",
  "rigscope-model",
  "rigscope-probe",
+ "rigscope-probe-win",
  "rigscope-smbios",
  "serde",
  "serde_json",
@@ -3499,6 +3500,7 @@ name = "xtask"
 version = "0.2.0"
 dependencies = [
  "anyhow",
+ "rigscope-probe-win",
  "rigscope-smbios",
  "serde_json",
 ]
