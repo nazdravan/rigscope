@@ -21,6 +21,7 @@ thiserror.workspace = true
 [dev-dependencies]
 rigscope-engine = { path = ".", features = ["testutil"] }
 proptest.workspace = true
+rigscope-probe-win = { workspace = true, features = ["testutil"] }
 
 [lints]
 workspace = true
