@@ -151,8 +151,33 @@ impl MemWin {
         dir.join(MARKER).is_file()
     }
 
+    /// Removes what an earlier `save` left, so stale `*.err.json` or `ioctl/*` files
+    /// cannot win over new data on `load`. Unrelated files are kept.
+    fn clear_managed(dir: &Path) -> std::io::Result<()> {
+        for name in [
+            MARKER,
+            "smbios.bin",
+            "smbios.bin.err.json",
+            "processors.bin",
+            "processors.bin.err.json",
+        ] {
+            match std::fs::remove_file(dir.join(name)) {
+                Err(e) if e.kind() != std::io::ErrorKind::NotFound => return Err(e),
+                _ => {}
+            }
+        }
+        match std::fs::remove_dir_all(dir.join("ioctl")) {
+            Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e),
+            _ => Ok(()),
+        }
+    }
+
     pub fn save(&self, dir: &Path) -> std::io::Result<()> {
-        std::fs::create_dir_all(dir.join("ioctl"))?;
+        Self::clear_managed(dir)?;
+        std::fs::create_dir_all(dir)?;
+        if !self.nvme.is_empty() || !self.ata.is_empty() {
+            std::fs::create_dir_all(dir.join("ioctl"))?;
+        }
         let env = Envelope {
             format: FORMAT,
             data: self.clone(),
@@ -308,6 +333,25 @@ mod tests {
         assert!(MemWin::is_fixture(&dir));
         let back = MemWin::load(&dir).unwrap();
         assert_eq!(back, w);
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn save_replaces_stale_files() {
+        let dir =
+            std::env::temp_dir().join(format!("rigscope-memwin-stale-{}", std::process::id()));
+        let mut w = MemWin::default();
+        w.smbios = Err(WinError::AccessDenied);
+        w.nvme.insert(0, Ok(vec![1; 8]));
+        w.save(&dir).unwrap();
+        std::fs::write(dir.join("keep.txt"), b"x").unwrap();
+        w.smbios = Ok(vec![0, 3, 4, 0, 0, 0, 0, 0]);
+        w.nvme.clear();
+        w.save(&dir).unwrap();
+        let back = MemWin::load(&dir).unwrap();
+        assert!(back.smbios.is_ok());
+        assert!(back.nvme.is_empty());
+        assert!(dir.join("keep.txt").exists());
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }
