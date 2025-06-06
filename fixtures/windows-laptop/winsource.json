@@ -1,0 +1,211 @@
+{
+  "format": 1,
+  "data": {
+    "os_version": {
+      "Ok": {
+        "product_name": "Windows 10 Pro",
+        "display_version": "24H2",
+        "current_build": 26100,
+        "ubr": 2314,
+        "edition_id": "Professional"
+      }
+    },
+    "computer_name": {
+      "Ok": "LAPTOP-SAMPLE"
+    },
+    "uptime_ms": {
+      "Ok": 3600000
+    },
+    "memory_status": {
+      "Ok": {
+        "total_phys": 34359738368,
+        "avail_phys": 21474836480
+      }
+    },
+    "cpu_registry": {
+      "Ok": {
+        "name": "AMD Ryzen 7 PRO 7840U w/ Radeon 780M Graphics",
+        "vendor": "AuthenticAMD",
+        "mhz": 3301,
+        "update_revision": [
+          9,
+          16,
+          64,
+          10,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "cpu_features": {
+      "Ok": [
+        "sse4.2",
+        "avx2",
+        "avx512f"
+      ]
+    },
+    "perf": [
+      {
+        "Ok": []
+      },
+      {
+        "Ok": [
+          [
+            0,
+            120.0
+          ],
+          [
+            1,
+            120.0
+          ],
+          [
+            2,
+            120.0
+          ],
+          [
+            3,
+            120.0
+          ],
+          [
+            4,
+            120.0
+          ],
+          [
+            5,
+            120.0
+          ],
+          [
+            6,
+            120.0
+          ],
+          [
+            7,
+            120.0
+          ],
+          [
+            8,
+            120.0
+          ],
+          [
+            9,
+            120.0
+          ],
+          [
+            10,
+            120.0
+          ],
+          [
+            11,
+            120.0
+          ],
+          [
+            12,
+            120.0
+          ],
+          [
+            13,
+            120.0
+          ],
+          [
+            14,
+            120.0
+          ],
+          [
+            15,
+            120.0
+          ]
+        ]
+      }
+    ],
+    "disks_wmi": {
+      "Ok": [
+        {
+          "number": 0,
+          "friendly_name": "SAMSUNG MZVL21T0HCLR-00BL7",
+          "serial": "S641NX0T000000",
+          "firmware": "6L2QGXD7",
+          "size": 1024209543168,
+          "bus_type": 17,
+          "media_type": 4
+        }
+      ]
+    },
+    "disks_ioctl": {
+      "Ok": []
+    },
+    "dxgi": {
+      "Ok": [
+        {
+          "description": "AMD Radeon(TM) 780M",
+          "vendor_id": 4098,
+          "device_id": 5567,
+          "dedicated_video_memory": 536870912,
+          "shared_system_memory": 17179869184,
+          "luid": 65536,
+          "software": false
+        }
+      ]
+    },
+    "pci_display": {
+      "Ok": [
+        {
+          "vendor_id": 4098,
+          "device_id": 5567,
+          "driver_version": "31.0.24033.1003",
+          "link_speed": 4,
+          "link_width": 16,
+          "location": "PCI bus 100, device 0, function 0"
+        }
+      ]
+    },
+    "gpu_temps": {
+      "65536": {
+        "Ok": 480
+      }
+    },
+    "net": {
+      "Ok": [
+        {
+          "name": "Wi-Fi",
+          "description": "MEDIATEK Wi-Fi 6E MT7922",
+          "if_type": 71,
+          "up": true,
+          "speed_bps": 1201000000,
+          "mac": "10:20:30:40:50:60",
+          "mtu": 1500,
+          "hardware": true
+        }
+      ]
+    },
+    "batteries": {
+      "Ok": [
+        {
+          "name": "5B10W51867",
+          "manufacturer": "SMP",
+          "serial": "1234",
+          "chemistry": "LiP",
+          "relative": false,
+          "designed": 52500,
+          "full": 49870,
+          "now": 30000,
+          "cycles": 112,
+          "power_state": 2
+        }
+      ]
+    },
+    "ac_online": {
+      "Ok": false
+    },
+    "thermal": {
+      "Ok": [
+        {
+          "instance": "ACPI\\ThermalZone\\THM0_0",
+          "tenths_kelvin": 3182
+        }
+      ]
+    },
+    "elevated": true
+  }
+}
