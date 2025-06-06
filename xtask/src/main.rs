@@ -205,6 +205,17 @@ fn gen_fixtures() -> Result<()> {
         std::fs::write(dir.join("DMI"), table)?;
         eprintln!("wrote {}", dir.display());
     }
+    for (name, w) in [
+        ("windows-laptop", rigscope_probe_win::samples::laptop()),
+        ("windows-vm", rigscope_probe_win::samples::vm()),
+    ] {
+        let dir = root().join("fixtures").join(name);
+        if dir.exists() {
+            std::fs::remove_dir_all(&dir)?;
+        }
+        w.save(&dir)?;
+        eprintln!("fixtures/{name}: written");
+    }
     Ok(())
 }
 
