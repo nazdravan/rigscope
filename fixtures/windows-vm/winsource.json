@@ -1,0 +1,111 @@
+{
+  "format": 1,
+  "data": {
+    "os_version": {
+      "Ok": {
+        "product_name": "Windows Server 2025 Datacenter",
+        "display_version": "24H2",
+        "current_build": 26100,
+        "ubr": 1742,
+        "edition_id": "ServerDatacenter"
+      }
+    },
+    "computer_name": {
+      "Ok": "WIN-VM"
+    },
+    "uptime_ms": {
+      "Ok": 120000
+    },
+    "memory_status": {
+      "Ok": {
+        "total_phys": 8589934592,
+        "avail_phys": 6442450944
+      }
+    },
+    "cpu_registry": {
+      "Ok": {
+        "name": "Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz",
+        "vendor": "GenuineIntel",
+        "mhz": 2794,
+        "update_revision": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    "cpu_features": {
+      "Ok": [
+        "sse4.2",
+        "avx2"
+      ]
+    },
+    "perf": [
+      {
+        "Ok": []
+      }
+    ],
+    "disks_wmi": {
+      "Ok": [
+        {
+          "number": 0,
+          "friendly_name": "Msft Virtual Disk",
+          "serial": null,
+          "firmware": "1.0",
+          "size": 136365211648,
+          "bus_type": 14,
+          "media_type": 0
+        }
+      ]
+    },
+    "disks_ioctl": {
+      "Ok": []
+    },
+    "dxgi": {
+      "Ok": [
+        {
+          "description": "Microsoft Basic Render Driver",
+          "vendor_id": 5140,
+          "device_id": 140,
+          "dedicated_video_memory": 0,
+          "shared_system_memory": 4294967296,
+          "luid": 1,
+          "software": true
+        }
+      ]
+    },
+    "pci_display": {
+      "Ok": []
+    },
+    "gpu_temps": {},
+    "net": {
+      "Ok": [
+        {
+          "name": "Ethernet",
+          "description": "Microsoft Hyper-V Network Adapter",
+          "if_type": 6,
+          "up": true,
+          "speed_bps": 10000000000,
+          "mac": "00:15:5d:00:00:01",
+          "mtu": 1500,
+          "hardware": true
+        }
+      ]
+    },
+    "batteries": {
+      "Ok": []
+    },
+    "ac_online": {
+      "Ok": true
+    },
+    "thermal": {
+      "Err": "NotAvailable"
+    },
+    "elevated": true
+  }
+}
