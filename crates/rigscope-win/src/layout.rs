@@ -208,6 +208,15 @@ pub fn utf16z(b: &[u8]) -> Option<String> {
     (!s.is_empty()).then_some(s)
 }
 
+/// PDH `Processor Information` instance "g,n" → logical CPU g×64+n; totals ("_Total",
+/// "0,_Total") → None.
+pub fn pdh_cpu(instance: &str) -> Option<u32> {
+    let (g, n) = instance.split_once(',')?;
+    let g: u32 = g.trim().parse().ok()?;
+    let n: u32 = n.trim().parse().ok()?;
+    g.checked_mul(64)?.checked_add(n)
+}
+
 #[cfg(test)]
 mod tests {
     #![allow(clippy::unwrap_used, clippy::indexing_slicing)]
@@ -330,5 +339,13 @@ mod tests {
             .collect();
         assert_eq!(utf16z(&b).as_deref(), Some("SMP"));
         assert_eq!(utf16z(&[0, 0]), None);
+    }
+
+    #[test]
+    fn pdh_instance_names() {
+        assert_eq!(pdh_cpu("0,3"), Some(3));
+        assert_eq!(pdh_cpu("1,2"), Some(66));
+        assert_eq!(pdh_cpu("_Total"), None);
+        assert_eq!(pdh_cpu("0,_Total"), None);
     }
 }
