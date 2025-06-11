@@ -60,8 +60,12 @@ impl Pdh {
         let r = unsafe {
             PdhGetFormattedCounterArrayW(self.counter, PDH_FMT_DOUBLE, &mut size, &mut count, None)
         };
-        if r != PDH_MORE_DATA {
-            return Ok(Vec::new()); // first sample: PDH_INVALID_DATA, no values yet
+        match r {
+            PDH_MORE_DATA => {}
+            // First sample of a rate counter: no values yet. ERROR_SUCCESS on a size query
+            // means zero bytes are needed, i.e. no instances: nothing to read either.
+            PDH_CSTATUS_INVALID_DATA | PDH_INVALID_DATA | 0 => return Ok(Vec::new()),
+            _ => return Err(fail("PdhGetFormattedCounterArrayW", r)),
         }
         if size as usize > 4 * 1024 * 1024 {
             return Err(fail("PdhGetFormattedCounterArrayW", r));
@@ -92,9 +96,17 @@ impl Pdh {
         let items = unsafe {
             std::slice::from_raw_parts(store.as_ptr().cast::<PDH_FMT_COUNTERVALUE_ITEM_W>(), n)
         };
+        // The names live after the items, inside `store`; a pointer outside it is skipped.
+        let lo = store.as_ptr() as usize;
+        let hi = lo + store.len() * 8;
         let mut out = Vec::new();
         for it in items {
-            // SAFETY: szName points into `store` (PDH puts the names after the items), NUL-terminated.
+            let at = it.szName.0 as usize;
+            if it.szName.is_null() || at < lo || at >= hi {
+                continue;
+            }
+            // SAFETY: szName is non-null and points inside `store` (checked above), where PDH
+            // wrote the NUL-terminated instance names; `store` is alive.
             let name = unsafe { it.szName.to_string() }.unwrap_or_default();
             if let Some(cpu) = crate::layout::pdh_cpu(&name) {
                 // SAFETY: PDH_FMT_DOUBLE was requested, so the union holds doubleValue.
