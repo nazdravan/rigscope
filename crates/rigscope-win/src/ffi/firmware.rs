@@ -40,8 +40,14 @@ pub fn processors_raw() -> Result<Vec<u8>, WinError> {
     // SAFETY: size query with no buffer; fails with ERROR_INSUFFICIENT_BUFFER and sets `len`.
     let _ = unsafe { GetLogicalProcessorInformationEx(RelationAll, None, &mut len) };
     let n = len as usize;
-    if n == 0 || n > MAX {
+    if n == 0 {
         return Err(last_error("GetLogicalProcessorInformationEx"));
+    }
+    if n > MAX {
+        return Err(WinError::Failed {
+            api: "GetLogicalProcessorInformationEx".into(),
+            code: 0,
+        });
     }
     // u64 storage keeps the records 8-byte aligned, as the API expects.
     let mut store = vec![0u64; n.div_ceil(8)];
