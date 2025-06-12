@@ -56,8 +56,9 @@ pub fn nvme_health_raw(disk: u32) -> Result<Vec<u8>, WinError> {
 }
 
 pub fn ata_smart_raw(disk: u32) -> Result<AtaSmartRaw, WinError> {
+    // bDriveNumber is a u8; a larger disk number must not wrap or fall back to drive 0.
+    let drive = u8::try_from(disk).map_err(|_| WinError::NotAvailable)?;
     let dev = Device::open(&path(disk), true)?;
-    let drive = u8::try_from(disk).unwrap_or(0);
     let read = |feature| -> Result<Vec<u8>, WinError> {
         let out = dev.ioctl(
             SMART_RCV_DRIVE_DATA,
