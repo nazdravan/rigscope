@@ -208,6 +208,17 @@ pub fn utf16z(b: &[u8]) -> Option<String> {
     (!s.is_empty()).then_some(s)
 }
 
+/// A PCI hardware id "PCI\VEN_10DE&DEV_2504&SUBSYS_…" → (0x10de, 0x2504); None when either
+/// id is missing or not four hex digits.
+pub fn ven_dev(ids: &str) -> Option<(u16, u16)> {
+    let ven = ids.split("VEN_").nth(1)?.get(..4)?;
+    let dev = ids.split("DEV_").nth(1)?.get(..4)?;
+    Some((
+        u16::from_str_radix(ven, 16).ok()?,
+        u16::from_str_radix(dev, 16).ok()?,
+    ))
+}
+
 /// PDH `Processor Information` instance "g,n" → logical CPU g×64+n; totals ("_Total",
 /// "0,_Total") → None.
 pub fn pdh_cpu(instance: &str) -> Option<u32> {
@@ -221,6 +232,16 @@ pub fn pdh_cpu(instance: &str) -> Option<u32> {
 mod tests {
     #![allow(clippy::unwrap_used, clippy::indexing_slicing)]
     use super::*;
+
+    #[test]
+    fn ven_dev_from_hardware_ids() {
+        assert_eq!(
+            ven_dev(r"PCI\VEN_10DE&DEV_2504&SUBSYS_1"),
+            Some((0x10de, 0x2504))
+        );
+        assert_eq!(ven_dev(r"ACPI\PNP0A08"), None);
+        assert_eq!(ven_dev(r"PCI\VEN_10DE&DEV_25"), None);
+    }
 
     fn u32le(b: &[u8], off: usize) -> u32 {
         u32::from_le_bytes(b[off..off + 4].try_into().unwrap())
