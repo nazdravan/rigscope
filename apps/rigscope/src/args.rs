@@ -12,6 +12,8 @@ pub struct Args {
     pub section: Option<String>,
     /// Port of the local control channel.
     pub control: Option<u16>,
+    /// Save this machine (Windows) as a masked fixture into this directory, then exit.
+    pub capture_fixture: Option<std::path::PathBuf>,
 }
 
 impl Args {
@@ -37,6 +39,9 @@ impl Args {
                 "--fixture" => a.fixture = Some(value("--fixture")?),
                 "--lang" => a.lang = Some(value("--lang")?),
                 "--section" => a.section = Some(value("--section")?),
+                "--capture-fixture" => {
+                    a.capture_fixture = Some(value("--capture-fixture")?.into());
+                }
                 "--control" => {
                     let v = value("--control")?;
                     a.control = Some(
@@ -45,7 +50,7 @@ impl Args {
                     );
                 }
                 "-h" | "--help" => {
-                    println!("usage: rigscope [--fixture DIR] [--lang en|ro] [--section memory|cpu|system] [--control PORT]");
+                    println!("usage: rigscope [--fixture DIR] [--lang en|ro] [--section memory|cpu|system] [--control PORT] [--capture-fixture DIR]");
                     std::process::exit(0);
                 }
                 other => bail!("unknown argument: {other}"),
@@ -69,6 +74,16 @@ mod tests {
         assert_eq!(a.fixture.as_deref(), Some("x"));
         assert_eq!(a.lang.as_deref(), Some("ro"));
         assert_eq!(a.section.as_deref(), Some("cpu"));
+    }
+
+    #[test]
+    fn capture_fixture_flag() {
+        let a = parse(&["--capture-fixture", "out"]).unwrap();
+        assert_eq!(
+            a.capture_fixture.as_deref(),
+            Some(std::path::Path::new("out"))
+        );
+        assert!(parse(&["--capture-fixture"]).is_err());
     }
 
     #[test]
