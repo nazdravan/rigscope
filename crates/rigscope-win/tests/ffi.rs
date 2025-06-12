@@ -1,7 +1,7 @@
 #![cfg(windows)]
-#![allow(clippy::unwrap_used, clippy::indexing_slicing)]
+#![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)]
 
-use rigscope_win::ffi;
+use rigscope_win::{ffi, layout, WinError};
 
 #[test]
 fn smbios_has_a_valid_header() {
@@ -57,26 +57,76 @@ fn disks_via_wmi_and_ioctl_agree_on_count() {
     }
 }
 
-#[test]
-fn smart_reads_do_not_crash() {
-    for d in ffi::physical_disks_wmi().unwrap() {
-        let _ = if d.bus_type == Some(17) {
-            ffi::nvme_health_raw(d.number).map(|_| ())
-        } else {
-            ffi::ata_smart_raw(d.number).map(|_| ())
-        };
+/// `Ok(v)` → `Some(v)`; the expected "can't here" errors (not elevated, not supported on this
+/// machine) → `None`. `Failed` and `Timeout` fail the test.
+fn ok_or_cant<T: std::fmt::Debug>(what: &str, r: Result<T, WinError>) -> Option<T> {
+    match r {
+        Ok(v) => Some(v),
+        Err(WinError::AccessDenied | WinError::NotAvailable) => None,
+        Err(e) => panic!("{what}: unexpected {e:?}"),
     }
+}
+
+#[test]
+fn smart_reads_succeed_or_report_access_denied_or_not_available() {
+    for d in ffi::physical_disks_wmi().unwrap() {
+        if d.bus_type == Some(17) {
+            let r = ffi::nvme_health_raw(d.number);
+            println!(
+                "disk {} NVMe health: {:?}",
+                d.number,
+                r.as_ref().map(Vec::len)
+            );
+            if let Some(b) = ok_or_cant("nvme_health_raw", r) {
+                assert!(
+                    layout::nvme_log_from_response(&b).is_some(),
+                    "disk {}",
+                    d.number
+                );
+            }
+        } else {
+            let r = ffi::ata_smart_raw(d.number);
+            println!(
+                "disk {} ATA SMART: {:?}",
+                d.number,
+                r.as_ref().map(|a| (a.attributes.len(), a.thresholds.len()))
+            );
+            if let Some(a) = ok_or_cant("ata_smart_raw", r) {
+                assert_eq!(a.attributes.len(), 512);
+                assert_eq!(a.thresholds.len(), 512);
+            }
+        }
+    }
+    // Out of range for SMART_RCV_DRIVE_DATA's u8 drive number: no fallback to drive 0.
+    assert_eq!(ffi::ata_smart_raw(256), Err(WinError::NotAvailable));
 }
 
 #[test]
 fn gpu_net_battery_thermal() {
     let a = ffi::adapters_dxgi().unwrap();
     assert!(!a.is_empty()); // at least the Basic Render Driver
-    let _ = ffi::pci_display().unwrap();
+    for p in ffi::pci_display().unwrap() {
+        assert_ne!(p.vendor_id, 0, "{p:?}");
+    }
     for x in a.iter().filter(|x| !x.software) {
-        let _ = ffi::GpuPerf::temperature(x.luid);
+        let r = ffi::GpuPerf::temperature(x.luid);
+        println!("GPU {} temperature: {r:?}", x.description);
+        if let Some(t) = ok_or_cant("GpuPerf::temperature", r) {
+            assert!(t.is_none_or(|t| t < 1500), "{t:?} deci-°C");
+        }
     }
     assert!(!ffi::net_adapters().unwrap().is_empty());
-    let _ = ffi::batteries().unwrap(); // desktop: an empty list
-    let _ = ffi::acpi_thermal_zones(); // may be Err on machines without zones
+    let b = ffi::batteries().unwrap(); // desktop: an empty list
+    println!("batteries: {}", b.len());
+    if !b.is_empty() {
+        assert!(
+            b.iter().any(|x| x.designed.is_some() || x.full.is_some()),
+            "{b:?}"
+        );
+    }
+    let r = ffi::acpi_thermal_zones();
+    println!("thermal zones: {r:?}");
+    if let Some(z) = ok_or_cant("acpi_thermal_zones", r) {
+        assert!(z.iter().all(|z| z.tenths_kelvin > 2000), "{z:?}");
+    }
 }
