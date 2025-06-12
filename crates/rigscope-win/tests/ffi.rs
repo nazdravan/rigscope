@@ -45,3 +45,38 @@ fn elevation_is_reported() {
         assert!(ffi::is_elevated());
     }
 }
+
+#[test]
+fn disks_via_wmi_and_ioctl_agree_on_count() {
+    let wmi = ffi::physical_disks_wmi().unwrap();
+    let io = ffi::physical_disks_ioctl().unwrap();
+    assert!(!wmi.is_empty());
+    assert_eq!(wmi.len(), io.len(), "wmi {wmi:?} vs ioctl {io:?}");
+    for d in &io {
+        assert!(rigscope_win::layout::parse_device_descriptor(&d.descriptor).is_some());
+    }
+}
+
+#[test]
+fn smart_reads_do_not_crash() {
+    for d in ffi::physical_disks_wmi().unwrap() {
+        let _ = if d.bus_type == Some(17) {
+            ffi::nvme_health_raw(d.number).map(|_| ())
+        } else {
+            ffi::ata_smart_raw(d.number).map(|_| ())
+        };
+    }
+}
+
+#[test]
+fn gpu_net_battery_thermal() {
+    let a = ffi::adapters_dxgi().unwrap();
+    assert!(!a.is_empty()); // at least the Basic Render Driver
+    let _ = ffi::pci_display().unwrap();
+    for x in a.iter().filter(|x| !x.software) {
+        let _ = ffi::GpuPerf::temperature(x.luid);
+    }
+    assert!(!ffi::net_adapters().unwrap().is_empty());
+    let _ = ffi::batteries().unwrap(); // desktop: an empty list
+    let _ = ffi::acpi_thermal_zones(); // may be Err on machines without zones
+}
