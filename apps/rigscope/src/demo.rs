@@ -1,18 +1,18 @@
-//! The built-in demo machine, shown when rigscope runs where there is no Linux to read and no
-//! `--fixture` was given (macOS). The blob is made by `build.rs`; it is unpacked into a private
-//! temporary directory that is removed on exit.
+//! The built-in demo machine, shown when rigscope runs where it cannot read the machine and no
+//! `--fixture` was given (macOS; Linux and Windows read themselves). The blob is made by
+//! `build.rs`; it is unpacked into a private temporary directory that is removed on exit.
 
 use crate::demo_pack;
 use std::path::{Path, PathBuf};
 
-#[cfg_attr(target_os = "linux", allow(dead_code))]
+#[cfg_attr(any(target_os = "linux", windows), allow(dead_code))]
 static BLOB: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/demo_fixture.bin"));
 
 /// A temporary directory holding the unpacked demo fixture; removed on drop.
-#[cfg_attr(target_os = "linux", allow(dead_code))]
+#[cfg_attr(any(target_os = "linux", windows), allow(dead_code))]
 pub struct DemoDir(PathBuf);
 
-#[cfg_attr(target_os = "linux", allow(dead_code))]
+#[cfg_attr(any(target_os = "linux", windows), allow(dead_code))]
 impl DemoDir {
     pub fn unpack() -> std::io::Result<Self> {
         let dir = std::env::temp_dir().join(format!("rigscope-demo-{}", std::process::id()));
