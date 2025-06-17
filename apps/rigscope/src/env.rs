@@ -14,7 +14,6 @@ pub const MAX_READ: u64 = 4 * 1024 * 1024;
 /// How the elevated read works in this environment.
 pub enum Elevation {
     /// No elevated read (Windows runs as administrator; demo of a Windows fixture).
-    #[allow(dead_code, reason = "constructed by the Windows backend")]
     None,
     /// Fixture mode: `root/smart/<disk>.json` simulates it.
     Fixture(FixtureSource),
