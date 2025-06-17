@@ -1,23 +1,20 @@
-//! rigscope — detailed hardware configuration viewer for Linux.
-
-mod args;
-mod control;
-mod demo;
-mod demo_pack;
-mod dump_dmi;
-mod env;
+//! rigscope — detailed hardware configuration viewer for Linux and Windows.
 
 use anyhow::Result;
+use rigscope::{args, capture, control, demo, env};
 use rigscope_engine::App;
 use serde_json::json;
 
 fn main() -> Result<()> {
     let args = args::Args::parse_os(std::env::args_os().skip(1))?;
+    if let Some(dir) = &args.capture_fixture {
+        return capture::run(dir);
+    }
 
     // Keeps the unpacked demo machine alive (and removes it on exit) when there is no Linux here.
     let mut _demo_dir = None;
     let (env, demo) = match &args.fixture {
-        Some(dir) => (env::RealEnv::fixture(dir), true),
+        Some(dir) => (fixture_env(dir)?, true),
         None => default_env(&mut _demo_dir)?,
     };
     let mut app = App::new(Box::new(env));
@@ -75,11 +72,33 @@ fn default_env(_demo: &mut Option<demo::DemoDir>) -> Result<(env::RealEnv, bool)
     Ok((env::RealEnv::system(), false))
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(windows)]
+fn default_env(_demo: &mut Option<demo::DemoDir>) -> Result<(env::RealEnv, bool)> {
+    let collector = rigscope_probe_win::WinCollector::new(rigscope_probe_win::RealWin::new());
+    Ok((
+        env::RealEnv::new(Box::new(collector), env::Elevation::None),
+        false,
+    ))
+}
+
+#[cfg(not(any(target_os = "linux", windows)))]
 fn default_env(demo: &mut Option<demo::DemoDir>) -> Result<(env::RealEnv, bool)> {
     let dir = demo::DemoDir::unpack()
         .map_err(|e| anyhow::anyhow!("cannot unpack the demo machine: {e}"))?;
     let env = env::RealEnv::fixture(&dir.path().to_string_lossy());
     *demo = Some(dir);
     Ok((env, true))
+}
+
+/// `--fixture DIR`: a Windows fixture (`winsource.json`) or a Linux-layout one.
+fn fixture_env(dir: &str) -> Result<env::RealEnv> {
+    let p = std::path::Path::new(dir);
+    if rigscope_probe_win::MemWin::is_fixture(p) {
+        let w = rigscope_probe_win::MemWin::load(p).map_err(|e| anyhow::anyhow!("{dir}: {e}"))?;
+        return Ok(env::RealEnv::new(
+            Box::new(rigscope_probe_win::WinCollector::new(w)),
+            env::Elevation::None,
+        ));
+    }
+    Ok(env::RealEnv::fixture(dir))
 }
