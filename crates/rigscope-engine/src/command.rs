@@ -26,6 +26,7 @@ impl App {
     pub fn new(mut env: Box<dyn Env>) -> Self {
         let now = env.now_unix();
         let snapshot = env.collector().collect(None, now);
+        let status = crate::commands::snapshot::elevation_status(&snapshot);
         App {
             session: Session {
                 snapshot,
@@ -33,7 +34,7 @@ impl App {
                 section: SectionId::Memory,
                 live: true,
                 language: crate::Language::En,
-                status: None,
+                status,
                 dmi_dump: None,
                 elevating: false,
                 opened: None,
