@@ -533,6 +533,10 @@ pub fn status(lang: Language, msg: &str) -> String {
             "elevated reading needs Linux with pkexec",
             "citirea cu drepturi ridicate cere Linux cu pkexec",
         ),
+        (
+            "on Windows rigscope already runs as administrator",
+            "pe Windows rigscope rulează deja ca administrator",
+        ),
         ("no memory slot data", "nu există date despre sloturi"),
         (
             "this machine has no DMI table",
@@ -547,6 +551,10 @@ pub fn status(lang: Language, msg: &str) -> String {
     };
     if let Some(t) = whole(msg) {
         return t;
+    }
+    // Set by the engine on Windows when a disk needs elevation (`elevation_status`).
+    if msg == tr(Language::En, Key::NotElevated) {
+        return tr(lang, Key::NotElevated).to_string();
     }
     let msg = &msg.replace(
         "; refresh to return to this computer",
