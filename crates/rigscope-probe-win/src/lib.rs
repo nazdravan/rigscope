@@ -5,8 +5,11 @@ mod collector;
 mod cpu;
 mod errors;
 mod gpu;
+mod mask;
 mod net;
 mod power;
+#[cfg(windows)]
+mod real;
 mod sensors;
 mod smart;
 mod source;
@@ -17,8 +20,11 @@ pub use collector::WinCollector;
 pub use cpu::{microcode, parse_processors, Topology, MAX_PROCESSORS_BUF};
 pub use errors::{field_err, field_of};
 pub use gpu::MAX_GPUS;
+pub use mask::mask_descriptor_serial;
 pub use net::MAX_INTERFACES;
 pub use power::MAX_SUPPLIES;
+#[cfg(windows)]
+pub use real::{capture, RealWin};
 pub use sensors::NO_CPU_TEMP;
 pub use smart::{parse_ata_smart, parse_nvme_health};
 pub use source::{MemWin, WinSource, R};
