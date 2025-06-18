@@ -1,6 +1,6 @@
 use super::always;
 use crate::{CommandSpec, EngineError, Session};
-use rigscope_model::DmiSource;
+use rigscope_model::{DmiSource, Field, Platform, Snapshot};
 use serde_json::{json, Value};
 
 pub fn specs() -> Vec<CommandSpec> {
@@ -38,13 +38,20 @@ pub fn specs() -> Vec<CommandSpec> {
                 "{} — runs the privileged helper (pkexec) to read the SMBIOS table and SMART",
             enabled: |s| {
                 if !s.env.can_elevate() {
-                    Err("elevated reading needs Linux with pkexec".into())
+                    Err(if s.snapshot.platform == Platform::Windows {
+                        "on Windows rigscope already runs as administrator".into()
+                    } else {
+                        "elevated reading needs Linux with pkexec".into()
+                    })
                 } else if s.elevating {
                     Err("already waiting for authentication".into())
                 } else if s.snapshot.dmi_source == DmiSource::SysfsIdOnly || needs_root_for_smart(s)
                 {
                     Ok(())
-                } else if s.snapshot.dmi_source == DmiSource::FullTable {
+                } else if matches!(
+                    s.snapshot.dmi_source,
+                    DmiSource::FullTable | DmiSource::Firmware
+                ) {
                     Err("the full DMI table is already loaded".into())
                 } else {
                     Err("this machine has no DMI table".into())
@@ -92,7 +99,7 @@ fn elevate_poll(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
     let next = s.env.collector().collect(Some(&dump), now);
     s.dmi_dump = Some(dump);
     s.replace_snapshot(next);
-    s.status = None;
+    s.status = elevation_status(&s.snapshot);
     Ok(json!(null))
 }
 
@@ -101,7 +108,7 @@ fn refresh(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
     let next = s.env.collector().collect(s.dmi_dump.as_ref(), now);
     s.replace_snapshot(next);
     s.opened = None;
-    s.status = None;
+    s.status = elevation_status(&s.snapshot);
     Ok(json!(null))
 }
 
@@ -115,10 +122,20 @@ fn undo(s: &mut Session, _: &Value) -> Result<Value, EngineError> {
     Ok(json!(null))
 }
 
+/// On Windows a disk that needs elevation means rigscope runs without administrator rights.
+pub(crate) fn elevation_status(s: &Snapshot) -> Option<String> {
+    (s.platform == Platform::Windows
+        && s.storage
+            .disks
+            .iter()
+            .any(|d| d.health == Field::NeedsElevation))
+    .then(|| "running without administrator rights".to_string())
+}
+
 fn needs_root_for_smart(s: &Session) -> bool {
     s.snapshot
         .storage
         .disks
         .iter()
-        .any(|d| d.health == rigscope_model::Field::NeedsElevation)
+        .any(|d| d.health == Field::NeedsElevation)
 }
