@@ -1,7 +1,7 @@
 //! Built-in commands.
 
 mod export;
-mod snapshot;
+pub(crate) mod snapshot;
 mod view;
 
 use crate::CommandSpec;
