@@ -174,3 +174,69 @@ fn engine_runs_on_the_windows_collector() {
     a.run("live.tick", json!({})).unwrap();
     assert!(a.session.snapshot.cpu.cores.iter().all(|c| c.estimated));
 }
+
+fn windows_without_admin() -> rigscope_probe_win::MemWin {
+    let mut w = rigscope_probe_win::samples::laptop();
+    w.elevated = false;
+    for v in w.nvme.values_mut() {
+        *v = Err(rigscope_win::WinError::AccessDenied);
+    }
+    w
+}
+
+#[test]
+fn windows_without_admin_sets_status() {
+    let env = FakeEnv::with(Box::new(rigscope_probe_win::WinCollector::new(
+        windows_without_admin(),
+    )));
+    let mut a = App::new(Box::new(env));
+    assert_eq!(
+        a.session.status.as_deref(),
+        Some("running without administrator rights")
+    );
+    a.run("snapshot.refresh", json!({})).unwrap();
+    assert_eq!(
+        a.session.status.as_deref(),
+        Some("running without administrator rights"),
+        "a refresh keeps it"
+    );
+}
+
+#[test]
+fn windows_as_admin_has_no_status() {
+    let env = FakeEnv::with(Box::new(rigscope_probe_win::WinCollector::new(
+        rigscope_probe_win::samples::laptop(),
+    )));
+    let a = App::new(Box::new(env));
+    assert_eq!(a.session.status, None);
+}
+
+#[test]
+fn elevate_reason_on_windows() {
+    let mut env = FakeEnv::with(Box::new(rigscope_probe_win::WinCollector::new(
+        windows_without_admin(),
+    )));
+    env.can_elevate = false;
+    let a = App::new(Box::new(env));
+    assert_eq!(
+        a.is_enabled("snapshot.elevate"),
+        Err("on Windows rigscope already runs as administrator".into())
+    );
+}
+
+#[test]
+fn elevate_reason_for_a_firmware_table() {
+    // Can elevate (Linux), but the snapshot already holds the firmware's full table.
+    let env = FakeEnv::with(Box::new(rigscope_probe_win::WinCollector::new(
+        rigscope_probe_win::samples::laptop(),
+    )));
+    let a = App::new(Box::new(env));
+    assert_eq!(
+        a.session.snapshot.dmi_source,
+        rigscope_model::DmiSource::Firmware
+    );
+    assert_eq!(
+        a.is_enabled("snapshot.elevate"),
+        Err("the full DMI table is already loaded".into())
+    );
+}
