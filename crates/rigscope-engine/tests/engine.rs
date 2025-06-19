@@ -220,7 +220,7 @@ fn elevate_reason_on_windows() {
     let a = App::new(Box::new(env));
     assert_eq!(
         a.is_enabled("snapshot.elevate"),
-        Err("on Windows rigscope already runs as administrator".into())
+        Err("on Windows rigscope runs as administrator from the start; there is no separate elevated read".into())
     );
 }
 
