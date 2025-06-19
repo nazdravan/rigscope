@@ -1,5 +1,47 @@
 //! Masking of raw data before it is written to a fixture (plain Rust, tested on every OS).
 
+use crate::MemWin;
+
+/// The host name a captured fixture carries.
+pub const CAPTURED_NAME: &str = "CAPTURED-PC";
+
+/// What `--capture-fixture` writes: `w` with the SMBIOS serials, asset tags and UUID
+/// (`rigscope_smbios::mask_serials`), the disk serials (WMI and inside the IOCTL descriptors),
+/// the battery serials and the MACs masked, and the host name replaced by [`CAPTURED_NAME`].
+/// Errors stay as they are.
+pub fn mask_fixture(mut w: MemWin) -> MemWin {
+    use rigscope_model::{mask, mask_mac};
+    if let Ok(b) = w.smbios.as_mut() {
+        if let Some(t) = b.get_mut(rigscope_smbios::RSMB_HEADER_LEN..) {
+            rigscope_smbios::mask_serials(t);
+        }
+    }
+    if let Ok(name) = w.computer_name.as_mut() {
+        *name = CAPTURED_NAME.to_string();
+    }
+    if let Ok(v) = w.disks_wmi.as_mut() {
+        for d in v.iter_mut() {
+            d.serial = d.serial.as_deref().map(mask);
+        }
+    }
+    if let Ok(v) = w.disks_ioctl.as_mut() {
+        for d in v.iter_mut() {
+            mask_descriptor_serial(&mut d.descriptor);
+        }
+    }
+    if let Ok(v) = w.net.as_mut() {
+        for n in v.iter_mut() {
+            n.mac = n.mac.as_deref().map(mask_mac);
+        }
+    }
+    if let Ok(v) = w.batteries.as_mut() {
+        for b in v.iter_mut() {
+            b.serial = b.serial.as_deref().map(mask);
+        }
+    }
+    w
+}
+
 /// Overwrites the serial string inside a `STORAGE_DEVICE_DESCRIPTOR` with `*` (same length,
 /// spaces kept). `SerialNumberOffset` is the `u32` at byte 24; 0 means there is no serial.
 /// Never panics: a bad offset or a missing terminator stops at the end of the buffer.
@@ -62,5 +104,41 @@ mod tests {
         let mut short = vec![1u8; 10];
         mask_descriptor_serial(&mut short);
         assert_eq!(short, vec![1u8; 10]);
+    }
+
+    #[test]
+    fn mask_fixture_leaves_no_original_identifier() {
+        let mut w = crate::samples::laptop();
+        // The sample has no IOCTL list; give it one with a serial in the descriptor.
+        w.disks_ioctl = Ok(vec![rigscope_win::DiskIoctlRaw {
+            number: 0,
+            descriptor: descriptor(36),
+            length: Some(1 << 30),
+        }]);
+        let before = w.clone();
+        let m = mask_fixture(w);
+
+        assert_eq!(m.computer_name.as_deref(), Ok(CAPTURED_NAME));
+        let disk = |w: &MemWin| w.disks_wmi.as_ref().unwrap()[0].serial.clone().unwrap();
+        assert_ne!(disk(&m), disk(&before));
+        assert!(!disk(&m).contains("S641NX0T"), "{}", disk(&m));
+        assert_eq!(
+            &m.disks_ioctl.as_ref().unwrap()[0].descriptor[36..41],
+            b"*****"
+        );
+        let bat = |w: &MemWin| w.batteries.as_ref().unwrap()[0].serial.clone().unwrap();
+        assert_ne!(bat(&m), bat(&before));
+        let mac = |w: &MemWin| w.net.as_ref().unwrap()[0].mac.clone().unwrap();
+        assert_ne!(mac(&m), mac(&before));
+        assert!(mac(&m).starts_with("**:**:**:**:"), "{}", mac(&m));
+
+        let smbios = m.smbios.as_ref().unwrap();
+        assert!(!String::from_utf8_lossy(smbios).contains("00000001"));
+        let decoded = rigscope_smbios::decode_rsmb(smbios).unwrap();
+        assert_eq!(decoded.memory.arrays[0].slots.len(), 2, "still decodes");
+        // Everything that is not an identifier is unchanged.
+        assert_eq!(m.os_version, before.os_version);
+        assert_eq!(m.dxgi, before.dxgi);
+        assert_eq!(m.nvme, before.nvme);
     }
 }
