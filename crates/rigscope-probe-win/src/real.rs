@@ -1,6 +1,6 @@
 //! The live Windows source: forwards to `rigscope_win::ffi`.
 
-use crate::{mask_descriptor_serial, MemWin, WinSource, R};
+use crate::{mask_fixture, MemWin, WinSource, R};
 use rigscope_win::{ffi, *};
 
 pub struct RealWin {
@@ -91,18 +91,13 @@ impl WinSource for RealWin {
     }
 }
 
-/// Every value `RealWin` returns, as a `MemWin` (for `--capture-fixture`). Disk, battery and
-/// SMBIOS serials, the SMBIOS UUID, MACs and the host name are masked.
+/// Every value `RealWin` returns, as a `MemWin` (for `--capture-fixture`), masked by
+/// [`mask_fixture`].
 pub fn capture(real: &mut RealWin) -> MemWin {
     let mut w = MemWin {
-        smbios: real.smbios_raw().map(|mut b| {
-            if let Some(t) = b.get_mut(rigscope_smbios::RSMB_HEADER_LEN..) {
-                rigscope_smbios::mask_serials(t);
-            }
-            b
-        }),
+        smbios: real.smbios_raw(),
         os_version: real.os_version(),
-        computer_name: real.computer_name().map(|_| "CAPTURED-PC".to_string()),
+        computer_name: real.computer_name(),
         uptime_ms: real.uptime_ms(),
         memory_status: real.memory_status(),
         processors: real.processors(),
@@ -113,44 +108,17 @@ pub fn capture(real: &mut RealWin) -> MemWin {
             std::thread::sleep(std::time::Duration::from_millis(500));
             real.cpu_performance()
         }],
-        disks_wmi: real.physical_disks_wmi().map(|v| {
-            v.into_iter()
-                .map(|d| PhysicalDiskRaw {
-                    serial: d.serial.as_deref().map(rigscope_model::mask),
-                    ..d
-                })
-                .collect()
-        }),
+        disks_wmi: real.physical_disks_wmi(),
         disks_ioctl: real.physical_disks_ioctl(),
         dxgi: real.adapters_dxgi(),
         pci_display: real.pci_display(),
-        net: real.net_adapters().map(|v| {
-            v.into_iter()
-                .map(|n| NetAdapterRaw {
-                    mac: n.mac.as_deref().map(rigscope_model::mask_mac),
-                    ..n
-                })
-                .collect()
-        }),
-        batteries: real.batteries().map(|v| {
-            v.into_iter()
-                .map(|b| BatteryRaw {
-                    serial: b.serial.as_deref().map(rigscope_model::mask),
-                    ..b
-                })
-                .collect()
-        }),
+        net: real.net_adapters(),
+        batteries: real.batteries(),
         ac_online: real.ac_online(),
         thermal: real.acpi_thermal_zones(),
         elevated: real.is_elevated(),
         ..MemWin::default()
     };
-    // The IOCTL descriptors carry the serial too.
-    if let Ok(v) = w.disks_ioctl.as_mut() {
-        for d in v.iter_mut() {
-            mask_descriptor_serial(&mut d.descriptor);
-        }
-    }
     // The disks the collector will ask SMART for: WMI's list, or the IOCTL one when WMI fails.
     let disks: Vec<(u32, Option<u16>)> = match (&w.disks_wmi, &w.disks_ioctl) {
         (Ok(v), _) => v.iter().map(|d| (d.number, d.bus_type)).collect(),
@@ -180,5 +148,5 @@ pub fn capture(real: &mut RealWin) -> MemWin {
     for l in luids {
         w.gpu_temps.insert(l, real.gpu_temperature(l));
     }
-    w
+    mask_fixture(w)
 }
