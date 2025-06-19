@@ -39,7 +39,7 @@ pub fn specs() -> Vec<CommandSpec> {
             enabled: |s| {
                 if !s.env.can_elevate() {
                     Err(if s.snapshot.platform == Platform::Windows {
-                        "on Windows rigscope already runs as administrator".into()
+                        "on Windows rigscope runs as administrator from the start; there is no separate elevated read".into()
                     } else {
                         "elevated reading needs Linux with pkexec".into()
                     })
