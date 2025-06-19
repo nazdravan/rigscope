@@ -20,7 +20,7 @@ pub use collector::WinCollector;
 pub use cpu::{microcode, parse_processors, Topology, MAX_PROCESSORS_BUF};
 pub use errors::{field_err, field_of};
 pub use gpu::MAX_GPUS;
-pub use mask::mask_descriptor_serial;
+pub use mask::{mask_descriptor_serial, mask_fixture, CAPTURED_NAME};
 pub use net::MAX_INTERFACES;
 pub use power::MAX_SUPPLIES;
 #[cfg(windows)]
