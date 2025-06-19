@@ -25,3 +25,23 @@ fn opened_snapshot_status_in_romanian() {
         "comandă indisponibilă: acest calculator nu are tabelă DMI"
     );
 }
+
+#[test]
+fn windows_statuses_in_romanian() {
+    use rigscope_ui::i18n::status;
+    assert_eq!(
+        status(Language::Ro, "running without administrator rights"),
+        "rulează fără drepturi de administrator"
+    );
+    assert_eq!(
+        status(Language::En, "running without administrator rights"),
+        "running without administrator rights"
+    );
+    assert_eq!(
+        status(
+            Language::Ro,
+            "command not available: on Windows rigscope already runs as administrator"
+        ),
+        "comandă indisponibilă: pe Windows rigscope rulează deja ca administrator"
+    );
+}
