@@ -28,13 +28,17 @@ fn main() -> Result<()> {
         "wasm" => wasm(),
         "linux" => linux(rest),
         "gen-fixtures" => gen_fixtures(),
-        "icons" => run(Command::new("python3").args(["-I", "assets/icon.py"])),
+        "icons" => {
+            run(Command::new("python3").args(["-I", "assets/icon.py"]))?;
+            windows_icon()
+        }
+        "windows-icon" => windows_icon(),
         "screenshot" => screenshot::screenshot(rest),
         "screenshot-inner" => screenshot::inner(rest),
         "shots" => screenshot::readme_shots(),
         "banner" => run(Command::new("python3").args(["-I", "assets/banner.py"])),
         _ => {
-            eprintln!("usage: cargo xtask <ci|layers|unsafe|wasm|linux [cmd...]|gen-fixtures|icons|banner|shots|screenshot [--fixture D --section S --lang L --out P]>");
+            eprintln!("usage: cargo xtask <ci|layers|unsafe|wasm|linux [cmd...]|gen-fixtures|icons|windows-icon|banner|shots|screenshot [--fixture D --section S --lang L --out P]>");
             Ok(())
         }
     }
@@ -216,6 +220,32 @@ fn gen_fixtures() -> Result<()> {
         w.save(&dir)?;
         eprintln!("fixtures/{name}: written");
     }
+    Ok(())
+}
+
+/// Sizes of the icon embedded in `rigscope.exe`.
+const WINDOWS_ICON_SIZES: [u32; 4] = [16, 32, 48, 256];
+
+/// Writes `apps/rigscope/windows/rigscope.ico` (16, 32, 48, 256 px) from `assets/icon.png`.
+/// Part of `icons`; `windows-icon` runs only this step (no Python needed).
+fn windows_icon() -> Result<()> {
+    use image::codecs::ico::{IcoEncoder, IcoFrame};
+    let root = root();
+    let src = image::open(root.join("assets/icon.png"))
+        .context("assets/icon.png")?
+        .into_rgba8();
+    let frames = WINDOWS_ICON_SIZES
+        .iter()
+        .map(|&s| {
+            let img = image::imageops::resize(&src, s, s, image::imageops::FilterType::Lanczos3);
+            IcoFrame::as_png(img.as_raw(), s, s, image::ExtendedColorType::Rgba8)
+        })
+        .collect::<image::ImageResult<Vec<_>>>()?;
+    let out = root.join("apps/rigscope/windows/rigscope.ico");
+    let mut bytes = Vec::new();
+    IcoEncoder::new(&mut bytes).encode_images(&frames)?;
+    std::fs::write(&out, bytes).with_context(|| out.display().to_string())?;
+    eprintln!("wrote {}", out.display());
     Ok(())
 }
 
