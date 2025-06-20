@@ -534,8 +534,8 @@ pub fn status(lang: Language, msg: &str) -> String {
             "citirea cu drepturi ridicate cere Linux cu pkexec",
         ),
         (
-            "on Windows rigscope already runs as administrator",
-            "pe Windows rigscope rulează deja ca administrator",
+            "on Windows rigscope runs as administrator from the start; there is no separate elevated read",
+            "pe Windows rigscope rulează ca administrator de la pornire; nu există o citire separată cu drepturi ridicate",
         ),
         ("no memory slot data", "nu există date despre sloturi"),
         (
