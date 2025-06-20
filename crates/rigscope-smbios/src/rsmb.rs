@@ -25,14 +25,28 @@ pub fn decode_rsmb(buf: &[u8]) -> Result<Decoded, SmbiosError> {
     decode_table(table)
 }
 
-/// (structure type, offset of a string-index byte in the formatted area).
-const SERIALS: &[(u8, usize)] = &[(1, 0x07), (2, 0x07), (3, 0x07), (17, 0x18)];
-/// Type 1 UUID: 16 bytes at offset 0x08.
-const UUID: (u8, usize, usize) = (1, 0x08, 16);
+/// (structure type, offset of a string-index byte in the formatted area): serial numbers and
+/// asset tags, overwritten with 'X'.
+const SERIALS: &[(u8, usize)] = &[
+    (1, 0x07),  // system serial
+    (2, 0x07),  // baseboard serial
+    (2, 0x08),  // baseboard asset tag
+    (3, 0x07),  // chassis serial
+    (3, 0x08),  // chassis asset tag
+    (4, 0x20),  // processor serial
+    (4, 0x21),  // processor asset tag
+    (17, 0x18), // memory device serial
+    (17, 0x19), // memory device asset tag
+    (22, 0x07), // portable battery serial
+    (39, 0x08), // power supply serial
+];
+/// (structure type, offset, length): binary fields zeroed. Type 1 UUID; type 22 SBDS serial.
+const ZEROED: &[(u8, usize, usize)] = &[(1, 0x08, 16), (22, 0x10, 2)];
 
-/// Overwrites serial numbers and the system UUID in place (types 1, 2, 3, 17), keeping every
-/// length so the table stays decodable. Malformed tables are masked as far as they parse;
-/// never panics.
+/// Overwrites serial numbers, asset tags, the system UUID and the battery's SBDS serial in
+/// place (see [`SERIALS`] and [`ZEROED`]: types 1, 2, 3, 4, 17, 22, 39), keeping every length
+/// so the table stays decodable. A field is touched only when it lies inside the structure's
+/// formatted length. Malformed tables are masked as far as they parse; never panics.
 pub fn mask_serials(table: &mut [u8]) {
     let mut pos = 0usize;
     while let (Some(kind), Some(len)) = (
@@ -54,9 +68,12 @@ pub fn mask_serials(table: &mut [u8]) {
         else {
             return;
         };
-        if kind == UUID.0 && len >= UUID.1 + UUID.2 {
-            let from = pos + UUID.1;
-            if let Some(u) = table.get_mut(from..from + UUID.2) {
+        for (_, off, n) in ZEROED.iter().filter(|(k, _, _)| *k == kind) {
+            if len < off + n {
+                continue;
+            }
+            let from = pos + off;
+            if let Some(u) = table.get_mut(from..from + n) {
                 u.fill(0);
             }
         }
@@ -164,6 +181,60 @@ mod tests {
         assert!(s.contains("LENOVO"));
         assert_eq!(crate::structures(&t).unwrap().len(), 3);
         assert!(t[0x08..0x08 + 16].iter().all(|b| *b == 0));
+    }
+
+    #[test]
+    fn mask_covers_the_portable_battery() {
+        let battery = StructBuilder::new(22, 0x16, 0x1A)
+            .string(0x04, "Front")
+            .string(0x05, "SMP")
+            .string(0x07, "BATSER77")
+            .string(0x08, "5B10W13930")
+            .u16(0x10, 0xBEEF)
+            .build();
+        let mut t = table(&[battery]);
+        mask_serials(&mut t);
+        let s = String::from_utf8_lossy(&t);
+        assert!(!s.contains("BATSER77") && s.contains("XXXXXXXX"), "{s}");
+        assert!(s.contains("Front") && s.contains("SMP") && s.contains("5B10W13930"));
+        assert_eq!(&t[0x10..0x12], &[0, 0], "SBDS serial");
+        assert_eq!(crate::structures(&t).unwrap().len(), 2);
+        // Too short for the SBDS word: the bytes after the formatted area are not touched.
+        let short = StructBuilder::new(22, 0x16, 0x10).string(0x07, "S").build();
+        let mut t = table(&[short]);
+        let strings = t[0x10..].to_vec();
+        mask_serials(&mut t);
+        assert_eq!(t[0x10], b'X');
+        assert_eq!(&t[0x11..], &strings[1..]);
+    }
+
+    #[test]
+    fn mask_covers_processor_and_asset_tags() {
+        let cpu = StructBuilder::new(4, 0x04, 0x2A)
+            .string(0x04, "CPU0")
+            .string(0x07, "Intel")
+            .string(0x20, "CPUSERIAL")
+            .string(0x21, "CPUASSET")
+            .string(0x22, "PARTNO")
+            .build();
+        let board = StructBuilder::new(2, 0x02, 0x09)
+            .string(0x04, "LENOVO")
+            .string(0x08, "BOARDTAG")
+            .build();
+        let psu = StructBuilder::new(39, 0x27, 0x16)
+            .string(0x05, "PSU1")
+            .string(0x08, "PSUSERIAL")
+            .build();
+        let mut t = table(&[cpu, board, psu]);
+        mask_serials(&mut t);
+        let s = String::from_utf8_lossy(&t);
+        for gone in ["CPUSERIAL", "CPUASSET", "BOARDTAG", "PSUSERIAL"] {
+            assert!(!s.contains(gone), "{gone}: {s}");
+        }
+        for kept in ["CPU0", "Intel", "PARTNO", "LENOVO", "PSU1"] {
+            assert!(s.contains(kept), "{kept}: {s}");
+        }
+        assert_eq!(crate::structures(&t).unwrap().len(), 4);
     }
 
     #[test]
