@@ -168,7 +168,11 @@ pub(crate) fn read_cpu(src: &mut dyn WinSource, fw: &Firmware) -> CpuInfo {
         ),
         logical_threads: Field::from_option(u32::try_from(logical.len()).ok().filter(|n| *n > 0)),
         base_mhz: Field::from_option(base),
-        max_mhz: Field::from_option(d.and_then(|d| d.cpu_max_mhz)),
+        // SMBIOS "Max Speed" can sit below the measured base (Dell reports 2100 for a 2.7 GHz part).
+        max_mhz: Field::from_option(
+            d.and_then(|d| d.cpu_max_mhz)
+                .filter(|m| base.is_none_or(|b| *m >= b)),
+        ),
         cores: logical
             .iter()
             .map(|&c| CoreFreq {
