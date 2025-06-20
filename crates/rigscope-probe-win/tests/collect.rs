@@ -82,3 +82,47 @@ fn not_elevated_shows_needs_elevation_for_smart() {
     let s = WinCollector::new(w).collect(None, 0);
     assert_eq!(s.storage.disks[0].health, Field::NeedsElevation);
 }
+
+#[test]
+fn real_desktop_fixture() {
+    let w = MemWin::load(&fixture("windows-desktop")).unwrap();
+    let s = WinCollector::new(w).collect(None, 0);
+    assert_eq!(s.dmi_source, DmiSource::Firmware);
+    assert!(!s.memory.arrays.is_empty(), "SMBIOS memory slots");
+    // i7-4600U: 2 cores / 4 threads.
+    assert_eq!(s.cpu.logical_threads, Field::Known(4));
+    assert_eq!(s.storage.disks.len(), 1);
+    let d = &s.storage.disks[0];
+    assert_eq!(d.interface, Field::Known(Interface::Raid)); // Intel RST, BusType 8
+    let h = d.health.known().expect("SMART readable behind Intel RST");
+    assert!(h.power_on_hours.is_some());
+    // Max clock must not be reported below the base clock (SMBIOS Max Speed is 2100 here).
+    if let (Some(b), Some(m)) = (s.cpu.base_mhz.known(), s.cpu.max_mhz.known()) {
+        assert!(m >= b, "max {m} < base {b}");
+    }
+    assert!(!s.gpu.gpus.is_empty());
+    assert!(s.gpu.gpus.iter().any(|g| g
+        .device_name
+        .known()
+        .is_some_and(|n| n.contains("Intel(R) HD Graphics"))));
+    assert!(!s.net.interfaces.is_empty());
+    assert_eq!(s.power.batteries.len(), 1);
+    let pct = s.power.batteries[0].health_percent().unwrap();
+    assert!(
+        (pct - 12310.0 / 33966.0 * 100.0).abs() < 0.5,
+        "health {pct}"
+    );
+    let r = report_text(&s, true);
+    assert!(
+        !r.contains("CAPTURED-PC"),
+        "host name is masked in the report too"
+    );
+}
+
+#[test]
+#[ignore]
+fn print_real_desktop_report() {
+    let w = MemWin::load(&fixture("windows-desktop")).unwrap();
+    let s = WinCollector::new(w).collect(None, 0);
+    println!("{}", report_text(&s, false));
+}
