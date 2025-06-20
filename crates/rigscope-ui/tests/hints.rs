@@ -40,8 +40,8 @@ fn windows_statuses_in_romanian() {
     assert_eq!(
         status(
             Language::Ro,
-            "command not available: on Windows rigscope already runs as administrator"
+            "command not available: on Windows rigscope runs as administrator from the start; there is no separate elevated read"
         ),
-        "comandă indisponibilă: pe Windows rigscope rulează deja ca administrator"
+        "comandă indisponibilă: pe Windows rigscope rulează ca administrator de la pornire; nu există o citire separată cu drepturi ridicate"
     );
 }
