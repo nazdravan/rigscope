@@ -53,7 +53,13 @@ fn health(src: &dyn WinSource, n: u32, iface: Option<Interface>) -> Field<DiskHe
             Err(WinError::AccessDenied) => Field::NeedsElevation,
             Err(_) => Field::Unavailable(NO_SMART_USB.into()),
         },
-        Some(Interface::Raid) => Field::Unavailable(NO_SMART_RAID.into()),
+        // Intel RST and similar report BusType RAID but often pass ATA SMART through.
+        Some(Interface::Raid) => match src.ata_smart(n) {
+            Ok(a) => parse_ata_smart(&a.attributes, &a.thresholds)
+                .map_or(Field::Unavailable(NO_SMART_RAID.into()), Field::Known),
+            Err(WinError::AccessDenied) => Field::NeedsElevation,
+            Err(_) => Field::Unavailable(NO_SMART_RAID.into()),
+        },
         Some(Interface::Virtual) => Field::Unavailable(NO_SMART_VIRTUAL.into()),
         _ => match src.ata_smart(n) {
             Ok(a) => parse_ata_smart(&a.attributes, &a.thresholds).map_or(
@@ -251,6 +257,48 @@ mod tests {
         assert_eq!(
             read_storage(&w).disks[0].health,
             Field::Unavailable("unreadable SMART data".into())
+        );
+    }
+
+    #[test]
+    fn raid_bus_with_readable_ata_smart_is_known() {
+        let mut w = MemWin::default();
+        let (a, t) = ata_sectors(&[(9, 0x32, 100, 1234)], &[(9, 0)]);
+        w.disks_wmi = Ok(vec![disk(0, 8, 4)]);
+        w.ata.insert(
+            0,
+            Ok(AtaSmartRaw {
+                attributes: a,
+                thresholds: t,
+            }),
+        );
+        let d = &read_storage(&w).disks[0];
+        assert_eq!(d.interface, Field::Known(Interface::Raid));
+        assert!(d.health.known().is_some());
+    }
+
+    #[test]
+    fn raid_bus_not_elevated_needs_elevation() {
+        let mut w = MemWin::default();
+        w.disks_wmi = Ok(vec![disk(0, 8, 4)]);
+        w.ata.insert(0, Err(WinError::AccessDenied));
+        assert_eq!(read_storage(&w).disks[0].health, Field::NeedsElevation);
+    }
+
+    #[test]
+    fn raid_bus_with_unparseable_smart_stays_unavailable() {
+        let mut w = MemWin::default();
+        w.disks_wmi = Ok(vec![disk(0, 8, 4)]);
+        w.ata.insert(
+            0,
+            Ok(AtaSmartRaw {
+                attributes: vec![0; 10],
+                thresholds: vec![0; 10],
+            }),
+        );
+        assert_eq!(
+            read_storage(&w).disks[0].health,
+            Field::Unavailable(NO_SMART_RAID.into())
         );
     }
 }
