@@ -2,7 +2,9 @@ name: ci
 
 # `cargo xtask ci` (fmt, clippy -D warnings, tests, layer rules, wasm check). Linux is the target
 # platform: there the tests also read the runner's real /proc and /sys. macOS is the development
-# platform (the app runs in demo mode there). Windows is not supported, so it is not built.
+# platform (the app runs in demo mode there). Windows: real hardware read through rigscope-win (the only crate with unsafe); its tests also read the runner's real hardware.
+# The Windows runners have the Windows SDK (rc.exe, needed by apps/rigscope/build.rs) and run elevated,
+# which the is_elevated test relies on when GITHUB_ACTIONS is set.
 # Runner images, the Rust toolchain (rust-toolchain.toml) and the actions (by commit SHA) are
 # pinned, so a run only changes when this repository does. To update an action, look up the
 # release's commit SHA and change it together with the version comment.
@@ -31,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-26]
+        os: [ubuntu-24.04, macos-26, windows-2025]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
