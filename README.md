@@ -6,15 +6,16 @@
 
 <img src="docs/assets/rigscope-banner.png" alt="rigscope" />
 
-**A desktop app for Linux that shows your computer's hardware in detail: every RAM slot, the CPU, disks with their SMART health, graphics, network, battery and sensors, without opening a terminal.**
+**A desktop app for Linux and Windows that shows your computer's hardware in detail: every RAM slot, the CPU, disks with their SMART health, graphics, network, battery and sensors, without opening a terminal.**
 
 [![CI](https://github.com/nazdravan/rigscope/actions/workflows/ci.yml/badge.svg)](https://github.com/nazdravan/rigscope/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-1F8FC8?style=flat-square)](#license)
 [![Rust](https://img.shields.io/badge/Rust-2021-1F8FC8?style=flat-square&logo=rust&logoColor=white)](Cargo.toml)
 [![egui](https://img.shields.io/badge/UI-egui%20%2F%20eframe-1F8FC8?style=flat-square)](https://github.com/emilk/egui)
 [![Linux](https://img.shields.io/badge/Linux-x86__64-1F8FC8?style=flat-square&logo=linux&logoColor=white)](#linux)
+[![Windows](https://img.shields.io/badge/Windows-x86__64-1F8FC8?style=flat-square&logo=windows&logoColor=white)](#windows)
 
-[Quick start](#quick-start) · [Memory](#memory) · [Processor](#processor) · [Storage](#storage-and-smart) · [Privileges](#root-and-privileges) · [Releases](../../releases) · [Issues](../../issues)
+[Quick start](#quick-start) · [Memory](#memory) · [Processor](#processor) · [Storage](#storage-and-smart) · [Privileges](#root-and-privileges) · [Windows](#windows) · [Releases](../../releases) · [Issues](../../issues)
 
 **English** · [Română](README.ro.md)
 
@@ -28,15 +29,16 @@ the question that usually starts the search: *which RAM can I buy for this machi
 
 <img src="docs/assets/screenshot-memory.png" alt="rigscope: the Memory section with the compatibility line and the slot table" />
 
-> **Note: not yet run on a real Linux machine.** Everything below was built and tested on
-> Linux inside Docker (with synthetic hardware data) and on macOS. The privilege prompt
-> (`pkexec`), SMART on real disks, the clipboard and the file dialogs still need a check on real
-> hardware.
+> **Note: tested on real hardware on Windows, not yet on Linux.** Windows ran on a real laptop
+> (i7-4600U, Windows 10 22H2) on 2026-11-05; the values matched Task Manager and WMI. The Linux
+> build was built and tested inside Docker (with synthetic hardware data) and on macOS: the
+> privilege prompt (`pkexec`), SMART on real disks, the clipboard and the file dialogs still need
+> a check on a real Linux machine.
 
 ## Quick start
 
-There is no release yet: packages (AppImage, `.deb`, `.tar.gz`) come with the first version.
-Until then, build it from source.
+There is no release yet: packages (AppImage, `.deb`, `.tar.gz` for Linux, a portable `.exe` for
+Windows) come with the first version. Until then, build it from source.
 
 ### From source
 
@@ -47,16 +49,17 @@ cd rigscope
 cargo run --release -p rigscope
 ```
 
-The binary lands in `target/release/rigscope`. On Linux it reads your machine; elsewhere it
-opens a sample machine in demo mode. Useful flags:
+The binary lands in `target/release/rigscope`. On Linux and Windows it reads your machine;
+elsewhere it opens a sample machine in demo mode. Useful flags:
 
 ```sh
 rigscope --lang ro                 # Romanian interface
 rigscope --section storage         # open a section directly
 rigscope --fixture fixtures/laptop-ddr5   # show a sample machine instead of this one
+rigscope --capture-fixture DIR     # Windows, elevated: save a masked fixture of this machine
 ```
 
-Runtime extras (optional): `pkexec` (polkit) for slot details and SMART, `smartmontools` for
+Linux runtime extras (optional): `pkexec` (polkit) for slot details and SMART, `smartmontools` for
 disk health, `hwdata` (`pci.ids`) for graphics and network card names.
 
 ---
@@ -66,12 +69,12 @@ disk health, `hwdata` (`pci.ids`) for graphics and network card names.
 | Section | What you get |
 |---|---|
 | **Memory** | Every slot: maker, part number, serial, size, rated vs running speed, ranks, voltage, width; empty slots; board maximum; a compatibility line to paste into a shop search |
-| **Processor** | Model, socket(s), cores / threads, base and max clock, live clock per core, L1–L3 caches, microcode, instruction set extensions |
-| **Storage** | NVMe / SATA / USB / virtio disks: model, capacity (GiB and GB), SSD or HDD, bus, firmware, serial, SMART health with warnings |
-| **Graphics** | Each card: vendor, model and board variant (from `pci.ids`), driver, PCIe link, video memory where the driver exposes it |
+| **Processor** | Model, socket(s), cores / threads, base and max clock, live clock per core (on Windows estimated as % Processor Performance × base clock), L1–L3 caches, microcode, instruction set extensions |
+| **Storage** | NVMe / SATA / USB / virtio disks (on Windows from WMI, with SMART for NVMe and SATA): model, capacity (GiB and GB), SSD or HDD, bus, firmware, serial, SMART health with warnings |
+| **Graphics** | Each card: vendor, model and board variant (from `pci.ids`), driver, PCIe link, video memory where the driver exposes it (on Windows exact VRAM from DXGI, the PCIe link and the temperature through D3DKMT) |
 | **Network** | Physical interfaces: Ethernet or Wi-Fi, adapter name, driver, MAC, state, speed, duplex, MTU (virtual ones are counted, not listed) |
 | **Battery** | Health (full vs design capacity, derived), energy now, charge, cycles, chemistry, mains state |
-| **Sensors** | Temperatures with their limits and fan speeds from `hwmon`, updated every second |
+| **Sensors** | Temperatures with their limits and fan speeds from `hwmon`, updated every second. On Windows only ACPI thermal zones, labelled as such: never shown as the CPU temperature |
 | **System** | Distribution, kernel, hostname, uptime, motherboard and BIOS |
 | **Export** | Copy or save a text report, save or open a JSON snapshot; serial numbers, MACs and the hostname are masked by default |
 
@@ -164,6 +167,32 @@ Needs a desktop with X11 or Wayland. Reads `/proc`, `/sys` and `/etc/os-release`
 polkit (`pkexec`), `smartmontools`, `hwdata`. Tested in Debian 12 (Docker, Xvfb).
 **Note: not yet run on a real Linux machine.**
 
+## Windows
+
+Download `rigscope-<version>-windows-x86_64.exe` from the [releases](../../releases). It is
+portable: nothing is installed, and it is an x86_64 MSVC build with a static CRT. The minimum is
+Windows 10 1809; on older builds the PCIe link and the GPU temperature show as unavailable.
+
+- **A UAC prompt at every start.** The `.exe` asks for administrator rights because SMART and the
+  disk IOCTLs need them. The whole app runs elevated (there is no separate helper).
+- **SmartScreen warns** ("Windows protected your PC"): the `.exe` is not code-signed. Click
+  **More info** → **Run anyway**, and check the file against `SHA256SUMS.txt` from the release:
+  `Get-FileHash rigscope-<version>-windows-x86_64.exe`.
+- **What it reads:** memory slots from the firmware SMBIOS table (no elevation needed), CPU
+  topology and caches, a live clock estimated as % Processor Performance × base clock, disks from
+  WMI with SMART for NVMe and SATA (also behind Intel RST/RAID when the controller passes ATA
+  SMART through), graphics with exact VRAM (DXGI), the PCIe link and the temperature through
+  D3DKMT on WDDM 2.4+, network and battery. ACPI thermal zones appear as "ACPI thermal zone",
+  never as the CPU temperature.
+- **What it cannot read:** the CPU temperature and the fans. Both need a kernel driver, and
+  rigscope installs no drivers.
+- **Tested on real hardware** on 2026-11-05: an i7-4600U laptop with Windows 10 22H2. Memory,
+  cores / threads, caches, disk, graphics, network and battery matched Task Manager and WMI.
+
+For contributors: `rigscope --capture-fixture DIR` (Windows, elevated) saves a masked fixture of
+the machine, and `--fixture DIR` opens either kind of fixture on any OS. Fixture names do not
+contain `:` (encoded as `%3A`) and symlinks are listed in `links.txt`; `.gitattributes` forces LF.
+
 ## macOS and others
 
 Builds and runs for development, in demo mode with a sample machine (there is no `/sys` to
@@ -178,12 +207,13 @@ read).
 | `crates/rigscope-model` | The snapshot: plain data + serde, compatibility line, text report, masking |
 | `crates/rigscope-smbios` | Panic-free SMBIOS/DMI decoder (types 0, 2, 4, 16, 17) |
 | `crates/rigscope-procfs` | Parsers for `/proc` and `/sys` text, `pci.ids` lookup |
+| `crates/rigscope-win`, `crates/rigscope-probe-win` | Windows: the unsafe Win32 FFI layer and the live collector built on it (Windows only) |
 | `crates/rigscope-probe` | Builds a snapshot from a `Source` (real fs, fixture dir, memory); disks, GPUs, network, battery, sensors, smartctl JSON |
 | `crates/rigscope-engine` | Session, command registry, undo, panic guard |
 | `crates/rigscope-ui` | egui panels, English/Romanian strings, theme |
 | `apps/rigscope` | The binary: window, privileged helper, control channel |
-| `xtask` | `cargo xtask ci`, `linux`, `screenshot`, `shots`, `icons`, `banner`, `gen-fixtures` |
-| `fixtures/` | Synthetic machines (desktop DDR4, laptop DDR5, VM) used by tests and demo mode |
+| `xtask` | `cargo xtask ci`, `linux`, `screenshot`, `shots`, `icons`, `banner`, `gen-fixtures`, `windows-icon` |
+| `fixtures/` | Sample machines (desktop DDR4, laptop DDR5, VM, a masked real Windows desktop) used by tests and demo mode |
 | `assets/theme.toml` | Colours, font and motif for the app, icons and banner |
 | `assets/icon.py`, `assets/banner.py` | Generate the icons and this banner (`cargo xtask icons`, `cargo xtask banner`) |
 
@@ -192,7 +222,7 @@ them to `docs/assets/`.
 
 ## Release
 
-Not released yet. The first release will publish Linux packages from CI.
+Not released yet. The first release will publish Linux packages, a macOS disk image and a portable Windows `.exe` from CI.
 
 ## Tests
 
