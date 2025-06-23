@@ -2,6 +2,25 @@
 
 All notable changes to rigscope. The notes of each version are the text of its GitHub release.
 
+## Unreleased
+
+### Added
+- Windows 10/11 (x86_64): real hardware read — memory slots from the firmware SMBIOS table,
+  processor topology and caches, disks with SMART (NVMe and SATA), graphics with exact VRAM and
+  temperature, network, battery. A portable `rigscope-<version>-windows-x86_64.exe` in the release.
+- `rigscope --capture-fixture DIR` (Windows, elevated) saves a masked fixture; `--fixture DIR`
+  opens either kind of fixture on any OS. `cargo xtask windows-icon` builds the Windows icon.
+
+### Changed
+- "Needs root" is "Needs administrator" on Windows snapshots. Snapshots saved by 0.2.0 still open.
+- Fixtures no longer contain `:` or symlinks (`%3A` encoding plus `links.txt`); `.gitattributes`
+  forces LF.
+
+### Known limits
+- On Windows the CPU temperature and the fans are not shown: both need a kernel driver.
+- The Windows `.exe` is not code-signed (SmartScreen warns) and asks for administrator rights at
+  each start.
+
 ## [0.2.0] — 2026-11-03
 
 ### Changed
