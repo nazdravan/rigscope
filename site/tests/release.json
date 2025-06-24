@@ -24,6 +24,11 @@
    "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/rigscope-0.1.0-macos-universal.dmg"
   },
   {
+   "name": "rigscope-0.1.0-windows-x86_64.exe",
+   "size": 5005000,
+   "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/rigscope-0.1.0-windows-x86_64.exe"
+  },
+  {
    "name": "SHA256SUMS.txt",
    "size": 5004000,
    "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/SHA256SUMS.txt"
