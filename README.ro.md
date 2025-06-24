@@ -6,15 +6,16 @@
 
 <img src="docs/assets/rigscope-banner.png" alt="rigscope" />
 
-**O aplicație grafică pentru Linux care arată în detaliu configurația calculatorului: fiecare slot de RAM, procesorul, discurile cu sănătatea lor SMART, placa video, rețeaua, bateria și senzorii, fără terminal.**
+**O aplicație grafică pentru Linux **și Windows** care arată în detaliu configurația calculatorului: fiecare slot de RAM, procesorul, discurile cu sănătatea lor SMART, placa video, rețeaua, bateria și senzorii, fără terminal.**
 
 [![CI](https://github.com/nazdravan/rigscope/actions/workflows/ci.yml/badge.svg)](https://github.com/nazdravan/rigscope/actions/workflows/ci.yml)
 [![Licență](https://img.shields.io/badge/licen%C8%9B%C4%83-MIT%20OR%20Apache--2.0-1F8FC8?style=flat-square)](#licență)
 [![Rust](https://img.shields.io/badge/Rust-2021-1F8FC8?style=flat-square&logo=rust&logoColor=white)](Cargo.toml)
 [![egui](https://img.shields.io/badge/UI-egui%20%2F%20eframe-1F8FC8?style=flat-square)](https://github.com/emilk/egui)
 [![Linux](https://img.shields.io/badge/Linux-x86__64-1F8FC8?style=flat-square&logo=linux&logoColor=white)](#linux)
+[![Windows](https://img.shields.io/badge/Windows-x86__64-1F8FC8?style=flat-square&logo=windows&logoColor=white)](#windows)
 
-[Pornire rapidă](#pornire-rapidă) · [Memorie](#memorie) · [Procesor](#procesor) · [Stocare](#stocare-și-smart) · [Drepturi](#root-și-drepturi) · [Releases](../../releases) · [Issues](../../issues)
+[Pornire rapidă](#pornire-rapidă) · [Memorie](#memorie) · [Procesor](#procesor) · [Stocare](#stocare-și-smart) · [Drepturi](#root-și-drepturi) · [Windows](#windows) · [Releases](../../releases) · [Issues](../../issues)
 
 [English](README.md) · **Română**
 
@@ -29,15 +30,16 @@ pentru calculatorul ăsta?*
 
 <img src="docs/assets/screenshot-memory-ro.png" alt="rigscope: secțiunea Memorie cu rândul de compatibilitate și tabelul sloturilor" />
 
-> **Notă: încă nu a rulat pe un calculator real cu Linux.** Tot ce e descris mai jos a fost
-> construit și testat pe Linux în Docker (cu date hardware sintetice) și pe macOS. Fereastra de
-> parolă (`pkexec`), SMART pe discuri reale, clipboard-ul și dialogurile de fișiere trebuie încă
-> verificate pe hardware real.
+> **Notă: testat pe hardware real pe Windows, încă nu pe Linux.** Windows a rulat pe un laptop
+> real (i7-4600U, Windows 10 22H2) pe 2026-11-05; valorile au coincis cu Task Manager și WMI.
+> Varianta Linux a fost construită și testată în Docker (cu date hardware sintetice) și pe macOS:
+> fereastra de parolă (`pkexec`), SMART pe discuri reale, clipboard-ul și dialogurile de fișiere
+> trebuie încă verificate pe un calculator real cu Linux.
 
 ## Pornire rapidă
 
-Încă nu există release: pachetele (AppImage, `.deb`, `.tar.gz`) vin odată cu prima versiune.
-Până atunci, aplicația se construiește din surse.
+Încă nu există release: pachetele (AppImage, `.deb`, `.tar.gz` pentru Linux, un `.exe` portabil
+pentru Windows) vin odată cu prima versiune. Până atunci, aplicația se construiește din surse.
 
 ### Din surse
 
@@ -48,16 +50,17 @@ cd rigscope
 cargo run --release -p rigscope
 ```
 
-Binarul ajunge în `target/release/rigscope`. Pe Linux citește calculatorul tău; în rest deschide
-o mașină de exemplu, în mod demonstrativ. Opțiuni utile:
+Binarul ajunge în `target/release/rigscope`. Pe Linux și Windows citește calculatorul tău; în rest
+deschide o mașină de exemplu, în mod demonstrativ. Opțiuni utile:
 
 ```sh
 rigscope --lang ro                 # interfața în română
 rigscope --section storage         # deschide direct o secțiune
 rigscope --fixture fixtures/laptop-ddr5   # o mașină de exemplu în loc de aceasta
+rigscope --capture-fixture DIR     # Windows, ridicat: salvează un fixture mascat al acestui calculator
 ```
 
-Pachete opționale la rulare: `pkexec` (polkit) pentru detaliile sloturilor și SMART,
+Pachete opționale la rulare pe Linux: `pkexec` (polkit) pentru detaliile sloturilor și SMART,
 `smartmontools` pentru sănătatea discurilor, `hwdata` (`pci.ids`) pentru numele plăcilor video
 și de rețea.
 
@@ -68,12 +71,12 @@ Pachete opționale la rulare: `pkexec` (polkit) pentru detaliile sloturilor și 
 | Secțiune | Ce primești |
 |---|---|
 | **Memorie** | Fiecare slot: producător, cod produs, serial, capacitate, frecvența nominală și cea reală, ranguri, tensiune, lățime; sloturile goale; maximul plăcii; un rând de compatibilitate de lipit în căutarea unui magazin |
-| **Procesor** | Model, socket(uri), nuclee / fire, frecvența de bază și maximă, frecvența live pe nucleu, cache L1–L3, microcod, extensii ale setului de instrucțiuni |
-| **Stocare** | Discuri NVMe / SATA / USB / virtio: model, capacitate (GiB și GB), SSD sau HDD, magistrală, firmware, serial, sănătate SMART cu avertismente |
-| **Placă video** | Fiecare placă: producător, model și varianta plăcii (din `pci.ids`), driver, legătura PCIe, memoria video unde o expune driverul |
+| **Procesor** | Model, socket(uri), nuclee / fire, frecvența de bază și maximă, frecvența live pe nucleu (pe Windows estimată ca % Processor Performance × frecvența de bază), cache L1–L3, microcod, extensii ale setului de instrucțiuni |
+| **Stocare** | Discuri NVMe / SATA / USB / virtio (pe Windows din WMI, cu SMART pentru NVMe și SATA): model, capacitate (GiB și GB), SSD sau HDD, magistrală, firmware, serial, sănătate SMART cu avertismente |
+| **Placă video** | Fiecare placă: producător, model și varianta plăcii (din `pci.ids`), driver, legătura PCIe, memoria video unde o expune driverul (pe Windows VRAM exact din DXGI, legătura PCIe și temperatura prin D3DKMT) |
 | **Rețea** | Interfețele fizice: Ethernet sau Wi-Fi, numele adaptorului, driver, MAC, stare, viteză, duplex, MTU (cele virtuale sunt numărate, nu listate) |
 | **Baterie** | Sănătate (capacitatea la încărcare completă față de cea de design, derivată), energia de acum, încărcare, cicluri, chimie, alimentare de la rețea |
-| **Senzori** | Temperaturi cu limitele lor și turațiile ventilatoarelor din `hwmon`, actualizate la fiecare secundă |
+| **Senzori** | Temperaturi cu limitele lor și turațiile ventilatoarelor din `hwmon`, actualizate la fiecare secundă. Pe Windows doar zonele termice ACPI, etichetate ca atare: nu sunt afișate niciodată drept temperatura procesorului |
 | **Sistem** | Distribuție, kernel, nume calculator, timp de funcționare, placa de bază și BIOS |
 | **Export** | Copiere sau salvare a unui raport text, salvare sau deschidere a unui snapshot JSON; serialele, adresele MAC și numele calculatorului sunt mascate implicit |
 
@@ -168,6 +171,35 @@ Are nevoie de un desktop cu X11 sau Wayland. Citește `/proc`, `/sys` și `/etc/
 opțional: polkit (`pkexec`), `smartmontools`, `hwdata`. Testat pe Debian 12 (Docker, Xvfb).
 **Notă: încă nu a rulat pe un calculator real cu Linux.**
 
+## Windows
+
+Descarcă `rigscope-<versiune>-windows-x86_64.exe` din [releases](../../releases). E portabil:
+nu se instalează nimic, iar build-ul este x86_64 MSVC, cu CRT static. Minimul este Windows 10
+1809; pe versiuni mai vechi legătura PCIe și temperatura plăcii video apar ca indisponibile.
+
+- **Prompt UAC la fiecare pornire.** `.exe`-ul cere drepturi de administrator pentru că SMART și
+  controlul complet al discurilor (IOCTL) le cer. Toată aplicația rulează ridicat (nu există
+  helper separat).
+- **SmartScreen avertizează** („Windows a protejat computerul”): `.exe`-ul nu e semnat. Se trece
+  de avertisment cu **Mai multe informații** → **Rulați oricum**, iar suma se verifică cu
+  `SHA256SUMS.txt` din release: `Get-FileHash rigscope-<versiune>-windows-x86_64.exe`.
+- **Ce citește:** sloturile de memorie din tabela SMBIOS a firmware-ului (fără drepturi ridicate),
+  topologia procesorului și cache-urile, o frecvență live estimată ca % Processor Performance ×
+  frecvența de bază, discurile din WMI cu SMART pentru NVMe și SATA (și în spatele Intel
+  RST/RAID, când controllerul lasă să treacă ATA SMART), placa video cu VRAM exact (DXGI),
+  legătura PCIe și temperatura prin D3DKMT pe WDDM 2.4+, rețeaua și bateria. Zonele termice ACPI
+  apar ca „ACPI thermal zone”, niciodată ca temperatura procesorului.
+- **Ce nu se poate citi:** temperatura procesorului și ventilatoarele. Ambele necesită un driver
+  de kernel, iar rigscope nu instalează drivere.
+- **Testat pe hardware real** pe 2026-11-05: un laptop i7-4600U cu Windows 10 22H2. Memoria,
+  nucleele / firele, cache-urile, discul, placa video, rețeaua și bateria au coincis cu Task
+  Manager și WMI.
+
+Pentru contribuitori: `rigscope --capture-fixture DIR` (Windows, ridicat) salvează un fixture
+mascat al calculatorului, iar `--fixture DIR` deschide orice fel de fixture pe orice OS. Numele
+din fixture nu conțin `:` (codat `%3A`), legăturile simbolice sunt în `links.txt`, iar
+`.gitattributes` forțează LF.
+
 ## macOS și altele
 
 Se construiește și rulează pentru dezvoltare, în mod demonstrativ, cu o mașină de exemplu (nu
@@ -182,12 +214,13 @@ există `/sys` de citit).
 | `crates/rigscope-model` | Snapshot-ul: date + serde, rândul de compatibilitate, raportul text, mascarea |
 | `crates/rigscope-smbios` | Decodor SMBIOS/DMI fără panici (tipurile 0, 2, 4, 16, 17) |
 | `crates/rigscope-procfs` | Parsere pentru textul din `/proc` și `/sys`, căutare în `pci.ids` |
+| `crates/rigscope-win`, `crates/rigscope-probe-win` | Windows: stratul FFI Win32 (unsafe) și colectorul live construit pe el (doar Windows) |
 | `crates/rigscope-probe` | Construiește snapshot-ul dintr-o `Source` (fs real, director fixture, memorie); discuri, plăci video, rețea, baterie, senzori, JSON smartctl |
 | `crates/rigscope-engine` | Sesiunea, registrul de comenzi, undo, protecția la panică |
 | `crates/rigscope-ui` | Panourile egui, textele în engleză/română, tema |
 | `apps/rigscope` | Binarul: fereastra, helperul privilegiat, canalul de control |
-| `xtask` | `cargo xtask ci`, `linux`, `screenshot`, `shots`, `icons`, `banner`, `gen-fixtures` |
-| `fixtures/` | Mașini sintetice (desktop DDR4, laptop DDR5, VM) folosite de teste și de modul demonstrativ |
+| `xtask` | `cargo xtask ci`, `linux`, `screenshot`, `shots`, `icons`, `banner`, `gen-fixtures`, `windows-icon` |
+| `fixtures/` | Mașini de exemplu (desktop DDR4, laptop DDR5, VM, un desktop Windows real, mascat) folosite de teste și de modul demonstrativ |
 | `assets/theme.toml` | Culorile, fontul și motivul pentru aplicație, iconițe și banner |
 | `assets/icon.py`, `assets/banner.py` | Generează iconițele și acest banner (`cargo xtask icons`, `cargo xtask banner`) |
 
@@ -196,7 +229,7 @@ salvează în `docs/assets/`.
 
 ## Release
 
-Încă nu există release. Primul release va publica pachete Linux din CI.
+Încă nu există release. Primul release va publica din CI pachete Linux, o imagine de disc macOS și un `.exe` portabil pentru Windows.
 
 ## Teste
 
