@@ -29,6 +29,7 @@ ASSET_KINDS = {
     "linux-deb": "linux-x86_64.deb",
     "linux-tar": "linux-x86_64.tar.gz",
     "mac-dmg": "macos-universal.dmg",
+    "windows-exe": "windows-x86_64.exe",
     "sha256": "SHA256SUMS.txt",
 }
 
@@ -187,7 +188,8 @@ def build(release, out):
     theme = tomllib.loads((ROOT / "assets/theme.toml").read_text(encoding="utf-8"))
     template = (SITE / "template.html").read_text(encoding="utf-8")
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    kinds = json.dumps({"linux": assets["linux-appimage"]["url"], "mac": assets["mac-dmg"]["url"]})
+    kinds = json.dumps({"linux": assets["linux-appimage"]["url"], "mac": assets["mac-dmg"]["url"],
+                        "windows": assets["windows-exe"]["url"]})
     for lang, path in LANGS.items():
         t = json.loads((SITE / "i18n" / f"{lang}.json").read_text(encoding="utf-8"))
         values = {k: v for k, v in t.items() if isinstance(v, str)}
