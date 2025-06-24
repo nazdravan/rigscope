@@ -37,9 +37,13 @@ and tests everything and keeps the files as workflow artifacts; it publishes not
 | `rigscope-<v>-linux-x86_64.AppImage` | Ubuntu 22.04 | One file, no install; the root-only data (SMBIOS, SMART) works from it too. |
 | `rigscope-<v>-linux-x86_64.tar.gz` | Ubuntu 22.04 | Binary and licences. |
 | `rigscope-<v>-macos-universal.dmg` | macOS | arm64 + x86_64, ad-hoc signed, not notarized (right click -> Open). Shows the built-in demo machine. |
+| `rigscope-<v>-windows-x86_64.exe` | `Windows x86_64` job, `windows-2025` runner | Portable, nothing to install. x86_64 MSVC build with a static CRT (`RUSTFLAGS=-C target-feature=+crt-static`); `build.rs` embeds the `requireAdministrator` manifest, icon and version (needs `rc.exe` from the runner's Windows SDK). Not code-signed, so SmartScreen warns; users verify it with `SHA256SUMS.txt`. |
 | `SHA256SUMS.txt` | | Checksums of all of the above. |
 
-Windows is not built: it is not a supported platform.
+The `Windows x86_64` job builds with `cargo build --release --locked -p rigscope --target
+x86_64-pc-windows-msvc`, copies `rigscope.exe` to `dist/rigscope-<v>-windows-x86_64.exe` and
+uploads it as the `release-windows-x86_64` artifact; the release job waits for it like for the
+others. There is no signing step.
 
 ## Root without a helper
 
@@ -52,5 +56,6 @@ from a fixed list, kernel disk names) and only prints hex; the window parses it.
 ## Local checks
 
 - `packaging/linux/package.sh`, `deb.sh`, `appimage.sh` on Linux; `packaging/macos/package.sh`
-  on macOS. Files land in `dist/release/` (not in git).
+  on macOS; on Windows `cargo build --release -p rigscope` (the icon comes from
+  `cargo xtask windows-icon`). Files land in `dist/release/` (not in git).
 - Bump an action only together with its commit SHA and version comment (see `ci.yml`).
