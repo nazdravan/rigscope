@@ -47,6 +47,10 @@ class ReleaseTest(unittest.TestCase):
         self.assertEqual(set(a), set(build.ASSET_KINDS))
         self.assertEqual(a["linux-deb"]["name"], "rigscope-0.1.0-linux-x86_64.deb")
 
+    def test_the_windows_exe_is_recognised(self):
+        a = build.release_assets(release())
+        self.assertEqual(a["windows-exe"]["name"], "rigscope-0.1.0-windows-x86_64.exe")
+
     def test_a_missing_asset_stops_the_build(self):
         r = release()
         r["assets"] = [x for x in r["assets"] if not x["name"].endswith(".dmg")]
@@ -79,6 +83,10 @@ class PageTest(unittest.TestCase):
         en = (self.out / "index.html").read_text(encoding="utf-8")
         self.assertIn("releases/download/v0.1.0/rigscope-0.1.0-linux-x86_64.deb", en)
         self.assertIn("SHA256SUMS.txt", en)
+        self.assertIn("releases/download/v0.1.0/rigscope-0.1.0-windows-x86_64.exe", en)
+        self.assertIn("Windows (x86_64, portable .exe)", en)
+        self.assertIn("Windows (x86_64, .exe portabil)", (self.out / "ro/index.html").read_text(encoding="utf-8"))
+        self.assertIn('data-label-windows="Download for Windows (.exe)"', en)
         self.assertIn("v0.1.0", en)
 
     def test_romanian_page_uses_relative_paths_one_level_up(self):
