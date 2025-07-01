@@ -37,7 +37,7 @@
       <a id="download-main" class="button" href="#download"
          data-kinds="{{ kinds_json }}"
          data-label-linux="{{ btn_linux }}" data-label-mac="{{ btn_mac }}"
-         data-label-windows="{{ btn_windows }}">{{ btn_default }}</a>
+         {{{ windows_label_attr }}}>{{ btn_default }}</a>
       <span class="version">v{{ version }} · {{ date }}</span>
     </p>
     <p class="note">{{ hero_note }}</p>
@@ -94,7 +94,7 @@
       <tr><td><a href="{{ url_linux_deb }}">{{ name_linux_deb }}</a></td><td>{{ dl_deb }}</td><td>{{ size_linux_deb }}</td></tr>
       <tr><td><a href="{{ url_linux_appimage }}">{{ name_linux_appimage }}</a></td><td>{{ dl_appimage }}</td><td>{{ size_linux_appimage }}</td></tr>
       <tr><td><a href="{{ url_linux_tar }}">{{ name_linux_tar }}</a></td><td>{{ dl_tar }}</td><td>{{ size_linux_tar }}</td></tr>
-      <tr><td><a href="{{ url_windows_exe }}">{{ name_windows_exe }}</a></td><td>{{ dl_windows }}</td><td>{{ size_windows_exe }}</td></tr>
+      {{{ windows_row }}}
       <tr><td><a href="{{ url_mac_dmg }}">{{ name_mac_dmg }}</a></td><td>{{ dl_mac }}</td><td>{{ size_mac_dmg }}</td></tr>
     </tbody>
   </table>
