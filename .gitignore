@@ -2,3 +2,5 @@
 /dist
 /.cache
 __pycache__/
+# A capture writes its outcome next to the fixture; never commit it.
+fixtures/**/capture.log
