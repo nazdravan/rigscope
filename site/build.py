@@ -29,8 +29,11 @@ ASSET_KINDS = {
     "linux-deb": "linux-x86_64.deb",
     "linux-tar": "linux-x86_64.tar.gz",
     "mac-dmg": "macos-universal.dmg",
-    "windows-exe": "windows-x86_64.exe",
     "sha256": "SHA256SUMS.txt",
+}
+# Not in every release (0.2.0 and earlier have none): the page then has no Windows row or button.
+OPTIONAL_ASSET_KINDS = {
+    "windows-exe": "windows-x86_64.exe",
 }
 
 # Page file -> source. Screenshots exist in English; the Romanian page uses the Romanian
@@ -131,7 +134,8 @@ def md_to_html(md):
 
 
 def release_assets(release):
-    """Key -> {name, url, size}. A missing file stops the build."""
+    """Key -> {name, url, size}. A missing required file stops the build; optional ones are
+    left out."""
     version = release["tagName"].removeprefix("v")
     by_name = {a["name"]: a for a in release["assets"]}
     assets = {}
@@ -141,6 +145,10 @@ def release_assets(release):
             raise SystemExit(f"Release {release['tagName']} has no file {name}")
         a = by_name[name]
         assets[kind] = {"name": name, "url": a["url"], "size": a["size"]}
+    for kind, suffix in OPTIONAL_ASSET_KINDS.items():
+        a = by_name.get(f"rigscope-{version}-{suffix}")
+        if a:
+            assets[kind] = {"name": a["name"], "url": a["url"], "size": a["size"]}
     return assets
 
 
@@ -188,8 +196,10 @@ def build(release, out):
     theme = tomllib.loads((ROOT / "assets/theme.toml").read_text(encoding="utf-8"))
     template = (SITE / "template.html").read_text(encoding="utf-8")
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    kinds = json.dumps({"linux": assets["linux-appimage"]["url"], "mac": assets["mac-dmg"]["url"],
-                        "windows": assets["windows-exe"]["url"]})
+    kind_urls = {"linux": assets["linux-appimage"]["url"], "mac": assets["mac-dmg"]["url"]}
+    if "windows-exe" in assets:
+        kind_urls["windows"] = assets["windows-exe"]["url"]
+    kinds = json.dumps(kind_urls)
     for lang, path in LANGS.items():
         t = json.loads((SITE / "i18n" / f"{lang}.json").read_text(encoding="utf-8"))
         values = {k: v for k, v in t.items() if isinstance(v, str)}
@@ -203,6 +213,16 @@ def build(release, out):
             "version": version,
             "date": format_date(release["publishedAt"], t["months"], t["date_format"]),
             "kinds_json": kinds,
+            "windows_label_attr": (
+                f'data-label-windows="{html.escape(t["btn_windows"])}"' if "windows-exe" in assets else ""
+            ),
+            "windows_row": (
+                f'<tr><td><a href="{html.escape(assets["windows-exe"]["url"])}">'
+                f'{html.escape(assets["windows-exe"]["name"])}</a></td>'
+                f'<td>{html.escape(t["dl_windows"])}</td>'
+                f'<td>{format_size(assets["windows-exe"]["size"])}</td></tr>'
+                if "windows-exe" in assets else ""
+            ),
             "news_html": news_html(changelog, t, version),
             "name": theme["name"],
         })
