@@ -44,12 +44,26 @@ class ChangelogTest(unittest.TestCase):
 class ReleaseTest(unittest.TestCase):
     def test_all_assets_are_mapped(self):
         a = build.release_assets(release())
-        self.assertEqual(set(a), set(build.ASSET_KINDS))
+        self.assertEqual(set(a), set(build.ASSET_KINDS) | set(build.OPTIONAL_ASSET_KINDS))
         self.assertEqual(a["linux-deb"]["name"], "rigscope-0.1.0-linux-x86_64.deb")
 
     def test_the_windows_exe_is_recognised(self):
         a = build.release_assets(release())
         self.assertEqual(a["windows-exe"]["name"], "rigscope-0.1.0-windows-x86_64.exe")
+
+    def test_a_release_without_the_windows_exe_still_builds(self):
+        r = release()
+        r["assets"] = [x for x in r["assets"] if not x["name"].endswith(".exe")]
+        self.assertNotIn("windows-exe", build.release_assets(r))
+        with tempfile.TemporaryDirectory() as tmp:
+            build.build(r, Path(tmp))
+            for page in ("index.html", "ro/index.html"):
+                html = (Path(tmp) / page).read_text(encoding="utf-8")
+                self.assertNotIn("windows-x86_64", html)
+                self.assertNotIn("data-label-windows", html)
+                self.assertNotIn(".exe", html)
+                self.assertIn("rigscope-0.1.0-linux-x86_64.deb", html)
+                self.assertNotIn("{{", html)
 
     def test_a_missing_asset_stops_the_build(self):
         r = release()
