@@ -5,7 +5,7 @@ All notable changes to rigscope. The notes of each version are the text of its G
 ## Unreleased
 
 ### Added
-- Windows 10/11 (x86_64): real hardware read — memory slots from the firmware SMBIOS table,
+- Windows 10 (1809 or later, x86_64): real hardware read — memory slots from the firmware SMBIOS table,
   processor topology and caches, disks with SMART (NVMe and SATA), graphics with exact VRAM and
   temperature, network, battery. A portable `rigscope-<version>-windows-x86_64.exe` in the release.
 - `rigscope --capture-fixture DIR` (Windows, elevated) saves a masked fixture; `--fixture DIR`
