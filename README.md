@@ -146,6 +146,9 @@ to install and it works the same from the AppImage, the `.tar.gz` or the `.deb`.
 parses nothing; the unprivileged window parses the result. The window stays responsive while the
 password prompt is open.
 
+On Windows the whole app runs as administrator (the manifest asks for it at each start), so there
+is no separate elevated read.
+
 ## Decisions
 
 - **No guessing.** A BIOS that reports nonsense is shown as it is; missing values say why.
@@ -169,8 +172,8 @@ polkit (`pkexec`), `smartmontools`, `hwdata`. Tested in Debian 12 (Docker, Xvfb)
 
 ## Windows
 
-Download `rigscope-<version>-windows-x86_64.exe` from the [releases](../../releases). It is
-portable: nothing is installed, and it is an x86_64 MSVC build with a static CRT. The minimum is
+Once a release exists, download `rigscope-<version>-windows-x86_64.exe` from the
+[releases](../../releases). It is portable: nothing is installed, and it is an x86_64 MSVC build with a static CRT. The minimum is
 Windows 10 1809; on older builds the PCIe link and the GPU temperature show as unavailable.
 
 - **A UAC prompt at every start.** The `.exe` asks for administrator rights because SMART and the
