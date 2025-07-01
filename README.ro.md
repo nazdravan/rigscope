@@ -6,7 +6,7 @@
 
 <img src="docs/assets/rigscope-banner.png" alt="rigscope" />
 
-**O aplicație grafică pentru Linux **și Windows** care arată în detaliu configurația calculatorului: fiecare slot de RAM, procesorul, discurile cu sănătatea lor SMART, placa video, rețeaua, bateria și senzorii, fără terminal.**
+**O aplicație grafică pentru Linux și Windows care arată în detaliu configurația calculatorului: fiecare slot de RAM, procesorul, discurile cu sănătatea lor SMART, placa video, rețeaua, bateria și senzorii, fără terminal.**
 
 [![CI](https://github.com/nazdravan/rigscope/actions/workflows/ci.yml/badge.svg)](https://github.com/nazdravan/rigscope/actions/workflows/ci.yml)
 [![Licență](https://img.shields.io/badge/licen%C8%9B%C4%83-MIT%20OR%20Apache--2.0-1F8FC8?style=flat-square)](#licență)
@@ -57,7 +57,7 @@ deschide o mașină de exemplu, în mod demonstrativ. Opțiuni utile:
 rigscope --lang ro                 # interfața în română
 rigscope --section storage         # deschide direct o secțiune
 rigscope --fixture fixtures/laptop-ddr5   # o mașină de exemplu în loc de aceasta
-rigscope --capture-fixture DIR     # Windows, ridicat: salvează un fixture mascat al acestui calculator
+rigscope --capture-fixture DIR     # Windows, cu drepturi de administrator: salvează un fixture mascat al acestui calculator
 ```
 
 Pachete opționale la rulare pe Linux: `pkexec` (polkit) pentru detaliile sloturilor și SMART,
@@ -150,6 +150,9 @@ fel din AppImage, din `.tar.gz` sau din `.deb`. Scriptul nu interpretează nimic
 neprivilegiată interpretează rezultatul. Fereastra rămâne responsivă cât timp e deschis dialogul
 de parolă.
 
+Pe Windows toată aplicația rulează ca administrator (manifestul o cere la fiecare pornire), deci
+nu există o citire ridicată separată.
+
 ## Decizii
 
 - **Nimic ghicit.** Un BIOS care raportează prostii e afișat așa cum e; valorile lipsă spun de ce.
@@ -173,7 +176,8 @@ opțional: polkit (`pkexec`), `smartmontools`, `hwdata`. Testat pe Debian 12 (Do
 
 ## Windows
 
-Descarcă `rigscope-<versiune>-windows-x86_64.exe` din [releases](../../releases). E portabil:
+După ce există un release, descarcă `rigscope-<versiune>-windows-x86_64.exe` din
+[releases](../../releases). E portabil:
 nu se instalează nimic, iar build-ul este x86_64 MSVC, cu CRT static. Minimul este Windows 10
 1809; pe versiuni mai vechi legătura PCIe și temperatura plăcii video apar ca indisponibile.
 
@@ -195,7 +199,7 @@ nu se instalează nimic, iar build-ul este x86_64 MSVC, cu CRT static. Minimul e
   nucleele / firele, cache-urile, discul, placa video, rețeaua și bateria au coincis cu Task
   Manager și WMI.
 
-Pentru contribuitori: `rigscope --capture-fixture DIR` (Windows, ridicat) salvează un fixture
+Pentru contribuitori: `rigscope --capture-fixture DIR` (Windows, cu drepturi de administrator) salvează un fixture
 mascat al calculatorului, iar `--fixture DIR` deschide orice fel de fixture pe orice OS. Numele
 din fixture nu conțin `:` (codat `%3A`), legăturile simbolice sunt în `links.txt`, iar
 `.gitattributes` forțează LF.
