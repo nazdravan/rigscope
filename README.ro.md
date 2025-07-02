@@ -76,7 +76,7 @@ Pachete opționale la rulare pe Linux: `pkexec` (polkit) pentru detaliile slotur
 | **Placă video** | Fiecare placă: producător, model și varianta plăcii (din `pci.ids`), driver, legătura PCIe, memoria video unde o expune driverul (pe Windows VRAM exact din DXGI, legătura PCIe și temperatura prin D3DKMT) |
 | **Rețea** | Interfețele fizice: Ethernet sau Wi-Fi, numele adaptorului, driver, MAC, stare, viteză, duplex, MTU (cele virtuale sunt numărate, nu listate) |
 | **Baterie** | Sănătate (capacitatea la încărcare completă față de cea de design, derivată), energia de acum, încărcare, cicluri, chimie, alimentare de la rețea |
-| **Senzori** | Temperaturi cu limitele lor și turațiile ventilatoarelor din `hwmon`, actualizate la fiecare secundă. Pe Windows doar zonele termice ACPI, etichetate ca atare: nu sunt afișate niciodată drept temperatura procesorului |
+| **Senzori** | Temperaturi cu limitele lor și turațiile ventilatoarelor din `hwmon`, actualizate la fiecare secundă. Pe Windows temperatura plăcii video (D3DKMT) și zonele termice ACPI, etichetate ca atare: nu sunt afișate niciodată drept temperatura procesorului |
 | **Sistem** | Distribuție, kernel, nume calculator, timp de funcționare, placa de bază și BIOS |
 | **Export** | Copiere sau salvare a unui raport text, salvare sau deschidere a unui snapshot JSON; serialele, adresele MAC și numele calculatorului sunt mascate implicit |
 
@@ -200,7 +200,9 @@ nu se instalează nimic, iar build-ul este x86_64 MSVC, cu CRT static. Minimul e
   Manager și WMI.
 
 Pentru contribuitori: `rigscope --capture-fixture DIR` (Windows, cu drepturi de administrator) salvează un fixture
-mascat al calculatorului, iar `--fixture DIR` deschide orice fel de fixture pe orice OS. Numele
+mascat al calculatorului, iar `--fixture DIR` deschide orice fel de fixture pe orice OS.
+`.exe`-ul de release nu are fereastră de consolă, deci rezultatul capturii (reușita sau eroarea)
+este în `DIR/capture.log`. Numele
 din fixture nu conțin `:` (codat `%3A`), legăturile simbolice sunt în `links.txt`, iar
 `.gitattributes` forțează LF.
 
@@ -218,13 +220,13 @@ există `/sys` de citit).
 | `crates/rigscope-model` | Snapshot-ul: date + serde, rândul de compatibilitate, raportul text, mascarea |
 | `crates/rigscope-smbios` | Decodor SMBIOS/DMI fără panici (tipurile 0, 2, 4, 16, 17) |
 | `crates/rigscope-procfs` | Parsere pentru textul din `/proc` și `/sys`, căutare în `pci.ids` |
-| `crates/rigscope-win`, `crates/rigscope-probe-win` | Windows: stratul FFI Win32 (unsafe) și colectorul live construit pe el (doar Windows) |
+| `crates/rigscope-win`, `crates/rigscope-probe-win` | Windows: stratul FFI Win32 (unsafe; apelurile lui se compilează doar pe Windows) și colectorul construit pe el; ambele crate-uri se compilează și își rulează testele pe orice OS |
 | `crates/rigscope-probe` | Construiește snapshot-ul dintr-o `Source` (fs real, director fixture, memorie); discuri, plăci video, rețea, baterie, senzori, JSON smartctl |
 | `crates/rigscope-engine` | Sesiunea, registrul de comenzi, undo, protecția la panică |
 | `crates/rigscope-ui` | Panourile egui, textele în engleză/română, tema |
 | `apps/rigscope` | Binarul: fereastra, helperul privilegiat, canalul de control |
 | `xtask` | `cargo xtask ci`, `linux`, `screenshot`, `shots`, `icons`, `banner`, `gen-fixtures`, `windows-icon` |
-| `fixtures/` | Mașini de exemplu (desktop DDR4, laptop DDR5, VM, un desktop Windows real, mascat) folosite de teste și de modul demonstrativ |
+| `fixtures/` | Mașini de exemplu (desktop DDR4, laptop DDR5, VM, un laptop Windows real, mascat) folosite de teste și de modul demonstrativ |
 | `assets/theme.toml` | Culorile, fontul și motivul pentru aplicație, iconițe și banner |
 | `assets/icon.py`, `assets/banner.py` | Generează iconițele și acest banner (`cargo xtask icons`, `cargo xtask banner`) |
 
