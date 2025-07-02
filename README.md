@@ -74,7 +74,7 @@ disk health, `hwdata` (`pci.ids`) for graphics and network card names.
 | **Graphics** | Each card: vendor, model and board variant (from `pci.ids`), driver, PCIe link, video memory where the driver exposes it (on Windows exact VRAM from DXGI, the PCIe link and the temperature through D3DKMT) |
 | **Network** | Physical interfaces: Ethernet or Wi-Fi, adapter name, driver, MAC, state, speed, duplex, MTU (virtual ones are counted, not listed) |
 | **Battery** | Health (full vs design capacity, derived), energy now, charge, cycles, chemistry, mains state |
-| **Sensors** | Temperatures with their limits and fan speeds from `hwmon`, updated every second. On Windows only ACPI thermal zones, labelled as such: never shown as the CPU temperature |
+| **Sensors** | Temperatures with their limits and fan speeds from `hwmon`, updated every second. On Windows the GPU temperature (D3DKMT) and the ACPI thermal zones, labelled as such: never shown as the CPU temperature |
 | **System** | Distribution, kernel, hostname, uptime, motherboard and BIOS |
 | **Export** | Copy or save a text report, save or open a JSON snapshot; serial numbers, MACs and the hostname are masked by default |
 
@@ -193,7 +193,8 @@ Windows 10 1809; on older builds the PCIe link and the GPU temperature show as u
   cores / threads, caches, disk, graphics, network and battery matched Task Manager and WMI.
 
 For contributors: `rigscope --capture-fixture DIR` (Windows, elevated) saves a masked fixture of
-the machine, and `--fixture DIR` opens either kind of fixture on any OS. Fixture names do not
+the machine, and `--fixture DIR` opens either kind of fixture on any OS. The release `.exe` has
+no console window, so the capture's result (success or the error) is in `DIR/capture.log`. Fixture names do not
 contain `:` (encoded as `%3A`) and symlinks are listed in `links.txt`; `.gitattributes` forces LF.
 
 ## macOS and others
@@ -210,13 +211,13 @@ read).
 | `crates/rigscope-model` | The snapshot: plain data + serde, compatibility line, text report, masking |
 | `crates/rigscope-smbios` | Panic-free SMBIOS/DMI decoder (types 0, 2, 4, 16, 17) |
 | `crates/rigscope-procfs` | Parsers for `/proc` and `/sys` text, `pci.ids` lookup |
-| `crates/rigscope-win`, `crates/rigscope-probe-win` | Windows: the unsafe Win32 FFI layer and the live collector built on it (Windows only) |
+| `crates/rigscope-win`, `crates/rigscope-probe-win` | Windows: the unsafe Win32 FFI layer (its calls compile on Windows only) and the collector built on it; both crates build and run their tests on every OS |
 | `crates/rigscope-probe` | Builds a snapshot from a `Source` (real fs, fixture dir, memory); disks, GPUs, network, battery, sensors, smartctl JSON |
 | `crates/rigscope-engine` | Session, command registry, undo, panic guard |
 | `crates/rigscope-ui` | egui panels, English/Romanian strings, theme |
 | `apps/rigscope` | The binary: window, privileged helper, control channel |
 | `xtask` | `cargo xtask ci`, `linux`, `screenshot`, `shots`, `icons`, `banner`, `gen-fixtures`, `windows-icon` |
-| `fixtures/` | Sample machines (desktop DDR4, laptop DDR5, VM, a masked real Windows desktop) used by tests and demo mode |
+| `fixtures/` | Sample machines (desktop DDR4, laptop DDR5, VM, a masked real Windows laptop) used by tests and demo mode |
 | `assets/theme.toml` | Colours, font and motif for the app, icons and banner |
 | `assets/icon.py`, `assets/banner.py` | Generate the icons and this banner (`cargo xtask icons`, `cargo xtask banner`) |
 
