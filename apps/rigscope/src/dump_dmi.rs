@@ -20,7 +20,6 @@ pub fn valid_disk_name(name: &str) -> bool {
 /// smartctl is looked up only in fixed system paths (never through `PATH`).
 pub const SMARTCTL_PATHS: &[&str] = &["/usr/sbin/smartctl", "/usr/bin/smartctl", "/sbin/smartctl"];
 
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub fn find_smartctl(exists: impl Fn(&str) -> bool) -> Option<&'static str> {
     SMARTCTL_PATHS.iter().copied().find(|p| exists(p))
 }
@@ -231,7 +230,6 @@ pub fn parse_script_output(out: &[u8], asked: &[String]) -> Result<Vec<u8>, Stri
 }
 
 /// Interprets pkexec's exit code and the script's output.
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub fn interpret(
     code: Option<i32>,
     stdout: &[u8],
