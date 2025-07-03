@@ -5,7 +5,8 @@ use crate::MemWin;
 /// The host name a captured fixture carries.
 pub const CAPTURED_NAME: &str = "CAPTURED-PC";
 
-/// What `--capture-fixture` writes: `w` with the SMBIOS serials, asset tags and UUID
+/// What `--capture-fixture` writes: `w` with every SMBIOS string the decoder does not read
+/// (serials, asset tags, OEM strings) blanked and the UUID zeroed
 /// (`rigscope_smbios::mask_serials`), the disk serials (WMI and inside the IOCTL descriptors),
 /// the battery serials and the MACs masked, and the host name replaced by [`CAPTURED_NAME`].
 /// Errors stay as they are.
