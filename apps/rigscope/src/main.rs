@@ -1,4 +1,7 @@
 //! rigscope — detailed hardware configuration viewer for Linux and Windows.
+// A release build on Windows is a GUI program: no console window opens next to it.
+// `--capture-fixture` reports into DIR/capture.log for that reason.
+#![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
 
 use anyhow::Result;
 use rigscope::{args, capture, control, demo, env};
