@@ -10,6 +10,11 @@ const WIFI_NO_DUPLEX: &str = "does not apply to Wi-Fi";
 pub(crate) fn read_net(src: &dyn WinSource) -> NetInfo {
     let mut out = NetInfo::default();
     for a in src.net_adapters().unwrap_or_default() {
+        // An NDIS filter row is a layer of another adapter, not an interface: neither listed
+        // nor counted as hidden.
+        if a.filter {
+            continue;
+        }
         let kind = match a.if_type {
             IF_ETHERNET => Some(NetKind::Ethernet),
             IF_WIFI => Some(NetKind::WiFi),
@@ -67,6 +72,7 @@ mod tests {
             mac: Some("a8:a1:59:12:34:56".into()),
             mtu: Some(1500),
             hardware: hw,
+            filter: false,
         }
     }
 
@@ -87,5 +93,42 @@ mod tests {
         assert_eq!(n.interfaces[0].state, Field::Known("up".into()));
         assert_eq!(n.interfaces[1].kind, Field::Known(NetKind::WiFi));
         assert!(matches!(n.interfaces[1].duplex, Field::Unavailable(_)));
+    }
+
+    #[test]
+    fn filter_rows_are_neither_listed_nor_counted() {
+        let filtered = |name: &str, if_type: u32, hw: bool| NetAdapterRaw {
+            filter: true,
+            ..nic(name, if_type, hw)
+        };
+        let mut w = MemWin::default();
+        w.net = Ok(vec![
+            nic("Ethernet", 6, true),
+            filtered(
+                "Ethernet-WFP Native MAC Layer LightWeight Filter-0000",
+                6,
+                false,
+            ),
+            filtered("Ethernet-QoS Packet Scheduler-0000", 6, false),
+            filtered("Wi-Fi-Native WiFi Filter Driver-0000", 71, true),
+            nic("vEthernet (WSL)", 6, false),
+        ]);
+        let n = read_net(&w);
+        assert_eq!(n.interfaces.len(), 1);
+        assert_eq!(n.interfaces[0].name, "Ethernet");
+        assert_eq!(
+            n.hidden_virtual, 1,
+            "only the WSL switch is a hidden virtual adapter"
+        );
+    }
+
+    #[test]
+    fn capture_without_filter_field_still_loads() {
+        let old = r#"{"name":"Ethernet","description":null,"if_type":6,"up":true,
+            "speed_bps":null,"mac":null,"mtu":null,"hardware":true}"#;
+        let a: NetAdapterRaw = serde_json::from_str(old).unwrap();
+        assert!(!a.filter);
+        // And a non-filter row serializes without the field, so old fixtures stay unchanged.
+        assert!(!serde_json::to_string(&a).unwrap().contains("filter"));
     }
 }
