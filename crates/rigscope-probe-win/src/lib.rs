@@ -27,7 +27,7 @@ pub use power::MAX_SUPPLIES;
 pub use real::{capture, RealWin};
 pub use sensors::NO_CPU_TEMP;
 pub use smart::{parse_ata_smart, parse_nvme_health};
-pub use source::{MemWin, WinSource, R};
+pub use source::{MemWin, WinSource, CAPTURE_LOG, R};
 pub use storage::{interface_of, MAX_DISKS, NO_SMART_RAID, NO_SMART_USB};
 
 #[cfg(any(test, feature = "testutil"))]
