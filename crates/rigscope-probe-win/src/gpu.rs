@@ -136,7 +136,7 @@ mod tests {
             luid: 9,
             ..Default::default()
         };
-        w.dxgi = Ok(vec![rtx(), basic, rtx()]); // rtx de două ori: același LUID, deci deduplicat
+        w.dxgi = Ok(vec![rtx(), basic, rtx()]); // rtx twice: the same LUID, so deduplicated
         w.pci_display = Ok(vec![PciDisplayRaw {
             vendor_id: 0x10de,
             device_id: 0x2504,
