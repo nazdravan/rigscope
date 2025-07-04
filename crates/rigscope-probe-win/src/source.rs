@@ -106,6 +106,9 @@ impl Default for MemWin {
 }
 
 const MARKER: &str = "winsource.json";
+/// What `rigscope --capture-fixture DIR` writes into DIR: the outcome of the capture, since a
+/// release build on Windows has no console to print it to. `save` removes an earlier one.
+pub const CAPTURE_LOG: &str = "capture.log";
 const FORMAT: u32 = 1;
 
 #[derive(Serialize, Deserialize)]
@@ -160,6 +163,7 @@ impl MemWin {
             "smbios.bin.err.json",
             "processors.bin",
             "processors.bin.err.json",
+            CAPTURE_LOG,
         ] {
             match std::fs::remove_file(dir.join(name)) {
                 Err(e) if e.kind() != std::io::ErrorKind::NotFound => return Err(e),
@@ -352,6 +356,19 @@ mod tests {
         assert!(back.smbios.is_ok());
         assert!(back.nvme.is_empty());
         assert!(dir.join("keep.txt").exists());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_capture_log_is_cleared_by_save_and_ignored_by_load() {
+        let dir = std::env::temp_dir().join(format!("rigscope-memwin-log-{}", std::process::id()));
+        let w = MemWin::default();
+        w.save(&dir).unwrap();
+        std::fs::write(dir.join(CAPTURE_LOG), b"fixture written").unwrap();
+        assert!(MemWin::is_fixture(&dir));
+        assert_eq!(MemWin::load(&dir).unwrap(), w);
+        w.save(&dir).unwrap();
+        assert!(!dir.join(CAPTURE_LOG).exists(), "a stale log is removed");
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }
