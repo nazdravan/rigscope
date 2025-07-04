@@ -194,6 +194,7 @@ pub fn laptop() -> MemWin {
             mac: Some("10:20:30:40:50:60".into()),
             mtu: Some(1500),
             hardware: true,
+            filter: false,
         }]),
         batteries: Ok(vec![BatteryRaw {
             name: Some("5B10W51867".into()),
@@ -275,6 +276,7 @@ pub fn vm() -> MemWin {
             mac: Some("00:15:5d:00:00:01".into()),
             mtu: Some(1500),
             hardware: true,
+            filter: false,
         }]),
         batteries: Ok(Vec::new()),
         ac_online: Ok(Some(true)),
