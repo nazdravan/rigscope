@@ -12,7 +12,8 @@ impl<S: Source> LinuxCollector<S> {
         LinuxCollector { src }
     }
 
-    /// The underlying source (the app reads the disk list from it for the elevated read).
+    /// The underlying source. The app does not use it: its elevated read keeps its own
+    /// `Source` (`env::Elevation::Linux`) and reads the disk list from that.
     pub fn source(&self) -> &S {
         &self.src
     }
