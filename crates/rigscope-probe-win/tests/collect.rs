@@ -23,14 +23,14 @@ fn laptop_snapshot() {
     assert_eq!(s.power.batteries.len(), 1);
     assert!(s.storage.disks[0].health.known().is_some());
     assert!(s.sensors.chips.iter().any(|c| c.hwmon == "cpu"));
-    // Un tick după colectare dă frecvențe estimate.
+    // A tick after collecting gives estimated frequencies.
     let mut cpu = s.cpu.clone();
     c.refresh_live(&mut cpu);
     assert!(cpu
         .cores
         .iter()
         .all(|k| k.estimated && k.cur_mhz.known().is_some()));
-    // Raportul se generează fără panică și spune „needs administrator” la nevoie.
+    // The report builds without panicking and says "needs administrator" where needed.
     let _ = report_text(&s, true);
 }
 
