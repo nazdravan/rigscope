@@ -65,6 +65,10 @@ pub fn parse_ata_smart(attributes: &[u8], thresholds: &[u8]) -> Option<DiskHealt
         return None;
     }
     let list = attrs(attributes);
+    // An all-zero (or failed) read lists no attribute: that is no data, not a healthy disk.
+    if list.is_empty() {
+        return None;
+    }
     let threshold = |id: u8| -> Option<u8> {
         (0..30).find_map(|i| {
             let e = thresholds.get(2 + i * 12..2 + i * 12 + 2)?;
@@ -79,10 +83,14 @@ pub fn parse_ata_smart(attributes: &[u8], thresholds: &[u8]) -> Option<DiskHealt
         .any(|a| a.prefail && threshold(a.id).is_some_and(|t| t != 0 && a.current <= t));
     Some(DiskHealth {
         passed: failing.then_some(false),
-        // 194 (or 190): the current temperature is the low byte of the raw value.
-        temperature_c: raw(194)
-            .or_else(|| raw(190))
-            .map(|r| i32::from((r & 0xFF) as u8)),
+        // 194 (or 190): the current temperature is the low byte of the raw value;
+        // 0 means the drive does not report it.
+        temperature_c: [194, 190]
+            .into_iter()
+            .filter_map(raw)
+            .map(|r| (r & 0xFF) as u8)
+            .find(|t| *t != 0)
+            .map(i32::from),
         // 9: low 32 bits (some vendors pack minutes in the upper bytes).
         power_on_hours: raw(9).map(|r| r & 0xFFFF_FFFF),
         power_cycles: raw(12),
@@ -128,7 +136,7 @@ pub(crate) mod tests {
             Some(false)
         );
         assert_eq!(parse_nvme_health(&[0; 100]), None);
-        // Temperatura 0 K = senzor absent, nu -273 °C.
+        // 0 K means the sensor is absent, not -273 °C.
         assert_eq!(
             parse_nvme_health(&nvme_log(0, 0, 0, 0))
                 .unwrap()
@@ -189,10 +197,10 @@ pub(crate) mod tests {
         assert_eq!(h.reallocated_sectors, Some(8));
         assert_eq!(h.power_on_hours, Some(4321));
         assert_eq!(h.power_cycles, Some(512));
-        assert_eq!(h.temperature_c, Some(39)); // byte-ul de jos al raw
+        assert_eq!(h.temperature_c, Some(39)); // the low byte of the raw value
         assert_eq!(h.pending_sectors, Some(1));
         assert_eq!(h.uncorrectable_sectors, Some(0));
-        // Nimic sub prag: nu afirmăm „passed” fără comanda SMART RETURN STATUS.
+        // Nothing at or below threshold: no "passed" claim without SMART RETURN STATUS.
         assert_eq!(h.passed, None);
     }
 
@@ -201,6 +209,22 @@ pub(crate) mod tests {
         let (a, t) = ata_sectors(&[(5, 0x33, 10, 2000)], &[(5, 10)]);
         assert_eq!(parse_ata_smart(&a, &t).unwrap().passed, Some(false));
         assert_eq!(parse_ata_smart(&a[..100], &t), None);
+    }
+
+    #[test]
+    fn ata_all_zero_sectors_are_no_data() {
+        assert_eq!(parse_ata_smart(&[0; 512], &[0; 512]), None);
+    }
+
+    #[test]
+    fn ata_temperature_raw_zero_is_absent() {
+        let (a, t) = ata_sectors(&[(9, 0x32, 95, 4321), (194, 0x22, 100, 0)], &[]);
+        let h = parse_ata_smart(&a, &t).unwrap();
+        assert_eq!(h.temperature_c, None);
+        assert_eq!(h.power_on_hours, Some(4321));
+        // 194 reads 0, 190 has a value: use 190.
+        let (a, t) = ata_sectors(&[(194, 0x22, 100, 0), (190, 0x22, 64, 36)], &[]);
+        assert_eq!(parse_ata_smart(&a, &t).unwrap().temperature_c, Some(36));
     }
 
     proptest::proptest! {
