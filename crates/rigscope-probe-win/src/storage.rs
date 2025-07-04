@@ -231,7 +231,7 @@ mod tests {
         assert_eq!(s.disks[0].name, "PhysicalDrive1");
         assert_eq!(s.disks[0].model, Field::Known("WDC WD10EZEX".into()));
         assert_eq!(s.disks[0].interface, Field::Known(Interface::Sata));
-        assert_eq!(s.disks[0].kind, Field::Unknown); // fără WMI nu există MediaType
+        assert_eq!(s.disks[0].kind, Field::Unknown); // without WMI there is no MediaType
     }
 
     #[test]
