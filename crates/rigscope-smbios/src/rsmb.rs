@@ -26,7 +26,7 @@ pub fn decode_rsmb(buf: &[u8]) -> Result<Decoded, SmbiosError> {
 }
 
 /// (structure type, offset of a string-index byte in the formatted area): serial numbers and
-/// asset tags, overwritten with 'X'.
+/// asset tags. They are always overwritten with 'X', even when a kept field shares the string.
 const SERIALS: &[(u8, usize)] = &[
     (1, 0x07),  // system serial
     (2, 0x07),  // baseboard serial
@@ -40,13 +40,45 @@ const SERIALS: &[(u8, usize)] = &[
     (22, 0x07), // portable battery serial
     (39, 0x08), // power supply serial
 ];
+/// (structure type, offset of a string-index byte): the strings the decoder reads
+/// (`decode.rs`), none of them per-unit. Every other string is overwritten with 'X'.
+const KEPT: &[(u8, usize)] = &[
+    (0, 0x04),  // BIOS vendor
+    (0, 0x05),  // BIOS version
+    (0, 0x08),  // BIOS release date
+    (2, 0x04),  // baseboard manufacturer
+    (2, 0x05),  // baseboard product
+    (2, 0x06),  // baseboard version
+    (4, 0x04),  // processor socket designation
+    (17, 0x10), // memory device locator
+    (17, 0x11), // memory device bank locator
+    (17, 0x17), // memory device manufacturer
+    (17, 0x1A), // memory device part number
+];
 /// (structure type, offset, length): binary fields zeroed. Type 1 UUID; type 22 SBDS serial.
 const ZEROED: &[(u8, usize, usize)] = &[(1, 0x08, 16), (22, 0x10, 2)];
 
-/// Overwrites serial numbers, asset tags, the system UUID and the battery's SBDS serial in
-/// place (see [`SERIALS`] and [`ZEROED`]: types 1, 2, 3, 4, 17, 22, 39), keeping every length
-/// so the table stays decodable. A field is touched only when it lies inside the structure's
-/// formatted length. Malformed tables are masked as far as they parse; never panics.
+/// The string-index bytes that `list` names for structure `kind` (formatted length `len`
+/// at `pos`); 0 (no string) is left out.
+fn indices(table: &[u8], list: &[(u8, usize)], kind: u8, pos: usize, len: usize) -> Vec<u8> {
+    list.iter()
+        .filter(|(k, off)| *k == kind && *off < len)
+        .filter_map(|(_, off)| table.get(pos.checked_add(*off)?).copied())
+        .filter(|i| *i != 0)
+        .collect()
+}
+
+/// Masks a raw SMBIOS table in place before it is written to a fixture, keeping every length
+/// so the table stays decodable:
+/// - the strings the decoder reads ([`KEPT`]: BIOS, baseboard, processor socket, memory
+///   locators, manufacturer and part number) stay;
+/// - every other string is overwritten with 'X', byte for byte: serial numbers and asset tags
+///   ([`SERIALS`], even when a kept field points at the same string), OEM strings (type 11),
+///   OEM-specific types (128 and up) and any string no known non-personal field references;
+/// - the system UUID and the battery's SBDS serial ([`ZEROED`]) are zeroed.
+///
+/// A field is touched only when it lies inside the structure's formatted length. Malformed
+/// tables are masked as far as they parse; never panics.
 pub fn mask_serials(table: &mut [u8]) {
     let mut pos = 0usize;
     while let (Some(kind), Some(len)) = (
@@ -77,28 +109,26 @@ pub fn mask_serials(table: &mut [u8]) {
                 u.fill(0);
             }
         }
-        for (_, off) in SERIALS.iter().filter(|(k, _)| *k == kind) {
-            if *off >= len {
-                continue;
-            }
-            let idx = table.get(pos + off).copied().unwrap_or(0);
-            if idx == 0 {
-                continue;
-            }
-            // Walk to string number `idx` (1-based) and overwrite its bytes with 'X'.
-            let mut s = strings_start;
-            for _ in 1..idx {
-                while s < end && table.get(s).is_some_and(|b| *b != 0) {
-                    s += 1;
-                }
-                s += 1;
-            }
+        let serials = indices(table, SERIALS, kind, pos, len);
+        let kept: Vec<u8> = indices(table, KEPT, kind, pos, len)
+            .into_iter()
+            .filter(|i| !serials.contains(i))
+            .collect();
+        // Walk strings 1, 2, ... up to the set's end; blank each one that is not kept.
+        let mut s = strings_start;
+        let mut idx = 1usize;
+        while s < end {
+            let keep = u8::try_from(idx).is_ok_and(|i| kept.contains(&i));
             while s < end && table.get(s).is_some_and(|b| *b != 0) {
-                if let Some(b) = table.get_mut(s) {
-                    *b = b'X';
+                if !keep {
+                    if let Some(b) = table.get_mut(s) {
+                        *b = b'X';
+                    }
                 }
                 s += 1;
             }
+            s += 1;
+            idx += 1;
         }
         pos = end + 2;
     }
@@ -160,7 +190,7 @@ mod tests {
     }
 
     #[test]
-    fn mask_overwrites_serials_and_uuid_only() {
+    fn mask_overwrites_serials_and_uuid() {
         let system = StructBuilder::new(1, 0x01, 0x1B)
             .string(0x04, "LENOVO")
             .string(0x07, "PF2ABCDE")
@@ -178,7 +208,9 @@ mod tests {
         let s = String::from_utf8_lossy(&t);
         assert!(!s.contains("PF2ABCDE") && !s.contains("L1HF12345"), "{s}");
         assert!(s.contains("XXXXXXXX") && s.contains("XXXXXXXXX"), "{s}");
-        assert!(s.contains("LENOVO"));
+        // The board vendor is read by the decoder and stays; the system vendor (type 1, not
+        // read) is blanked like any other unreferenced string.
+        assert_eq!(s.matches("LENOVO").count(), 1, "{s}");
         assert_eq!(crate::structures(&t).unwrap().len(), 3);
         assert!(t[0x08..0x08 + 16].iter().all(|b| *b == 0));
     }
@@ -195,8 +227,11 @@ mod tests {
         let mut t = table(&[battery]);
         mask_serials(&mut t);
         let s = String::from_utf8_lossy(&t);
-        assert!(!s.contains("BATSER77") && s.contains("XXXXXXXX"), "{s}");
-        assert!(s.contains("Front") && s.contains("SMP") && s.contains("5B10W13930"));
+        // The decoder reads no type-22 string: all of them are blanked, length for length.
+        for gone in ["BATSER77", "Front", "SMP", "5B10W13930"] {
+            assert!(!s.contains(gone), "{gone}: {s}");
+        }
+        assert!(s.contains("XXXXX\0XXX\0XXXXXXXX\0XXXXXXXXXX\0\0"), "{s:?}");
         assert_eq!(&t[0x10..0x12], &[0, 0], "SBDS serial");
         assert_eq!(crate::structures(&t).unwrap().len(), 2);
         // Too short for the SBDS word: the bytes after the formatted area are not touched.
@@ -228,10 +263,19 @@ mod tests {
         let mut t = table(&[cpu, board, psu]);
         mask_serials(&mut t);
         let s = String::from_utf8_lossy(&t);
-        for gone in ["CPUSERIAL", "CPUASSET", "BOARDTAG", "PSUSERIAL"] {
+        // Processor manufacturer and part number and the PSU strings are not read: blanked.
+        for gone in [
+            "CPUSERIAL",
+            "CPUASSET",
+            "BOARDTAG",
+            "PSUSERIAL",
+            "Intel",
+            "PARTNO",
+            "PSU1",
+        ] {
             assert!(!s.contains(gone), "{gone}: {s}");
         }
-        for kept in ["CPU0", "Intel", "PARTNO", "LENOVO", "PSU1"] {
+        for kept in ["CPU0", "LENOVO"] {
             assert!(s.contains(kept), "{kept}: {s}");
         }
         assert_eq!(crate::structures(&t).unwrap().len(), 4);
@@ -264,5 +308,115 @@ mod tests {
         let mut bad = vec![17u8, 0x20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         mask_serials(&mut bad);
         mask_serials(&mut []);
+    }
+
+    /// The string set of the first structure in `t` (after its formatted area).
+    fn strings_of(t: &[u8]) -> String {
+        let len = usize::from(t[1]);
+        let end = len + t[len..].windows(2).position(|w| w == [0, 0]).unwrap();
+        String::from_utf8_lossy(&t[len..end]).into_owned()
+    }
+
+    #[test]
+    fn mask_blanks_oem_strings_type_11() {
+        let oem = StructBuilder::new(11, 0x0B, 0x05)
+            .u8(0x04, 2)
+            .string(0x10, "CN7512345678")
+            .string(0x10, "_SID_ABCDEF")
+            .build();
+        let mut t = table(&[oem]);
+        let before = t.len();
+        mask_serials(&mut t);
+        assert_eq!(t.len(), before);
+        assert_eq!(strings_of(&t), "XXXXXXXXXXXX\0XXXXXXXXXXX");
+        assert_eq!(crate::structures(&t).unwrap().len(), 2);
+    }
+
+    #[test]
+    fn mask_blanks_an_unreferenced_battery_string() {
+        let battery = StructBuilder::new(22, 0x16, 0x1A)
+            .string(0x04, "Front")
+            .string(0x05, "SMP")
+            // A string no field of the formatted area points at (index byte cleared).
+            .string(0x0F, "CN75OEMDATA")
+            .u8(0x0F, 0)
+            .build();
+        let mut t = table(&[battery]);
+        mask_serials(&mut t);
+        let s = String::from_utf8_lossy(&t);
+        assert!(!s.contains("CN75OEMDATA") && !s.contains("Front"), "{s}");
+        assert_eq!(strings_of(&t), "XXXXX\0XXX\0XXXXXXXXXXX");
+        assert_eq!(crate::structures(&t).unwrap().len(), 2);
+    }
+
+    #[test]
+    fn mask_blanks_oem_specific_types() {
+        let oem = StructBuilder::new(255, 0xF0, 0x08)
+            .string(0x04, "_SID-0123456789")
+            .string(0x05, "VENDORDATA")
+            .build();
+        let mut t = table(&[
+            oem,
+            StructBuilder::new(2, 0x02, 0x08)
+                .string(0x04, "LENOVO")
+                .build(),
+        ]);
+        let before = t.len();
+        mask_serials(&mut t);
+        assert_eq!(t.len(), before);
+        assert_eq!(strings_of(&t), "XXXXXXXXXXXXXXX\0XXXXXXXXXX");
+        let s = String::from_utf8_lossy(&t);
+        assert!(
+            s.contains("LENOVO"),
+            "the next structure is still walked: {s}"
+        );
+        assert_eq!(crate::structures(&t).unwrap().len(), 3);
+    }
+
+    #[test]
+    fn mask_blanks_an_extra_memory_device_string() {
+        let dimm = Dimm {
+            size_mib: 8192,
+            form_factor: 0x09,
+            mem_type: 0x1A,
+            speed: 3200,
+            configured: 3200,
+            locator: "DIMM A1",
+            bank: "BANK 0",
+            manufacturer: "Acme",
+            serial: "SN123456",
+            part: "PART",
+            ranks: 2,
+            voltage_mv: 1200,
+        };
+        // memory_device's string set, plus an asset tag (0x19) and a firmware version (0x2B).
+        let mut dev = memory_device(0x11, 0x10, &dimm);
+        let n_strings = 5u8;
+        assert_eq!(dev.pop(), Some(0)); // drop the set terminator, keep the last string's NUL
+        dev.extend_from_slice(b"ASSET42\0FWV-7788\0\0");
+        dev[0x19] = n_strings + 1;
+        dev[0x2B] = n_strings + 2;
+        let mut t = table(&[memory_array(0x10, 64 << 30, 2), dev]);
+        let before_len = t.len();
+        let before = crate::decode_table(&t).unwrap();
+        mask_serials(&mut t);
+        assert_eq!(t.len(), before_len);
+        let s = String::from_utf8_lossy(&t);
+        for gone in ["SN123456", "ASSET42", "FWV-7788"] {
+            assert!(!s.contains(gone), "{gone}: {s}");
+        }
+        for kept in ["DIMM A1", "BANK 0", "Acme", "PART"] {
+            assert!(s.contains(kept), "{kept}: {s}");
+        }
+        let after = crate::decode_table(&t).unwrap();
+        assert_eq!(after.memory.arrays.len(), before.memory.arrays.len());
+        assert_eq!(
+            after.memory.arrays[0].slots.len(),
+            before.memory.arrays[0].slots.len()
+        );
+        assert_eq!(
+            after.memory.arrays[0].slots[0].locator,
+            before.memory.arrays[0].slots[0].locator
+        );
     }
 }
