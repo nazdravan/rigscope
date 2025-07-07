@@ -445,3 +445,57 @@ fn estimated_frequency_is_marked() {
     });
     assert!(has(&h, "estimated: % processor performance"));
 }
+
+fn windows_env(w: rigscope_probe_win::MemWin) -> FakeEnv {
+    FakeEnv::with(Box::new(rigscope_probe_win::WinCollector::new(w)))
+}
+
+#[test]
+fn windows_memory_panel_shows_slots_without_no_dmi_card() {
+    let h = harness(windows_env(rigscope_probe_win::samples::laptop()), |_| {});
+    assert!(
+        !has(&h, "No DMI table"),
+        "a Windows firmware read is not 'no DMI'"
+    );
+    assert!(!has(&h, "firmware table lists no memory slots"));
+    assert!(has(&h, "DIMM 0"), "slot is shown");
+    assert!(has(&h, "M425R4GA3BB0-CWMOL"), "part number in slot table");
+}
+
+#[test]
+fn windows_firmware_without_slots_says_so() {
+    let h = harness(windows_env(rigscope_probe_win::samples::vm()), |_| {});
+    assert!(!has(&h, "No DMI table"));
+    assert!(has(&h, "The firmware table lists no memory slots"));
+}
+
+#[test]
+fn windows_smart_without_admin_has_banner_but_no_elevate_button() {
+    let mut w = rigscope_probe_win::samples::laptop();
+    w.elevated = false;
+    for v in w.nvme.values_mut() {
+        *v = Err(rigscope_win::WinError::AccessDenied);
+    }
+    let h = harness(windows_env(w), |a| {
+        a.run("view.section", json!({"id": "storage"})).unwrap();
+    });
+    assert!(
+        a_disk_needs_elevation(&h),
+        "fixture must exercise NeedsElevation"
+    );
+    assert!(has(&h, "Disk health (SMART) needs administrator rights"));
+    assert!(
+        !has(&h, "Read with elevated rights"),
+        "no elevate button on Windows"
+    );
+}
+
+fn a_disk_needs_elevation(h: &Harness<'_, App>) -> bool {
+    h.state()
+        .session
+        .snapshot
+        .storage
+        .disks
+        .iter()
+        .any(|d| d.health == rigscope_model::Field::NeedsElevation)
+}
