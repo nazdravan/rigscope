@@ -36,7 +36,14 @@ pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
 
     match snap.dmi_source {
         DmiSource::FullTable => {}
-        DmiSource::NoTable | DmiSource::Firmware => {
+        DmiSource::Firmware => {
+            if snap.memory.arrays.is_empty() {
+                card(ui, tr(lang, Key::SlotDetails), |ui| {
+                    ui.label(tr(lang, Key::FirmwareNoSlots));
+                });
+            }
+        }
+        DmiSource::NoTable => {
             card(ui, tr(lang, Key::SlotDetails), |ui| {
                 ui.label(tr(lang, Key::NoDmi));
             });
