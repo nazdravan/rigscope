@@ -3,7 +3,7 @@ use crate::i18n::{tr, Key};
 use crate::widgets::{card, command_button, kv_grid};
 use crate::Actions;
 use rigscope_engine::App;
-use rigscope_model::Field;
+use rigscope_model::{Field, Platform};
 use serde_json::json;
 
 pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
@@ -11,20 +11,25 @@ pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {
     let cx = crate::fmt::Ctx::of(app);
     let disks = &app.session.snapshot.storage.disks;
     if disks.iter().any(|d| d.health == Field::NeedsElevation) {
-        let key = match app.session.snapshot.platform {
-            rigscope_model::Platform::Windows => Key::SmartNeedsAdmin,
-            _ => Key::SmartNeedsRoot,
+        let windows = app.session.snapshot.platform == Platform::Windows;
+        let key = if windows {
+            Key::SmartNeedsAdmin
+        } else {
+            Key::SmartNeedsRoot
         };
         card(ui, tr(lang, Key::DiskHealth), |ui| {
             ui.label(tr(lang, key));
-            command_button(
-                ui,
-                app,
-                actions,
-                "snapshot.elevate",
-                tr(lang, Key::ReadElevated),
-                json!({}),
-            );
+            // Windows has no elevated helper: the user restarts rigscope as administrator.
+            if !windows {
+                command_button(
+                    ui,
+                    app,
+                    actions,
+                    "snapshot.elevate",
+                    tr(lang, Key::ReadElevated),
+                    json!({}),
+                );
+            }
         });
     }
     if disks.is_empty() {
