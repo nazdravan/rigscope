@@ -11,6 +11,7 @@ use windows::Win32::Networking::WinSock::AF_UNSPEC;
 
 /// A bound on the list walk. GAA_FLAG_INCLUDE_ALL_INTERFACES also lists every filter
 /// (WFP, QoS, ...) interface: a Windows 10 laptop with Hyper-V showed 66, so 64 truncated.
+/// Filter rows are flagged (`NetAdapterRaw::filter`) and dropped by the probe.
 const MAX: usize = 256;
 const MAX_BYTES: u32 = 1024 * 1024;
 const ERROR_BUFFER_OVERFLOW: u32 = 111;
@@ -83,8 +84,11 @@ pub fn net_adapters() -> Result<Vec<NetAdapterRaw>, WinError> {
         };
         // SAFETY: `row` is a live MIB_IF_ROW2 with the LUID set, as the API requires.
         let found = unsafe { GetIfEntry2(&mut row) }.is_ok();
-        // Bit 0 of InterfaceAndOperStatusFlags is HardwareInterface.
-        let hardware = found && row.InterfaceAndOperStatusFlags._bitfield & 1 != 0;
+        // InterfaceAndOperStatusFlags (netioapi.h, LSB first): bit 0 HardwareInterface,
+        // bit 1 FilterInterface. windows 0.62 exposes it as an opaque `_bitfield: u8`.
+        let bits = row.InterfaceAndOperStatusFlags._bitfield;
+        let hardware = found && bits & 0b01 != 0;
+        let filter = found && bits & 0b10 != 0;
         out.push(NetAdapterRaw {
             name,
             description,
@@ -95,6 +99,7 @@ pub fn net_adapters() -> Result<Vec<NetAdapterRaw>, WinError> {
             mac,
             mtu: (a.Mtu != u32::MAX).then_some(a.Mtu),
             hardware,
+            filter,
         });
         p = a.Next;
     }
