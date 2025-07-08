@@ -98,7 +98,12 @@ pub fn ata_smart_request(drive: u8, feature: u8) -> Vec<u8> {
     v
 }
 
+/// The 512 data bytes of a `SENDCMDOUTPARAMS`, or `None` when the buffer is short or
+/// `DRIVERSTATUS.bDriverError` (byte 4) reports a failed command.
 pub fn ata_data_from_response(out: &[u8]) -> Option<&[u8]> {
+    if *out.get(4)? != 0 {
+        return None;
+    }
     out.get(16..16 + 512)
 }
 
@@ -299,6 +304,14 @@ mod tests {
         out[16] = 0x10;
         assert_eq!(ata_data_from_response(&out).unwrap()[0], 0x10);
         assert_eq!(ata_data_from_response(&out[..100]), None);
+    }
+
+    #[test]
+    fn ata_response_with_driver_error_has_no_data() {
+        let mut out = vec![0u8; ATA_SMART_OUT_LEN];
+        out[16] = 0x10;
+        out[4] = 1; // DRIVERSTATUS.bDriverError
+        assert_eq!(ata_data_from_response(&out), None);
     }
 
     #[test]
