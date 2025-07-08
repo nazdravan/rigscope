@@ -111,6 +111,10 @@ pub struct NetAdapterRaw {
     pub mtu: Option<u32>,
     /// `MIB_IF_ROW2.InterfaceAndOperStatusFlags.HardwareInterface`.
     pub hardware: bool,
+    /// `MIB_IF_ROW2.InterfaceAndOperStatusFlags.FilterInterface`: an NDIS filter (WFP, QoS,
+    /// Native Wi-Fi, ...) stacked on another adapter. Absent in captures made before it existed.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub filter: bool,
 }
 
 /// One battery from `IOCTL_BATTERY_QUERY_*`. Capacities are mWh unless `relative`.
