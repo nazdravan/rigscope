@@ -10,6 +10,7 @@ pub enum Platform {
     #[default]
     Linux,
     Windows,
+    MacOs,
     Other,
 }
 
@@ -69,7 +70,8 @@ pub enum DmiSource {
     NoTable,
     /// The full SMBIOS table (root or elevated helper).
     FullTable,
-    /// The full SMBIOS table, read through the OS firmware API (Windows `GetSystemFirmwareTable`).
+    /// Memory modules and the board read through an OS API: the SMBIOS table from Windows
+    /// `GetSystemFirmwareTable`, or macOS `system_profiler`.
     Firmware,
 }
 
