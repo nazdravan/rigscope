@@ -10,6 +10,7 @@ pub fn rank(name: &str) -> Option<u32> {
         "rigscope-engine" => Some(50),
         "rigscope-win" => Some(20),
         "rigscope-probe-win" => Some(31),
+        "rigscope-probe-mac" => Some(31),
         "rigscope-ui" => Some(60),
         "rigscope" => Some(70),
         _ => None,
