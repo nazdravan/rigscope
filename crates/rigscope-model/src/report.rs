@@ -150,7 +150,7 @@ fn show<T>(p: Platform, f: &Field<T>, fmt: impl Fn(&T) -> String) -> String {
         Field::Unknown => "unknown".into(),
         Field::NeedsElevation => match p {
             Platform::Windows => "needs administrator".into(),
-            Platform::Linux | Platform::Other => "needs root".into(),
+            Platform::Linux | Platform::MacOs | Platform::Other => "needs root".into(),
         },
         Field::Unavailable(reason) => reason.clone(),
     }
