@@ -1,0 +1,72 @@
+{
+  "format": 1,
+  "profiler": {
+    "SPHardwareDataType": {
+      "SPHardwareDataType": [
+        {
+          "SMC_version_system": "2.40f1",
+          "_name": "hardware_overview",
+          "boot_rom_version": "529.140.2.0.0",
+          "cpu_type": "Quad-Core Intel Core i5",
+          "current_processor_speed": "3 GHz",
+          "l2_cache_core": "256 KB",
+          "l3_cache": "6 MB",
+          "machine_model": "iMac18,2",
+          "machine_name": "iMac",
+          "number_processors": 4,
+          "os_loader_version": "577.140.2~30",
+          "packages": 1,
+          "physical_memory": "16 GB",
+          "platform_UUID": "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+          "provisioning_UDID": "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+          "serial_number": "XXXXXXXXXXXX"
+        }
+      ]
+    },
+    "SPMemoryDataType": {
+      "SPMemoryDataType": [
+        {
+          "_items": [
+            {
+              "_name": "BANK 0/DIMM0",
+              "dimm_manufacturer": "0x80AD",
+              "dimm_part_number": "0x484D413431475336414652384E2D544620202020",
+              "dimm_serial_number": "0xXXXXXXXX",
+              "dimm_size": "8 GB",
+              "dimm_speed": "2133 MHz",
+              "dimm_status": "ok",
+              "dimm_type": "DDR4 SO-DIMM"
+            },
+            {
+              "_name": "BANK 1/DIMM0",
+              "dimm_manufacturer": "0x802C",
+              "dimm_part_number": "0x313641544631473634485A2D3247314132202020",
+              "dimm_serial_number": "0xXXXXXXXX",
+              "dimm_size": "8 GB",
+              "dimm_speed": "2133 MHz",
+              "dimm_status": "ok",
+              "dimm_type": "DDR4 SO-DIMM"
+            }
+          ],
+          "_name": "global_name",
+          "global_ecc_state": "ecc_disabled",
+          "is_memory_upgradeable": "Yes"
+        }
+      ]
+    }
+  },
+  "sysctl": {
+    "hw.cpufrequency": "3000000000",
+    "hw.logicalcpu": "4",
+    "hw.memsize": "17179869184",
+    "hw.model": "iMac18,2",
+    "hw.packages": "1",
+    "hw.physicalcpu": "4",
+    "kern.boottime": "{ sec = 1793730004, usec = 924388 } Tue Nov  3 20:20:04 2026",
+    "kern.hostname": "CAPTURED-MAC",
+    "kern.osproductversion": "13.7.8",
+    "kern.osrelease": "22.6.0",
+    "machdep.cpu.brand_string": "Intel(R) Core(TM) i5-7400 CPU @ 3.00GHz",
+    "machdep.cpu.vendor": "GenuineIntel"
+  }
+}
