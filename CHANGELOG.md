@@ -8,8 +8,12 @@ All notable changes to rigscope. The notes of each version are the text of its G
 - Windows 10 (1809 or later, x86_64): real hardware read — memory slots from the firmware SMBIOS table,
   processor topology and caches, disks with SMART (NVMe and SATA), graphics with exact VRAM and
   temperature, network, battery. A portable `rigscope-<version>-windows-x86_64.exe` in the release.
-- `rigscope --capture-fixture DIR` (Windows, elevated) saves a masked fixture; `--fixture DIR`
-  opens either kind of fixture on any OS. `cargo xtask windows-icon` builds the Windows icon.
+- macOS reads the machine instead of showing a sample: memory modules (size, type, speed, maker,
+  part number), the processor, the board model and the operating system, from `system_profiler`
+  and `sysctl`. Storage, Graphics, Network, Battery and Sensors are not read on macOS yet and say
+  Unknown. Apple silicon has no memory slots, so only the total is shown there.
+- `rigscope --capture-fixture DIR` (Windows elevated, or macOS) saves a masked fixture; `--fixture
+  DIR` opens any kind of fixture on any OS. `cargo xtask windows-icon` builds the Windows icon.
 
 ### Changed
 - "Needs root" is "Needs administrator" on Windows snapshots. Snapshots saved by 0.2.0 still open.
@@ -17,6 +21,9 @@ All notable changes to rigscope. The notes of each version are the text of its G
   forces LF.
 
 ### Known limits
+- macOS: only the memory, processor, board and system sections are read; the rest is Unknown.
+  The memory speed is the running speed only (macOS gives no rated speed, voltage or ranks), and
+  the JEDEC maker table is short: an unlisted code is shown as printed. Tested on one Intel iMac.
 - On Windows the CPU temperature and the fans are not shown: both need a kernel driver.
 - The Windows `.exe` is not code-signed (SmartScreen warns) and asks for administrator rights at
   each start.
