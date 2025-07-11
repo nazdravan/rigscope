@@ -1,4 +1,4 @@
-//! `rigscope --capture-fixture DIR` (Windows): saves this machine as a fixture, masked.
+//! `rigscope --capture-fixture DIR` (Windows, macOS): saves this machine as a fixture, masked.
 
 use anyhow::Result;
 use rigscope_probe_win::CAPTURE_LOG;
@@ -41,7 +41,7 @@ fn check_target(dir: &Path) -> Result<()> {
         Ok(m) if !m.is_dir() => anyhow::bail!("{shown}: not a directory"),
         Ok(_) => {}
     }
-    if rigscope_probe_win::MemWin::is_fixture(dir) {
+    if rigscope_probe_win::MemWin::is_fixture(dir) || rigscope_probe_mac::MemMac::is_fixture(dir) {
         return Ok(());
     }
     // A log alone is what a capture that failed before writing the fixture leaves behind.
@@ -65,9 +65,16 @@ fn write(dir: &Path) -> Result<()> {
         .map_err(|e| anyhow::anyhow!("{}: {e}", dir.display()))
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
+fn write(dir: &Path) -> Result<()> {
+    rigscope_probe_mac::capture()
+        .save(dir)
+        .map_err(|e| anyhow::anyhow!("{}: {e}", dir.display()))
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 fn write(_dir: &Path) -> Result<()> {
-    anyhow::bail!("--capture-fixture works only on Windows")
+    anyhow::bail!("--capture-fixture works only on Windows and macOS")
 }
 
 #[cfg(test)]
