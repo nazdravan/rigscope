@@ -50,8 +50,8 @@ cd rigscope
 cargo run --release -p rigscope
 ```
 
-Binarul ajunge în `target/release/rigscope`. Pe Linux și Windows citește calculatorul tău; în rest
-deschide o mașină de exemplu, în mod demonstrativ. Opțiuni utile:
+Binarul ajunge în `target/release/rigscope`. Pe Linux, Windows și macOS citește calculatorul tău; în
+rest deschide o mașină de exemplu, în mod demonstrativ. Opțiuni utile:
 
 ```sh
 rigscope --lang ro                 # interfața în română
@@ -208,8 +208,16 @@ din fixture nu conțin `:` (codat `%3A`), legăturile simbolice sunt în `links.
 
 ## macOS și altele
 
-Se construiește și rulează pentru dezvoltare, în mod demonstrativ, cu o mașină de exemplu (nu
-există `/sys` de citit).
+**macOS** citește calculatorul prin `system_profiler` și `sysctl`: modulele de memorie (mărime,
+tip, viteză, producător, număr de piesă), procesorul, modelul plăcii și sistemul de operare.
+Stocarea, Grafica, Rețeaua, Bateria și Senzorii nu se citesc încă pe macOS și arată Necunoscut.
+macOS dă doar viteza la care rulează modulul, nu viteza nominală, tensiunea sau rank-urile, iar
+Apple silicon nu are sloturi, deci se vede doar totalul. Testat pe un iMac Intel (macOS 13);
+varianta Apple silicon e acoperită doar de teste. `rigscope --capture-fixture DIR` salvează un
+fixture mascat al Mac-ului.
+
+Orice alt sistem se construiește și rulează pentru dezvoltare, în mod demonstrativ, cu o mașină de
+exemplu.
 
 ---
 
@@ -226,7 +234,7 @@ există `/sys` de citit).
 | `crates/rigscope-ui` | Panourile egui, textele în engleză/română, tema |
 | `apps/rigscope` | Binarul: fereastra, helperul privilegiat, canalul de control |
 | `xtask` | `cargo xtask ci`, `linux`, `screenshot`, `shots`, `icons`, `banner`, `gen-fixtures`, `windows-icon` |
-| `fixtures/` | Mașini de exemplu (desktop DDR4, laptop DDR5, VM, un laptop Windows real, mascat) folosite de teste și de modul demonstrativ |
+| `fixtures/` | Mașini de exemplu (desktop DDR4, laptop DDR5, VM, mașini Windows și macOS reale, mascate) folosite de teste și de modul demonstrativ |
 | `assets/theme.toml` | Culorile, fontul și motivul pentru aplicație, iconițe și banner |
 | `assets/icon.py`, `assets/banner.py` | Generează iconițele și acest banner (`cargo xtask icons`, `cargo xtask banner`) |
 
