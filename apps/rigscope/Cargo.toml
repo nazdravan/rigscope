@@ -22,6 +22,8 @@ rigscope-model.workspace = true
 rigscope-probe.workspace = true
 # On every OS: `--fixture` opens Windows fixtures everywhere; RealWin is cfg(windows) inside it.
 rigscope-probe-win.workspace = true
+# On every OS too: `--fixture` opens macOS fixtures everywhere; RealMac only runs on macOS.
+rigscope-probe-mac.workspace = true
 rigscope-ui.workspace = true
 serde_json.workspace = true
 arboard = { workspace = true, features = ["wayland-data-control"] }
