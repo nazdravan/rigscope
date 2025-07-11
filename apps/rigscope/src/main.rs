@@ -84,7 +84,16 @@ fn default_env(_demo: &mut Option<demo::DemoDir>) -> Result<(env::RealEnv, bool)
     ))
 }
 
-#[cfg(not(any(target_os = "linux", windows)))]
+#[cfg(target_os = "macos")]
+fn default_env(_demo: &mut Option<demo::DemoDir>) -> Result<(env::RealEnv, bool)> {
+    let collector = rigscope_probe_mac::MacCollector::new(rigscope_probe_mac::RealMac);
+    Ok((
+        env::RealEnv::new(Box::new(collector), env::Elevation::None),
+        false,
+    ))
+}
+
+#[cfg(not(any(target_os = "linux", windows, target_os = "macos")))]
 fn default_env(demo: &mut Option<demo::DemoDir>) -> Result<(env::RealEnv, bool)> {
     let dir = demo::DemoDir::unpack()
         .map_err(|e| anyhow::anyhow!("cannot unpack the demo machine: {e}"))?;
@@ -93,9 +102,17 @@ fn default_env(demo: &mut Option<demo::DemoDir>) -> Result<(env::RealEnv, bool)>
     Ok((env, true))
 }
 
-/// `--fixture DIR`: a Windows fixture (`winsource.json`) or a Linux-layout one.
+/// `--fixture DIR`: a macOS fixture (`macsource.json`), a Windows one (`winsource.json`) or a
+/// Linux-layout one.
 fn fixture_env(dir: &str) -> Result<env::RealEnv> {
     let p = std::path::Path::new(dir);
+    if rigscope_probe_mac::MemMac::is_fixture(p) {
+        let m = rigscope_probe_mac::MemMac::load(p).map_err(|e| anyhow::anyhow!("{e}"))?;
+        return Ok(env::RealEnv::new(
+            Box::new(rigscope_probe_mac::MacCollector::new(m)),
+            env::Elevation::None,
+        ));
+    }
     if rigscope_probe_win::MemWin::is_fixture(p) {
         let w = rigscope_probe_win::MemWin::load(p).map_err(|e| anyhow::anyhow!("{dir}: {e}"))?;
         return Ok(env::RealEnv::new(
