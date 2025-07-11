@@ -49,8 +49,8 @@ cd rigscope
 cargo run --release -p rigscope
 ```
 
-The binary lands in `target/release/rigscope`. On Linux and Windows it reads your machine;
-elsewhere it opens a sample machine in demo mode. Useful flags:
+The binary lands in `target/release/rigscope`. On Linux, Windows and macOS it reads your
+machine; elsewhere it opens a sample machine in demo mode. Useful flags:
 
 ```sh
 rigscope --lang ro                 # Romanian interface
@@ -199,8 +199,14 @@ contain `:` (encoded as `%3A`) and symlinks are listed in `links.txt`; `.gitattr
 
 ## macOS and others
 
-Builds and runs for development, in demo mode with a sample machine (there is no `/sys` to
-read).
+**macOS** reads the machine through `system_profiler` and `sysctl`: memory modules (size, type,
+speed, maker, part number), processor, board model and operating system. Storage, Graphics,
+Network, Battery and Sensors are not read there yet and show Unknown. macOS reports only the speed
+a module runs at, not its rated speed, voltage or ranks, and Apple silicon has no slots, so only
+the total is shown. Tested on one Intel iMac (macOS 13); the Apple silicon path is covered by
+tests only. `rigscope --capture-fixture DIR` saves a masked fixture of the Mac.
+
+Anything else builds and runs for development, in demo mode with a sample machine.
 
 ---
 
@@ -217,7 +223,7 @@ read).
 | `crates/rigscope-ui` | egui panels, English/Romanian strings, theme |
 | `apps/rigscope` | The binary: window, privileged helper, control channel |
 | `xtask` | `cargo xtask ci`, `linux`, `screenshot`, `shots`, `icons`, `banner`, `gen-fixtures`, `windows-icon` |
-| `fixtures/` | Sample machines (desktop DDR4, laptop DDR5, VM, a masked real Windows laptop) used by tests and demo mode |
+| `fixtures/` | Sample machines (desktop DDR4, laptop DDR5, VM, masked real Windows and macOS machines) used by tests and demo mode |
 | `assets/theme.toml` | Colours, font and motif for the app, icons and banner |
 | `assets/icon.py`, `assets/banner.py` | Generate the icons and this banner (`cargo xtask icons`, `cargo xtask banner`) |
 
