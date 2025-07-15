@@ -1,6 +1,6 @@
 // The main button offers the file that fits the visitor's system; without JavaScript it links to
 // the downloads section. Phones, tablets and Chromebooks get nothing: rigscope is a desktop app,
-// and Linux and Windows read real hardware (macOS shows a demo machine).
+// and Linux, Windows and macOS read real hardware.
 
 export function pickDownload(ua, platform, maxTouchPoints = 0) {
   if (/Android|iPhone|iPad|iPod|CrOS/i.test(ua)) return null;
