@@ -36,7 +36,7 @@ and tests everything and keeps the files as workflow artifacts; it publishes not
 | `rigscope-<v>-linux-x86_64.deb` | Ubuntu 22.04 (glibc 2.35) | Installs `/usr/bin/rigscope`, the desktop file and the icon. |
 | `rigscope-<v>-linux-x86_64.AppImage` | Ubuntu 22.04 | One file, no install; the root-only data (SMBIOS, SMART) works from it too. |
 | `rigscope-<v>-linux-x86_64.tar.gz` | Ubuntu 22.04 | Binary and licences. |
-| `rigscope-<v>-macos-universal.dmg` | macOS | arm64 + x86_64, ad-hoc signed, not notarized (right click -> Open). Shows the built-in demo machine. |
+| `rigscope-<v>-macos-universal.dmg` | macOS | arm64 + x86_64, ad-hoc signed, not notarized (right click -> Open). Reads memory, processor, board and system through `system_profiler`; the other sections are not read yet. |
 | `rigscope-<v>-windows-x86_64.exe` | `Windows x86_64` job, `windows-2025` runner | Portable, nothing to install. x86_64 MSVC build with a static CRT (`RUSTFLAGS=-C target-feature=+crt-static`); `build.rs` embeds the `requireAdministrator` manifest, icon and version (needs `rc.exe` from the runner's Windows SDK). Not code-signed, so SmartScreen warns; users verify it with `SHA256SUMS.txt`. |
 | `SHA256SUMS.txt` | | Checksums of all of the above. |
 
