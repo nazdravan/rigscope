@@ -1,6 +1,50 @@
 {
   "format": 1,
   "profiler": {
+    "SPDisplaysDataType": {
+      "SPDisplaysDataType": [
+        {
+          "_name": "kHW_AMDRadeonPro555Item",
+          "spdisplays_device-id": "0x67ef",
+          "spdisplays_efi-version": "01.00.921",
+          "spdisplays_mtlgpufamilysupport": "spdisplays_metal2",
+          "spdisplays_ndrvs": [
+            {
+              "_name": "display"
+            }
+          ],
+          "spdisplays_pcie_width": "x8",
+          "spdisplays_revision-id": "0x00c7",
+          "spdisplays_rom-revision": "113-C980AA-921",
+          "spdisplays_vbios-version": "113-C9810A1P-017",
+          "spdisplays_vendor": "sppci_vendor_amd",
+          "spdisplays_vram": "2 GB",
+          "sppci_bus": "spdisplays_pcie_device",
+          "sppci_device_type": "spdisplays_gpu",
+          "sppci_model": "Radeon Pro 555"
+        }
+      ]
+    },
+    "SPEthernetDataType": {
+      "SPEthernetDataType": [
+        {
+          "_name": "Broadcom 57766-A1",
+          "spethernet_BSD_Device_Name": "en0",
+          "spethernet_avb_support": "Yes",
+          "spethernet_bus": "spethernet_pci_device",
+          "spethernet_device-id": "0x1686",
+          "spethernet_driver": "com.apple.iokit.AppleBCM5701Ethernet",
+          "spethernet_mac_address": "XX:XX:XX:XX:XX:XX",
+          "spethernet_max_link_speed": "ethernet_speed_1000",
+          "spethernet_pcie_link-speed": "2.5 GT/s",
+          "spethernet_pcie_link-width": "x1",
+          "spethernet_revision-id": "0x0001",
+          "spethernet_subsystem-id": "0x1686",
+          "spethernet_subsystem-vendor-id": "0x14e4",
+          "spethernet_vendor-id": "0x14e4"
+        }
+      ]
+    },
     "SPHardwareDataType": {
       "SPHardwareDataType": [
         {
@@ -53,6 +97,71 @@
           "is_memory_upgradeable": "Yes"
         }
       ]
+    },
+    "SPNVMeDataType": {
+      "SPNVMeDataType": []
+    },
+    "SPNetworkDataType": {
+      "SPNetworkDataType": [
+        {
+          "Ethernet": {
+            "MAC Address": "XX:XX:XX:XX:XX:XX"
+          },
+          "_name": "Ethernet",
+          "hardware": "Ethernet",
+          "interface": "en0"
+        },
+        {
+          "_name": "Ethernet",
+          "hardware": "Ethernet",
+          "interface": "en4"
+        },
+        {
+          "Ethernet": {
+            "MAC Address": "XX:XX:XX:XX:XX:XX"
+          },
+          "_name": "Wi-Fi",
+          "hardware": "AirPort",
+          "interface": "en1"
+        },
+        {
+          "_name": "Ethernet",
+          "hardware": "Ethernet",
+          "interface": "bridge0"
+        }
+      ]
+    },
+    "SPSerialATADataType": {
+      "SPSerialATADataType": [
+        {
+          "_items": [
+            {
+              "_name": "TOSHIBA THNSNJ1T02CSX",
+              "bsd_name": "disk0",
+              "detachable_drive": "no",
+              "device_model": "TOSHIBA THNSNJ1T02CSX                   ",
+              "device_revision": "JXPS4101",
+              "device_serial": "XXXXXXXXXXXX",
+              "partition_map_type": "guid_partition_map_type",
+              "removable_media": "no",
+              "size": "1,02 TB",
+              "size_in_bytes": 1024209543168,
+              "smart_status": "Verified",
+              "spsata_medium_type": "Solid State",
+              "spsata_ncq": "Yes",
+              "spsata_ncq_depth": "32",
+              "spsata_trim_support": "No"
+            }
+          ],
+          "_name": "Intel 10 Series Chipset",
+          "spsata_negotiatedlinkspeed": "6 Gigabit",
+          "spsata_physical_interconnect": "SATA",
+          "spsata_portdescription": "AHCI Version 1.31 Supported",
+          "spsata_portspeed": "6 Gigabit",
+          "spsata_product": "10 Series Chipset",
+          "spsata_vendor": "Intel"
+        }
+      ]
     }
   },
   "sysctl": {
@@ -62,7 +171,7 @@
     "hw.model": "iMac18,2",
     "hw.packages": "1",
     "hw.physicalcpu": "4",
-    "kern.boottime": "{ sec = 1793730004, usec = 924388 } Tue Nov  3 20:20:04 2026",
+    "kern.boottime": "{ sec = 1793730004, usec = 692755 } Tue Nov  3 20:20:04 2026",
     "kern.hostname": "CAPTURED-MAC",
     "kern.osproductversion": "13.7.8",
     "kern.osrelease": "22.6.0",
