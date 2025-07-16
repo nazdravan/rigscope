@@ -1,8 +1,8 @@
-use crate::{memory, system, MacSource};
+use crate::{gpu, memory, net, storage, system, MacSource};
 use rigscope_model::{Collector, CpuInfo, DmiDump, DmiSource, Platform, SensorInfo, Snapshot};
 
 /// The macOS collector. Memory, board and processor come from `system_profiler` and `sysctl`;
-/// the other sections are not read on macOS yet and stay unknown.
+/// storage, graphics and network too; Battery and Sensors are not read on macOS yet.
 pub struct MacCollector<S: MacSource> {
     src: S,
 }
@@ -27,6 +27,9 @@ impl<S: MacSource> Collector for MacCollector<S> {
             board: system::read_board(&self.src),
             memory,
             cpu: system::read_cpu(&self.src),
+            storage: storage::read_storage(&self.src),
+            gpu: gpu::read_gpus(&self.src),
+            net: net::read_net(&self.src),
             dmi_source: if has_profile {
                 DmiSource::Firmware
             } else {
