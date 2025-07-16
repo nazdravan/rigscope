@@ -14,7 +14,15 @@ const SYSCTL_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_OUTPUT: u64 = 8 * 1024 * 1024;
 
 /// The profiler data types rigscope reads (and captures for a fixture).
-pub const DATA_TYPES: &[&str] = &["SPMemoryDataType", "SPHardwareDataType"];
+pub const DATA_TYPES: &[&str] = &[
+    "SPMemoryDataType",
+    "SPHardwareDataType",
+    "SPSerialATADataType",
+    "SPNVMeDataType",
+    "SPDisplaysDataType",
+    "SPNetworkDataType",
+    "SPEthernetDataType",
+];
 
 /// The sysctl names rigscope reads (and captures for a fixture).
 pub const SYSCTLS: &[&str] = &[
