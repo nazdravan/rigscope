@@ -9,6 +9,9 @@ const SECRET_KEYS: &[&str] = &[
     "dimm_serial_number",
     "platform_UUID",
     "provisioning_UDID",
+    "device_serial",
+    "MAC Address",
+    "spethernet_mac_address",
 ];
 
 /// Overwrites every letter and digit of a secret with `X`, keeping the length and the
@@ -28,6 +31,14 @@ pub fn mask_text(s: &str) -> String {
 fn mask_value(v: &mut Value) {
     match v {
         Value::Object(map) => {
+            // Volume names, mount points and UUIDs say what the owner keeps on the disk.
+            map.remove("volumes");
+            // A display's EDID, serial number and product ids: keep only that one is attached.
+            if let Some(Value::Array(displays)) = map.get_mut("spdisplays_ndrvs") {
+                for d in displays.iter_mut() {
+                    *d = serde_json::json!({ "_name": "display" });
+                }
+            }
             for (k, val) in map.iter_mut() {
                 if SECRET_KEYS.contains(&k.as_str()) {
                     if let Value::String(s) = val {
@@ -46,9 +57,46 @@ fn mask_value(v: &mut Value) {
 /// The host name a captured fixture carries.
 pub const CAPTURED_NAME: &str = "CAPTURED-MAC";
 
+/// `SPNetworkDataType` lists every service with its addresses, DNS servers and the names of USB
+/// modems. Keep only the Ethernet and Wi-Fi adapters, with their interface and MAC.
+fn slim_network(v: &mut Value) {
+    let Some(Value::Array(items)) = v.get_mut("SPNetworkDataType") else {
+        return;
+    };
+    let slim: Vec<Value> = items
+        .iter()
+        .filter_map(|n| {
+            let hardware = n.get("hardware")?.as_str()?;
+            let label = match hardware {
+                "Ethernet" => "Ethernet",
+                "AirPort" => "Wi-Fi",
+                _ => return None,
+            };
+            let mut out = serde_json::json!({
+                "_name": label,
+                "hardware": hardware,
+                "interface": n.get("interface")?.clone(),
+            });
+            if let Some(mac) = n.get("Ethernet").and_then(|e| e.get("MAC Address")) {
+                if let Some(obj) = out.as_object_mut() {
+                    obj.insert(
+                        "Ethernet".into(),
+                        serde_json::json!({ "MAC Address": mac.clone() }),
+                    );
+                }
+            }
+            Some(out)
+        })
+        .collect();
+    *items = slim;
+}
+
 /// What `--capture-fixture` writes: `m` with serial numbers and UUIDs masked and the host name
 /// replaced.
 pub fn mask_fixture(mut m: MemMac) -> MemMac {
+    if let Some(n) = m.profiler.get_mut("SPNetworkDataType") {
+        slim_network(n);
+    }
     m.profiler.values_mut().for_each(mask_value);
     if let Some(h) = m.sysctl.get_mut("kern.hostname") {
         *h = CAPTURED_NAME.to_string();
@@ -79,6 +127,50 @@ mod tests {
         assert!(text.contains("0xXXXXXXXX"));
         assert!(text.contains("iMac18,2"));
         assert!(text.contains("8 GB"));
+    }
+
+    #[test]
+    fn disk_volumes_serials_and_display_ids_are_removed() {
+        let m = MemMac::new()
+            .with_profiler(
+                "SPSerialATADataType",
+                r#"{"SPSerialATADataType":[{"_items":[{"device_serial":"157S102STGUW","bsd_name":"disk0","volumes":[{"_name":"Alice Photos","volume_uuid":"U"}]}]}]}"#,
+            )
+            .with_profiler(
+                "SPDisplaysDataType",
+                r#"{"SPDisplaysDataType":[{"sppci_model":"Radeon","spdisplays_ndrvs":[{"_spdisplays_display-serial-number":"1be22532","_IODisplayEDID":"{length = 384}"}]}]}"#,
+            );
+        let text = serde_json::to_string(&mask_fixture(m)).unwrap();
+        for secret in [
+            "157S102STGUW",
+            "Alice Photos",
+            "1be22532",
+            "EDID",
+            "volume_uuid",
+        ] {
+            assert!(!text.contains(secret), "{secret}: {text}");
+        }
+        assert!(text.contains("disk0"));
+        assert!(text.contains(r#""spdisplays_ndrvs":[{"_name":"display"}]"#));
+    }
+
+    #[test]
+    fn the_network_capture_keeps_only_adapters_and_macs() {
+        let m = MemMac::new().with_profiler(
+            "SPNetworkDataType",
+            r#"{"SPNetworkDataType":[
+              {"_name":"Arduino Leonardo","hardware":"Modem","interface":"usbmodem1"},
+              {"_name":"My Home Wi-Fi Adapter","hardware":"AirPort","interface":"en1",
+               "ip_address":["192.168.1.23"],"dhcp":{"dhcp_routers":"192.168.1.1"},
+               "Ethernet":{"MAC Address":"24:f6:77:15:a6:be","MediaSubType":"autoselect"}}]}"#,
+        );
+        let text = serde_json::to_string(&mask_fixture(m)).unwrap();
+        for secret in ["Arduino", "192.168", "My Home", "24:f6:77", "dhcp"] {
+            assert!(!text.contains(secret), "{secret}: {text}");
+        }
+        assert!(text.contains("XX:XX:XX:XX:XX:XX"));
+        assert!(text.contains(r#""interface":"en1""#));
+        assert!(text.contains(r#""_name":"Wi-Fi""#));
     }
 
     #[test]
