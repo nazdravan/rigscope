@@ -209,10 +209,12 @@ din fixture nu conțin `:` (codat `%3A`), legăturile simbolice sunt în `links.
 ## macOS și altele
 
 **macOS** citește calculatorul prin `system_profiler` și `sysctl`: modulele de memorie (mărime,
-tip, viteză, producător, număr de piesă), procesorul, modelul plăcii și sistemul de operare.
-Stocarea, Grafica, Rețeaua, Bateria și Senzorii nu se citesc încă pe macOS și arată Necunoscut.
-macOS dă doar viteza la care rulează modulul, nu viteza nominală, tensiunea sau rank-urile, iar
-Apple silicon nu are sloturi, deci se vede doar totalul. Testat pe un iMac Intel (macOS 13);
+tip, viteză, producător, număr de piesă), procesorul, modelul plăcii, sistemul de operare,
+discurile SATA și NVMe cu verdictul SMART al unității, plăcile video și adaptoarele Ethernet și
+Wi-Fi. Bateria și Senzorii nu se citesc încă pe macOS, iar discurile USB nu sunt listate. macOS
+dă doar viteza la care rulează modulul (nu viteza nominală, tensiunea sau rank-urile), niciun
+atribut SMART și nicio stare sau viteză a legăturii de rețea, iar Apple silicon nu are sloturi,
+deci se vede doar totalul. Testat pe un iMac Intel (macOS 13);
 varianta Apple silicon e acoperită doar de teste. `rigscope --capture-fixture DIR` salvează un
 fixture mascat al Mac-ului.
 
