@@ -43,7 +43,7 @@
  "dl_appimage": "Any Linux x86_64. One file, no install.",
  "dl_tar": "Any Linux x86_64. Binary and licences.",
  "dl_windows": "Windows (x86_64, portable .exe). Windows 10 1809 or later; asks for administrator rights at each start; not code-signed (SmartScreen: More info, Run anyway).",
- "dl_mac": "macOS 11+, Apple silicon and Intel. Reads memory, processor, board and system; other sections are not read yet. Not notarized (right click, Open).",
+ "dl_mac": "macOS 11+, Apple silicon and Intel. Reads memory, processor, disks, graphics and network; battery and sensors are not read yet. Not notarized (right click, Open).",
  "dl_checksums": "SHA-256 checksums of all files.",
  "dl_source": "Source code:",
  "footer_license": "Licensed under",
