@@ -200,10 +200,11 @@ contain `:` (encoded as `%3A`) and symlinks are listed in `links.txt`; `.gitattr
 ## macOS and others
 
 **macOS** reads the machine through `system_profiler` and `sysctl`: memory modules (size, type,
-speed, maker, part number), processor, board model and operating system. Storage, Graphics,
-Network, Battery and Sensors are not read there yet and show Unknown. macOS reports only the speed
-a module runs at, not its rated speed, voltage or ranks, and Apple silicon has no slots, so only
-the total is shown. Tested on one Intel iMac (macOS 13); the Apple silicon path is covered by
+speed, maker, part number), processor, board model and operating system, SATA and NVMe disks with
+the drive's own SMART verdict, graphics cards, and Ethernet and Wi-Fi adapters. Battery and
+Sensors are not read there yet, and USB disks are not listed. macOS reports only the speed a
+module runs at (not its rated speed, voltage or ranks), no SMART attributes and no link state or
+speed for network adapters, and Apple silicon has no slots, so only the total is shown. Tested on one Intel iMac (macOS 13); the Apple silicon path is covered by
 tests only. `rigscope --capture-fixture DIR` saves a masked fixture of the Mac.
 
 Anything else builds and runs for development, in demo mode with a sample machine.
