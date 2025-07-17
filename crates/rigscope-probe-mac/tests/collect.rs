@@ -1,6 +1,8 @@
 #![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)]
 
-use rigscope_model::{Collector, DmiSource, Field, MemType, Platform, SlotState};
+use rigscope_model::{
+    Collector, DiskKind, DmiSource, Field, Interface, MemType, NetKind, Platform, SlotState,
+};
 use rigscope_probe_mac::{MacCollector, MemMac};
 use std::path::PathBuf;
 
@@ -121,4 +123,59 @@ fn a_bad_fixture_is_an_error_not_a_panic() {
 fn a_boot_time_in_the_future_gives_no_uptime() {
     let s = MacCollector::new(fixture("mac-imac")).collect(None, 1);
     assert_eq!(s.system.uptime_s, Field::Unknown);
+}
+
+#[test]
+fn imac_storage_graphics_and_network() {
+    let s = MacCollector::new(fixture("mac-imac")).collect(None, 1);
+
+    assert_eq!(s.storage.disks.len(), 1);
+    let d = &s.storage.disks[0];
+    assert_eq!(d.name, "disk0");
+    assert_eq!(d.model, Field::Known("TOSHIBA THNSNJ1T02CSX".into()));
+    assert_eq!(d.kind, Field::Known(DiskKind::Ssd));
+    assert_eq!(d.interface, Field::Known(Interface::Sata));
+    assert_eq!(d.size_bytes, Field::Known(1_024_209_543_168));
+    assert_eq!(
+        d.serial,
+        Field::Known("XXXXXXXXXXXX".into()),
+        "masked in the fixture"
+    );
+    assert_eq!(d.health.known().and_then(|h| h.passed), Some(true));
+
+    assert_eq!(s.gpu.gpus.len(), 1);
+    let g = &s.gpu.gpus[0];
+    assert_eq!(g.vendor_name, Field::Known("AMD".into()));
+    assert_eq!(g.device_name, Field::Known("Radeon Pro 555".into()));
+    assert_eq!(g.vendor_id, Field::Known(0x1002));
+    assert_eq!(g.device_id, Field::Known(0x67ef));
+    assert_eq!(g.vram_bytes, Field::Known(2 << 30));
+    assert_eq!(g.pcie_link, Field::Known("PCIe x8".into()));
+    assert!(g.boot_vga);
+
+    let names: Vec<&str> = s.net.interfaces.iter().map(|n| n.name.as_str()).collect();
+    assert_eq!(
+        names,
+        ["en0", "en1"],
+        "bridge0 and the USB modem en4 are hidden"
+    );
+    assert_eq!(s.net.hidden_virtual, 2);
+    let eth = &s.net.interfaces[0];
+    assert_eq!(eth.kind, Field::Known(NetKind::Ethernet));
+    assert_eq!(eth.vendor_name, Field::Known("Broadcom".into()));
+    assert_eq!(eth.device_name, Field::Known("57766-A1".into()));
+    assert_eq!(s.net.interfaces[1].kind, Field::Known(NetKind::WiFi));
+
+    assert!(
+        s.power.batteries.is_empty(),
+        "battery is not read on macOS yet"
+    );
+}
+
+#[test]
+fn an_empty_source_has_no_disks_cards_or_adapters() {
+    let s = MacCollector::new(MemMac::new()).collect(None, 1);
+    assert!(s.storage.disks.is_empty());
+    assert!(s.gpu.gpus.is_empty());
+    assert!(s.net.interfaces.is_empty());
 }
