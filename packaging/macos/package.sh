@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Universal (arm64 + x86_64) macOS disk image: dist/release/rigscope-<version>-macos-universal.dmg
-# On macOS the app reads memory, processor, board and system (system_profiler, sysctl); the other
-# sections are not read yet. The bundle is ad-hoc signed (not notarized): open it with right click -> Open.
+# On macOS the app reads memory, processor, board, system, disks, graphics and network
+# (system_profiler, sysctl); battery and sensors are not read yet. The bundle is ad-hoc signed (not notarized): open it with right click -> Open.
 set -euo pipefail
 . "$(dirname "$0")/../env.sh"
 cd "$ROOT"
