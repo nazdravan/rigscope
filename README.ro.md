@@ -38,8 +38,9 @@ pentru calculatorul ăsta?*
 
 ## Pornire rapidă
 
-Încă nu există release: pachetele (AppImage, `.deb`, `.tar.gz` pentru Linux, un `.exe` portabil
-pentru Windows) vin odată cu prima versiune. Până atunci, aplicația se construiește din surse.
+Descarcă un pachet de pe pagina [releases](../../releases): AppImage, `.deb` sau `.tar.gz` pentru
+Linux, un `.exe` portabil pentru Windows, o imagine de disc pentru macOS, cu `SHA256SUMS.txt`. Sau
+construiește aplicația din surse.
 
 ### Din surse
 
@@ -176,7 +177,7 @@ opțional: polkit (`pkexec`), `smartmontools`, `hwdata`. Testat pe Debian 12 (Do
 
 ## Windows
 
-După ce există un release, descarcă `rigscope-<versiune>-windows-x86_64.exe` din
+Descarcă `rigscope-<versiune>-windows-x86_64.exe` din
 [releases](../../releases). E portabil:
 nu se instalează nimic, iar build-ul este x86_64 MSVC, cu CRT static. Minimul este Windows 10
 1809; pe versiuni mai vechi legătura PCIe și temperatura plăcii video apar ca indisponibile.
@@ -245,7 +246,7 @@ salvează în `docs/assets/`.
 
 ## Release
 
-Încă nu există release. Primul release va publica din CI pachete Linux, o imagine de disc macOS și un `.exe` portabil pentru Windows.
+Release-urile sunt construite și publicate de CI: pachete Linux, o imagine de disc macOS și un `.exe` portabil pentru Windows, cu `SHA256SUMS.txt`. Vezi `docs/releasing.md`.
 
 ## Teste
 
