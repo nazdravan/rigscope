@@ -2,7 +2,7 @@
 
 All notable changes to rigscope. The notes of each version are the text of its GitHub release.
 
-## Unreleased
+## [0.2.1] — 2026-11-05
 
 ### Added
 - Windows 10 (1809 or later, x86_64): real hardware read — memory slots from the firmware SMBIOS table,
@@ -20,6 +20,11 @@ All notable changes to rigscope. The notes of each version are the text of its G
 - "Needs root" is "Needs administrator" on Windows snapshots. Snapshots saved by 0.2.0 still open.
 - Fixtures no longer contain `:` or symlinks (`%3A` encoding plus `links.txt`); `.gitattributes`
   forces LF.
+
+### Fixed
+- Windows: a disk that does not implement the SMART IOCTL (a virtual or RAID disk answers
+  `ERROR_INVALID_FUNCTION`) now reads as not available instead of an error.
+- The macOS disk image and the Windows `.exe` are in the release (0.2.0 had neither).
 
 ### Known limits
 - macOS: Battery and Sensors are not read, and USB disks are not listed. The memory speed is the
