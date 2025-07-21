@@ -37,8 +37,9 @@ the question that usually starts the search: *which RAM can I buy for this machi
 
 ## Quick start
 
-There is no release yet: packages (AppImage, `.deb`, `.tar.gz` for Linux, a portable `.exe` for
-Windows) come with the first version. Until then, build it from source.
+Download a package from the [releases](../../releases) page: AppImage, `.deb` or `.tar.gz` for
+Linux, a portable `.exe` for Windows, a disk image for macOS, with `SHA256SUMS.txt`. Or build it
+from source.
 
 ### From source
 
@@ -172,7 +173,7 @@ polkit (`pkexec`), `smartmontools`, `hwdata`. Tested in Debian 12 (Docker, Xvfb)
 
 ## Windows
 
-Once a release exists, download `rigscope-<version>-windows-x86_64.exe` from the
+Download `rigscope-<version>-windows-x86_64.exe` from the
 [releases](../../releases). It is portable: nothing is installed, and it is an x86_64 MSVC build with a static CRT. The minimum is
 Windows 10 1809; on older builds the PCIe link and the GPU temperature show as unavailable.
 
@@ -233,7 +234,7 @@ them to `docs/assets/`.
 
 ## Release
 
-Not released yet. The first release will publish Linux packages, a macOS disk image and a portable Windows `.exe` from CI.
+Releases are built and published by CI: Linux packages, a macOS disk image and a portable Windows `.exe`, with `SHA256SUMS.txt`. See `docs/releasing.md`.
 
 ## Tests
 
