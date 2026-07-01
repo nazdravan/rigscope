@@ -56,12 +56,22 @@ pub fn draw(ui: &mut egui::Ui, app: &mut App) {
     draw_with(ui, app, &params_for);
 }
 
+/// [`draw`], returning whether Help → "Check for updates" was clicked.
+pub fn draw_updates(ui: &mut egui::Ui, app: &mut App) -> bool {
+    draw_picked(ui, app, &params_for)
+}
+
 /// Asks for a command's parameters (file dialogs); `None` = cancelled.
 pub type ParamsPicker<'a> = &'a dyn Fn(&str) -> Option<serde_json::Value>;
 
 /// [`draw`] with an injectable parameter picker (tests replace the file dialogs).
 pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
+    draw_picked(ui, app, pick);
+}
+
+fn draw_picked(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) -> bool {
     let mut actions = Actions::default();
+    let mut check_updates = false;
     let lang = app.session.language;
 
     // The privileged helper runs in the background; collect its result without blocking.
@@ -80,7 +90,9 @@ pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
         }
     }
 
-    egui::Panel::top("menu").show(ui, |ui| menu_bar(ui, app, &mut actions, lang, pick));
+    egui::Panel::top("menu").show(ui, |ui| {
+        menu_bar(ui, app, &mut actions, lang, pick, &mut check_updates)
+    });
     egui::Panel::bottom("status").show(ui, |ui| status_bar(ui, app, &mut actions, lang));
     // The status line is overwritten by the next action; this banner stays while the data is
     // not this machine's.
@@ -133,6 +145,7 @@ pub fn draw_with(ui: &mut egui::Ui, app: &mut App, pick: ParamsPicker<'_>) {
         // Errors are already recorded in `session.status` by the engine.
         let _ = app.run(&id, params);
     }
+    check_updates
 }
 
 fn menu_bar(
@@ -141,6 +154,7 @@ fn menu_bar(
     actions: &mut Actions,
     lang: Language,
     pick: ParamsPicker<'_>,
+    check_updates: &mut bool,
 ) {
     egui::MenuBar::new().ui(ui, |ui| {
         for (menu, key) in [
@@ -177,8 +191,39 @@ fn menu_bar(
                 }
             });
         }
+        // Not an engine command: the updater lives in `RigscopeUi`, outside the document.
+        ui.menu_button(tr(lang, Key::Help), |ui| {
+            if ui
+                .button(app_update::texts(update_lang(lang)).check_button)
+                .clicked()
+            {
+                *check_updates = true;
+                ui.close();
+            }
+        });
     });
 }
+
+/// The updater's language for the UI language.
+fn update_lang(lang: Language) -> app_update::Lang {
+    match lang {
+        Language::En => app_update::Lang::En,
+        Language::Ro => app_update::Lang::Ro,
+    }
+}
+
+/// What the updater needs to find, download and install a new release from GitHub.
+pub const RIGSCOPE: app_update::AppInfo = app_update::AppInfo {
+    name: "rigscope",
+    display_name: "rigscope",
+    repo: "nazdravan/rigscope",
+    version: env!("CARGO_PKG_VERSION"),
+    windows_exe: "rigscope.exe",
+    // There is no .msi: on Windows only the portable zip updates in place.
+    msi_registry_key: r"Software\nazdravan\rigscope",
+    deb_package: "rigscope",
+    mac_bundle: "rigscope.app",
+};
 
 fn status_bar(ui: &mut egui::Ui, app: &App, actions: &mut Actions, lang: Language) {
     ui.horizontal(|ui| {
@@ -205,6 +250,7 @@ pub struct RigscopeUi {
     /// Shown as a banner when the data is a sample, not this machine.
     pub demo: bool,
     last_tick: Option<std::time::Instant>,
+    updater: app_update::Updater,
 }
 
 impl RigscopeUi {
@@ -218,6 +264,7 @@ impl RigscopeUi {
             app,
             demo,
             last_tick: None,
+            updater: app_update::Updater::new(RIGSCOPE),
         }
     }
 }
@@ -255,6 +302,19 @@ impl eframe::App for RigscopeUi {
                 ui.label(egui::RichText::new(tr(lang, Key::DemoMode)).strong());
             });
         }
-        draw(ui, &mut self.app);
+        let ctx = ui.ctx().clone();
+        if draw_updates(ui, &mut self.app) {
+            self.updater.check(&ctx);
+        }
+        let lang = update_lang(self.app.session.language);
+        if let Some(app_update::UpdaterEvent::RestartRequested) = self.updater.show(&ctx, lang) {
+            match self.updater.restart() {
+                Ok(()) => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
+                Err(e) => {
+                    let text = app_update::texts(lang);
+                    self.app.session.status = Some(text.error(&e).unwrap_or_else(|| e.to_string()));
+                }
+            }
+        }
     }
 }

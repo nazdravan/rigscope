@@ -9,6 +9,12 @@ use rigscope_engine::App;
 use serde_json::json;
 
 fn main() -> Result<()> {
+    // `--check-update` prints what a check finds, without a window.
+    if let Some(code) = app_update::run_cli(&rigscope_ui::RIGSCOPE) {
+        std::process::exit(code);
+    }
+    // Leftovers of a previous update.
+    app_update::cleanup(&rigscope_ui::RIGSCOPE);
     let args = args::Args::parse_os(std::env::args_os().skip(1))?;
     if let Some(dir) = &args.capture_fixture {
         return capture::run(dir);

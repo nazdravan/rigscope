@@ -2,6 +2,14 @@
 
 All notable changes to rigscope. The notes of each version are the text of its GitHub release.
 
+## [Unreleased]
+
+### Added
+- **Help → Check for updates** finds a newer release and installs it (`.deb`, AppImage, `.dmg`,
+  the portable Windows `.zip`), then restarts rigscope; for the bare `.exe` and the `.tar.gz` it
+  opens the release page. Nothing is checked on its own, only when the button is pressed.
+  `rigscope --check-update` prints what a check finds.
+
 ## [0.2.2] — 2026-11-06
 
 ### Added

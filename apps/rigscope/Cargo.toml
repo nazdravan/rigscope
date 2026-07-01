@@ -25,6 +25,7 @@ rigscope-probe-win.workspace = true
 # On every OS too: `--fixture` opens macOS fixtures everywhere; RealMac only runs on macOS.
 rigscope-probe-mac.workspace = true
 rigscope-ui.workspace = true
+app-update = { git = "https://github.com/nazdravan/app-update", rev = "2bd753dd0e53524a5aabc2b244b06569b9050386" }
 serde_json.workspace = true
 arboard = { workspace = true, features = ["wayland-data-control"] }
 image = { version = "0.25", default-features = false, features = ["png"] }

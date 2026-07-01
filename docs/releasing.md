@@ -46,6 +46,14 @@ x86_64-pc-windows-msvc`, copies `rigscope.exe` to `dist/rigscope-<v>-windows-x86
 portable zip next to it and uploads both as the `release-windows-x86_64` artifact; the release job waits for it like for the
 others. There is no signing step.
 
+## The in-app updater
+
+Help → Check for updates (the `app-update` crate) finds its file by the exact names above and
+checks it against `SHA256SUMS.txt` (`<sum>  <name>` lines) of the same release, so neither the
+names nor the `v<version>` tag may change. It updates the `.deb`, the AppImage, the `.app` from the
+`.dmg` and the portable Windows folder (recognised by the `LICENSE-*` file next to `rigscope.exe`);
+the bare `.exe` and the `.tar.gz` only get a link to the release.
+
 ## Root without a helper
 
 "Read with elevated rights" runs `pkexec /bin/sh -c <script>`: the system shell (root-owned)

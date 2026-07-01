@@ -499,3 +499,30 @@ fn a_disk_needs_elevation(h: &Harness<'_, App>) -> bool {
         .iter()
         .any(|d| d.health == rigscope_model::Field::NeedsElevation)
 }
+
+#[test]
+fn help_menu_offers_update_check() {
+    for (lang, help, check) in [
+        ("en", "Help", "Check for updates"),
+        ("ro", "Ajutor", "Caută actualizări"),
+    ] {
+        let mut app = App::new(Box::new(FakeEnv::fixture("desktop-ddr4")));
+        app.run("view.language", json!({ "id": lang })).unwrap();
+        let mut h = Harness::builder()
+            .with_size(egui::vec2(1100.0, 800.0))
+            .build_ui_state(
+                |ui, state: &mut (App, bool)| {
+                    if rigscope_ui::draw_updates(ui, &mut state.0) {
+                        state.1 = true;
+                    }
+                },
+                (app, false),
+            );
+        h.run();
+        h.get_by_label(help).click();
+        h.run();
+        h.get_by_label(check).click();
+        h.run();
+        assert!(h.state().1, "{lang}: the click reaches the app");
+    }
+}

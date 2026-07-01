@@ -13,6 +13,8 @@ egui.workspace = true
 eframe.workspace = true
 serde_json.workspace = true
 rfd.workspace = true
+# Help → "Check for updates" (GitHub Releases).
+app-update = { git = "https://github.com/nazdravan/app-update", rev = "2bd753dd0e53524a5aabc2b244b06569b9050386" }
 
 [dev-dependencies]
 egui_kittest.workspace = true

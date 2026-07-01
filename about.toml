@@ -9,6 +9,8 @@ accepted = [
     "BSD-3-Clause",
     "BSL-1.0",
     "ISC",
+    # webpki-roots (the TLS roots of app-update): permissive.
+    "CDLA-Permissive-2.0",
     "Unicode-3.0",
     "Zlib",
     "OFL-1.1",
