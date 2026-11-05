@@ -10,11 +10,12 @@ pub enum WinError {
 }
 
 impl WinError {
-    /// From a Win32 error code: 5 = ERROR_ACCESS_DENIED, 2/50/1168 = not found/not supported.
+    /// From a Win32 error code: 5 = ERROR_ACCESS_DENIED, 1/2/50/1168 = not found/not supported
+    /// (1 = ERROR_INVALID_FUNCTION: a virtual or RAID disk that does not implement the IOCTL).
     pub fn from_code(api: &str, code: u32) -> WinError {
         match code {
             5 => WinError::AccessDenied,
-            2 | 50 | 1168 => WinError::NotAvailable,
+            1 | 2 | 50 | 1168 => WinError::NotAvailable,
             _ => WinError::Failed {
                 api: api.to_string(),
                 code,
@@ -137,4 +138,28 @@ pub struct BatteryRaw {
 pub struct ThermalZoneRaw {
     pub instance: String,
     pub tenths_kelvin: u32,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unsupported_ioctl_codes_are_not_available() {
+        for code in [1, 2, 50, 1168] {
+            assert_eq!(
+                WinError::from_code("x", code),
+                WinError::NotAvailable,
+                "{code}"
+            );
+        }
+        assert_eq!(WinError::from_code("x", 5), WinError::AccessDenied);
+        assert_eq!(
+            WinError::from_code("x", 87),
+            WinError::Failed {
+                api: "x".into(),
+                code: 87
+            }
+        );
+    }
 }
