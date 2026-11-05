@@ -33,7 +33,9 @@ fn check(file: &str, lang: Language) {
         std::fs::write(&path, new).unwrap_or_else(|e| panic!("{file}: {e}"));
         return;
     }
-    panic!("{file}: shortcut table is stale; run RIGSCOPE_UPDATE_README=1 cargo test -p rigscope-ui --test readme");
+    panic!(
+        "{file}: shortcut table is stale; run RIGSCOPE_UPDATE_README=1 cargo test -p rigscope-ui --test readme"
+    );
 }
 
 #[test]

@@ -1,5 +1,5 @@
-use crate::{field_err, parse_ata_smart, parse_nvme_health, WinSource};
-use rigscope_model::{clean_text, Disk, DiskHealth, DiskKind, Field, Interface, StorageInfo};
+use crate::{WinSource, field_err, parse_ata_smart, parse_nvme_health};
+use rigscope_model::{Disk, DiskHealth, DiskKind, Field, Interface, StorageInfo, clean_text};
 use rigscope_win::layout::{nvme_log_from_response, parse_device_descriptor};
 use rigscope_win::{PhysicalDiskRaw, WinError};
 
@@ -130,8 +130,8 @@ mod tests {
         clippy::field_reassign_with_default
     )]
     use super::*;
-    use crate::smart::tests::{ata_sectors, nvme_log};
     use crate::MemWin;
+    use crate::smart::tests::{ata_sectors, nvme_log};
     use rigscope_model::{DiskKind, Field};
     use rigscope_win::{AtaSmartRaw, DiskIoctlRaw, PhysicalDiskRaw, WinError};
 

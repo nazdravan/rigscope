@@ -1,5 +1,5 @@
 use crate::fmt;
-use crate::i18n::{hidden_virtual, tr, Key};
+use crate::i18n::{Key, hidden_virtual, tr};
 use crate::widgets::{card, kv_grid};
 use rigscope_engine::App;
 

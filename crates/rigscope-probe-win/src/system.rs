@@ -1,5 +1,5 @@
-use crate::{field_err, field_of, WinSource};
-use rigscope_model::{clean_text, BoardInfo, DmiSource, Field, MemoryInfo, SystemInfo};
+use crate::{WinSource, field_err, field_of};
+use rigscope_model::{BoardInfo, DmiSource, Field, MemoryInfo, SystemInfo, clean_text};
 use rigscope_smbios::Decoded;
 
 const NO_TABLE: &str = "the firmware has no SMBIOS table (virtual machine?)";
@@ -110,7 +110,7 @@ mod tests {
     )]
     use super::*;
     use crate::MemWin;
-    use rigscope_smbios::testutil::{memory_array, memory_device, table, Dimm};
+    use rigscope_smbios::testutil::{Dimm, memory_array, memory_device, table};
     use rigscope_win::{MemoryStatusRaw, OsVersionRaw, WinError};
 
     fn rsmb(t: &[u8]) -> Vec<u8> {

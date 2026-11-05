@@ -1,5 +1,5 @@
 use crate::fmt;
-use crate::i18n::{tr, Key};
+use crate::i18n::{Key, tr};
 use crate::widgets::{card, kv_grid};
 use rigscope_engine::App;
 use rigscope_model::format_mwh;

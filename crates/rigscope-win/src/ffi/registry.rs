@@ -1,11 +1,11 @@
 #![allow(unsafe_code)]
 
 use super::wide;
-use windows::core::PCWSTR;
 use windows::Win32::System::Registry::{
-    RegGetValueW, HKEY_LOCAL_MACHINE, REG_ROUTINE_FLAGS, REG_VALUE_TYPE, RRF_RT_REG_BINARY,
-    RRF_RT_REG_DWORD, RRF_RT_REG_SZ,
+    HKEY_LOCAL_MACHINE, REG_ROUTINE_FLAGS, REG_VALUE_TYPE, RRF_RT_REG_BINARY, RRF_RT_REG_DWORD,
+    RRF_RT_REG_SZ, RegGetValueW,
 };
+use windows::core::PCWSTR;
 
 /// One HKLM value of the type `flags` allows, as raw bytes (at most 64 KiB).
 fn get(subkey: &str, value: &str, flags: REG_ROUTINE_FLAGS) -> Option<Vec<u8>> {

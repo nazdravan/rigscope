@@ -3,7 +3,7 @@
 use super::{from_error, last_error};
 use crate::WinError;
 use windows::Win32::System::SystemInformation::{
-    GetLogicalProcessorInformationEx, GetSystemFirmwareTable, RelationAll, FIRMWARE_TABLE_PROVIDER,
+    FIRMWARE_TABLE_PROVIDER, GetLogicalProcessorInformationEx, GetSystemFirmwareTable, RelationAll,
     SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX,
 };
 

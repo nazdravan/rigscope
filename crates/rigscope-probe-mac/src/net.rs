@@ -2,9 +2,9 @@
 //! (PCI ids and driver of wired cards). The Wi-Fi profiler (`SPAirPortDataType`) scans the air
 //! for several seconds, so it is not used.
 
-use crate::gpu::parse_hex_u16;
 use crate::MacSource;
-use rigscope_model::{clean_text, Field, NetInfo, NetInterface, NetKind};
+use crate::gpu::parse_hex_u16;
+use rigscope_model::{Field, NetInfo, NetInterface, NetKind, clean_text};
 use serde_json::Value;
 
 /// Most interfaces read from the profiler output.

@@ -15,7 +15,7 @@ mod system_panel;
 pub mod theme;
 mod widgets;
 
-pub use shell::{draw, draw_with, params_for, ParamsPicker, RigscopeUi};
+pub use shell::{ParamsPicker, RigscopeUi, draw, draw_with, params_for};
 
 /// Commands requested by widgets during a frame, run after drawing.
 #[derive(Default)]

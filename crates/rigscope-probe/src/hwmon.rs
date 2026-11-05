@@ -1,7 +1,7 @@
 //! Temperatures and fans from `/sys/class/hwmon` (no root).
 
-use crate::sysfs::text;
 use crate::Source;
+use crate::sysfs::text;
 use rigscope_model::{Fan, Field, SensorChip, SensorInfo, Temperature};
 
 pub const HWMON_DIR: &str = "/sys/class/hwmon";

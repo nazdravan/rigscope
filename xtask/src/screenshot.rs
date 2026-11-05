@@ -1,7 +1,7 @@
 //! `cargo xtask screenshot`: runs rigscope under Xvfb in the Linux image, drives it through the
 //! control channel and saves a PNG into the repository (default `target/shots/`).
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
 use std::process::Command;

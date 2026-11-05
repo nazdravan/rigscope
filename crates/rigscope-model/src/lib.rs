@@ -18,23 +18,23 @@ pub mod system;
 pub mod text;
 
 pub use collector::Collector;
-pub use compat::{compat_summary, CompatLine};
+pub use compat::{CompatLine, compat_summary};
 pub use cpu::{CacheKind, CacheLevel, CoreFreq, CpuInfo};
 pub use dump::{
-    decode_dmi_dump, encode_dmi_dump, DmiDump, DumpError, MAX_DMI_PART, MAX_DUMP_DISKS,
+    DmiDump, DumpError, MAX_DMI_PART, MAX_DUMP_DISKS, decode_dmi_dump, encode_dmi_dump,
 };
 pub use field::Field;
 pub use gpu::{Gpu, GpuInfo};
 pub use memory::{
     FormFactor, MemType, MemoryArray, MemoryInfo, MemoryModule, MemorySlot, SlotState, VoltageMv,
 };
-pub use net::{format_speed, NetInfo, NetInterface, NetKind};
-pub use power::{format_mwh, Battery, PowerInfo};
+pub use net::{NetInfo, NetInterface, NetKind, format_speed};
+pub use power::{Battery, PowerInfo, format_mwh};
 pub use report::{
     format_bytes, format_decimal_gb, format_disk_size, format_written, health_summary, mask,
     mask_mac, masked, report_text,
 };
-pub use sensors::{chip_kind, format_celsius, Fan, SensorChip, SensorInfo, Temperature};
+pub use sensors::{Fan, SensorChip, SensorInfo, Temperature, chip_kind, format_celsius};
 pub use storage::{Disk, DiskHealth, DiskKind, Interface, StorageInfo};
-pub use system::{BoardInfo, DmiSource, Platform, Snapshot, SystemInfo, SCHEMA_VERSION};
+pub use system::{BoardInfo, DmiSource, Platform, SCHEMA_VERSION, Snapshot, SystemInfo};
 pub use text::clean_text;

@@ -16,7 +16,7 @@ mod wmi;
 pub use d3dkmt::GpuPerf;
 pub use dxgi::adapters_dxgi;
 
-pub use self::wmi::{acpi_thermal_zones, physical_disks_wmi, WMI_TIMEOUT};
+pub use self::wmi::{WMI_TIMEOUT, acpi_thermal_zones, physical_disks_wmi};
 pub use firmware::{processors_raw, smbios_raw};
 pub use handle::Device;
 pub use net::net_adapters;

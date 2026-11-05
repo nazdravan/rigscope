@@ -1,19 +1,18 @@
 #![allow(unsafe_code)]
 
-use super::{from_error, Device};
+use super::{Device, from_error};
 use crate::layout::{
-    battery_info_query, battery_status_query, parse_battery_info, parse_battery_status, utf16z,
-    ven_dev, BATTERY_CAPACITY_RELATIVE, BATTERY_DEVICE_NAME, BATTERY_INFORMATION,
-    BATTERY_MANUFACTURE_NAME, BATTERY_SERIAL_NUMBER, IOCTL_BATTERY_QUERY_INFORMATION,
-    IOCTL_BATTERY_QUERY_STATUS, IOCTL_BATTERY_QUERY_TAG,
+    BATTERY_CAPACITY_RELATIVE, BATTERY_DEVICE_NAME, BATTERY_INFORMATION, BATTERY_MANUFACTURE_NAME,
+    BATTERY_SERIAL_NUMBER, IOCTL_BATTERY_QUERY_INFORMATION, IOCTL_BATTERY_QUERY_STATUS,
+    IOCTL_BATTERY_QUERY_TAG, battery_info_query, battery_status_query, parse_battery_info,
+    parse_battery_status, utf16z, ven_dev,
 };
 use crate::{BatteryRaw, PciDisplayRaw, WinError};
-use windows::core::{GUID, PCWSTR};
 use windows::Win32::Devices::DeviceAndDriverInstallation::{
-    SetupDiDestroyDeviceInfoList, SetupDiEnumDeviceInfo, SetupDiEnumDeviceInterfaces,
-    SetupDiGetClassDevsW, SetupDiGetDeviceInterfaceDetailW, SetupDiGetDevicePropertyW,
     DIGCF_DEVICEINTERFACE, DIGCF_PRESENT, GUID_DEVCLASS_DISPLAY, HDEVINFO,
     SP_DEVICE_INTERFACE_DATA, SP_DEVICE_INTERFACE_DETAIL_DATA_W, SP_DEVINFO_DATA,
+    SetupDiDestroyDeviceInfoList, SetupDiEnumDeviceInfo, SetupDiEnumDeviceInterfaces,
+    SetupDiGetClassDevsW, SetupDiGetDeviceInterfaceDetailW, SetupDiGetDevicePropertyW,
 };
 use windows::Win32::Devices::Properties::{
     DEVPKEY_Device_DriverVersion, DEVPKEY_Device_HardwareIds, DEVPKEY_Device_LocationInfo,
@@ -21,6 +20,7 @@ use windows::Win32::Devices::Properties::{
 };
 use windows::Win32::Foundation::DEVPROPKEY;
 use windows::Win32::System::Power::GUID_DEVICE_BATTERY;
+use windows::core::{GUID, PCWSTR};
 
 const MAX_DEVICES: u32 = 64;
 /// Bytes for one device property or one interface detail record.

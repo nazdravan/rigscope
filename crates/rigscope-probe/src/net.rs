@@ -1,8 +1,8 @@
 //! Network interfaces from `/sys/class/net` (no root). Virtual ones are counted, not listed.
 
-use crate::sysfs::{hex_id, pci_ids, text};
 use crate::Source;
-use rigscope_model::{clean_text, Field, NetInfo, NetInterface, NetKind};
+use crate::sysfs::{hex_id, pci_ids, text};
+use rigscope_model::{Field, NetInfo, NetInterface, NetKind, clean_text};
 use rigscope_procfs::pci_ids as ids;
 
 pub const NET_DIR: &str = "/sys/class/net";

@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::indexing_slicing)]
 
 use rigscope_model::*;
-use rigscope_probe_win::{samples, MemWin, WinCollector};
+use rigscope_probe_win::{MemWin, WinCollector, samples};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -26,10 +26,11 @@ fn laptop_snapshot() {
     // A tick after collecting gives estimated frequencies.
     let mut cpu = s.cpu.clone();
     c.refresh_live(&mut cpu);
-    assert!(cpu
-        .cores
-        .iter()
-        .all(|k| k.estimated && k.cur_mhz.known().is_some()));
+    assert!(
+        cpu.cores
+            .iter()
+            .all(|k| k.estimated && k.cur_mhz.known().is_some())
+    );
     // The report builds without panicking and says "needs administrator" where needed.
     let _ = report_text(&s, true);
 }
@@ -101,10 +102,11 @@ fn real_desktop_fixture() {
         assert!(m >= b, "max {m} < base {b}");
     }
     assert!(!s.gpu.gpus.is_empty());
-    assert!(s.gpu.gpus.iter().any(|g| g
-        .device_name
-        .known()
-        .is_some_and(|n| n.contains("Intel(R) HD Graphics"))));
+    assert!(s.gpu.gpus.iter().any(|g| {
+        g.device_name
+            .known()
+            .is_some_and(|n| n.contains("Intel(R) HD Graphics"))
+    }));
     assert!(!s.net.interfaces.is_empty());
     assert_eq!(s.power.batteries.len(), 1);
     let pct = s.power.batteries[0].health_percent().unwrap();

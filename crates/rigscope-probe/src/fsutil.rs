@@ -1,6 +1,6 @@
 //! Size-capped filesystem helpers shared by the real and fixture sources.
 
-use crate::{ReadError, MAX_FILE_LEN};
+use crate::{MAX_FILE_LEN, ReadError};
 use std::io::Read;
 
 /// Most directory entries listed.

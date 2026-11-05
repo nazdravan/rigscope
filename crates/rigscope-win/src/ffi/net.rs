@@ -1,13 +1,14 @@
 #![allow(unsafe_code)]
 
 use crate::{NetAdapterRaw, WinError};
-use windows::core::PWSTR;
 use windows::Win32::NetworkManagement::IpHelper::{
-    GetAdaptersAddresses, GetIfEntry2, GAA_FLAG_INCLUDE_ALL_INTERFACES, GAA_FLAG_SKIP_ANYCAST,
-    GAA_FLAG_SKIP_DNS_SERVER, GAA_FLAG_SKIP_MULTICAST, IP_ADAPTER_ADDRESSES_LH, MIB_IF_ROW2,
+    GAA_FLAG_INCLUDE_ALL_INTERFACES, GAA_FLAG_SKIP_ANYCAST, GAA_FLAG_SKIP_DNS_SERVER,
+    GAA_FLAG_SKIP_MULTICAST, GetAdaptersAddresses, GetIfEntry2, IP_ADAPTER_ADDRESSES_LH,
+    MIB_IF_ROW2,
 };
 use windows::Win32::NetworkManagement::Ndis::IfOperStatusUp;
 use windows::Win32::Networking::WinSock::AF_UNSPEC;
+use windows::core::PWSTR;
 
 /// A bound on the list walk. GAA_FLAG_INCLUDE_ALL_INTERFACES also lists every filter
 /// (WFP, QoS, ...) interface: a Windows 10 laptop with Hyper-V showed 66, so 64 truncated.

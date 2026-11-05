@@ -1,5 +1,5 @@
-use crate::parse::{parse_memory, Dimm};
 use crate::MacSource;
+use crate::parse::{Dimm, parse_memory};
 use rigscope_model::{Field, MemoryArray, MemoryInfo, MemoryModule, MemorySlot, SlotState};
 
 const NO_PROFILER: &str = "system_profiler gave no memory data";
@@ -42,7 +42,7 @@ pub(crate) fn read_memory(src: &dyn MacSource) -> (MemoryInfo, bool) {
                     }],
                 },
                 false,
-            )
+            );
         }
     };
     (

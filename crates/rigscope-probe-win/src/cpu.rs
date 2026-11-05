@@ -2,8 +2,8 @@
 //! buffer, microcode from the registry, and an estimated live clock from PDH samples.
 
 use crate::system::Firmware;
-use crate::{field_err, field_of, WinSource};
-use rigscope_model::{clean_text, CacheKind, CacheLevel, CoreFreq, CpuInfo, Field};
+use crate::{WinSource, field_err, field_of};
+use rigscope_model::{CacheKind, CacheLevel, CoreFreq, CpuInfo, Field, clean_text};
 
 pub const MAX_PROCESSORS_BUF: usize = 1024 * 1024;
 const MAX_LOGICAL: usize = 4096;
@@ -227,7 +227,7 @@ pub(crate) mod tests {
         clippy::field_reassign_with_default
     )]
     use super::*;
-    use crate::{system::read_firmware, MemWin};
+    use crate::{MemWin, system::read_firmware};
     use rigscope_model::{CacheKind, Field};
     use rigscope_win::{CpuRegistryRaw, WinError};
 

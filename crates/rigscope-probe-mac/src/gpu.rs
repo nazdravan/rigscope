@@ -1,8 +1,8 @@
 //! Graphics cards from `SPDisplaysDataType`.
 
-use crate::parse::parse_size;
 use crate::MacSource;
-use rigscope_model::{clean_text, Field, Gpu, GpuInfo};
+use crate::parse::parse_size;
+use rigscope_model::{Field, Gpu, GpuInfo, clean_text};
 use serde_json::Value;
 
 /// Most cards read from the profiler output.

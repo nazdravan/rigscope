@@ -1,7 +1,7 @@
 use super::always;
 use crate::{CommandSpec, EngineError, Session};
-use rigscope_model::{compat_summary, masked, report_text, Snapshot, SCHEMA_VERSION};
-use serde_json::{json, Value};
+use rigscope_model::{SCHEMA_VERSION, Snapshot, compat_summary, masked, report_text};
+use serde_json::{Value, json};
 
 /// Largest snapshot file `snapshot.open` accepts.
 pub const MAX_SNAPSHOT_FILE: usize = 4 * 1024 * 1024;

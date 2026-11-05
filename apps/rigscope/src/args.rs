@@ -1,6 +1,6 @@
 //! Command-line arguments (hand-parsed; the set is tiny).
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Args {
@@ -50,7 +50,9 @@ impl Args {
                     );
                 }
                 "-h" | "--help" => {
-                    println!("usage: rigscope [--fixture DIR] [--lang en|ro] [--section memory|cpu|system] [--control PORT] [--capture-fixture DIR]");
+                    println!(
+                        "usage: rigscope [--fixture DIR] [--lang en|ro] [--section memory|cpu|system] [--control PORT] [--capture-fixture DIR]"
+                    );
                     std::process::exit(0);
                 }
                 other => bail!("unknown argument: {other}"),

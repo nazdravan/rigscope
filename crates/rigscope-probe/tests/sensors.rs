@@ -64,10 +64,12 @@ fn laptop_unlabelled_temp_gets_its_index() {
 
 #[test]
 fn vm_has_no_sensors() {
-    assert!(build_snapshot(&fixture("minimal-vm"), None, 0)
-        .sensors
-        .chips
-        .is_empty());
+    assert!(
+        build_snapshot(&fixture("minimal-vm"), None, 0)
+            .sensors
+            .chips
+            .is_empty()
+    );
 }
 
 #[test]

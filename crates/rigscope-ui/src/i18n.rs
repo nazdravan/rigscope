@@ -124,7 +124,9 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Unknown => "Unknown",
             NeedsRoot => "Needs root",
             NeedsAdmin => "Needs administrator",
-            SmartNeedsAdmin => "Disk health (SMART) needs administrator rights: rigscope is running without them.",
+            SmartNeedsAdmin => {
+                "Disk health (SMART) needs administrator rights: rigscope is running without them."
+            }
             EstimatedFrequency => "estimated: % processor performance × base clock",
             NotElevated => "running without administrator rights",
             Empty => "Empty",
@@ -152,10 +154,16 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Ranks => "Ranks",
             Voltage => "Voltage",
             Width => "Data width",
-            NeedsRootBanner => "Slot details need root: the BIOS memory table is readable only by root.",
+            NeedsRootBanner => {
+                "Slot details need root: the BIOS memory table is readable only by root."
+            }
             ReadElevated => "Read with elevated rights",
-            NoDmi => "No DMI table: this looks like a virtual machine or container, so slot details are not available.",
-            FirmwareNoSlots => "The firmware table lists no memory slots, so slot details are not available.",
+            NoDmi => {
+                "No DMI table: this looks like a virtual machine or container, so slot details are not available."
+            }
+            FirmwareNoSlots => {
+                "The firmware table lists no memory slots, so slot details are not available."
+            }
             Model => "Model",
             Vendor => "Vendor",
             Socket => "Socket",
@@ -223,7 +231,9 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Derived => "derived",
             Sensors => "Sensors",
             DiskHealth => "Health (SMART)",
-            SmartNeedsRoot => "Disk health (SMART) needs root: smartctl reads it through the elevated helper.",
+            SmartNeedsRoot => {
+                "Disk health (SMART) needs root: smartctl reads it through the elevated helper."
+            }
             Warning => "Warning",
             NoSensors => "No sensors found in /sys/class/hwmon.",
         },
@@ -234,7 +244,9 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Unknown => "Necunoscut",
             NeedsRoot => "Necesită root",
             NeedsAdmin => "Necesită administrator",
-            SmartNeedsAdmin => "Sănătatea discurilor (SMART) necesită drepturi de administrator: rigscope rulează fără ele.",
+            SmartNeedsAdmin => {
+                "Sănătatea discurilor (SMART) necesită drepturi de administrator: rigscope rulează fără ele."
+            }
             EstimatedFrequency => "estimat: % performanță procesor × frecvența de bază",
             NotElevated => "rulează fără drepturi de administrator",
             Empty => "Gol",
@@ -262,10 +274,16 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Ranks => "Ranguri",
             Voltage => "Tensiune",
             Width => "Lățime date",
-            NeedsRootBanner => "Detaliile sloturilor necesită root: tabela de memorie din BIOS poate fi citită doar de root.",
+            NeedsRootBanner => {
+                "Detaliile sloturilor necesită root: tabela de memorie din BIOS poate fi citită doar de root."
+            }
             ReadElevated => "Citește cu drepturi ridicate",
-            NoDmi => "Nu există tabelă DMI: pare o mașină virtuală sau un container, deci detaliile sloturilor lipsesc.",
-            FirmwareNoSlots => "Tabela firmware nu listează niciun slot de memorie, deci detaliile sloturilor lipsesc.",
+            NoDmi => {
+                "Nu există tabelă DMI: pare o mașină virtuală sau un container, deci detaliile sloturilor lipsesc."
+            }
+            FirmwareNoSlots => {
+                "Tabela firmware nu listează niciun slot de memorie, deci detaliile sloturilor lipsesc."
+            }
             Model => "Model",
             Vendor => "Producător",
             Socket => "Socket",
@@ -333,7 +351,9 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
             Derived => "derivat",
             Sensors => "Senzori",
             DiskHealth => "Sănătate (SMART)",
-            SmartNeedsRoot => "Sănătatea discurilor (SMART) necesită root: smartctl o citește prin helperul cu drepturi ridicate.",
+            SmartNeedsRoot => {
+                "Sănătatea discurilor (SMART) necesită root: smartctl o citește prin helperul cu drepturi ridicate."
+            }
             Warning => "Atenție",
             NoSensors => "Nu s-au găsit senzori în /sys/class/hwmon.",
         },
@@ -344,7 +364,9 @@ pub fn tr(lang: Language, key: Key) -> &'static str {
 pub fn opened_snapshot(lang: Language, path: &str) -> String {
     match lang {
         Language::En => {
-            format!("Showing the saved snapshot {path}, not this computer. Refresh reads this computer again.")
+            format!(
+                "Showing the saved snapshot {path}, not this computer. Refresh reads this computer again."
+            )
         }
         Language::Ro => format!(
             "Se afișează snapshot-ul salvat {path}, nu acest calculator. Reîmprospătează citește din nou acest calculator."
@@ -580,13 +602,21 @@ pub fn missing_hint(lang: Language, value: &str) -> Option<&'static str> {
         })
     } else if value == tr(lang, Key::NeedsRoot) {
         Some(match lang {
-            Language::En => "Readable only by root: use Read with elevated rights in the Memory section.",
-            Language::Ro => "Poate fi citit doar de root: folosește Citește cu drepturi ridicate în secțiunea Memorie.",
+            Language::En => {
+                "Readable only by root: use Read with elevated rights in the Memory section."
+            }
+            Language::Ro => {
+                "Poate fi citit doar de root: folosește Citește cu drepturi ridicate în secțiunea Memorie."
+            }
         })
     } else if value == tr(lang, Key::NeedsAdmin) {
         Some(match lang {
-            Language::En => "Readable only with administrator rights: run rigscope as administrator.",
-            Language::Ro => "Poate fi citit doar cu drepturi de administrator: rulează rigscope ca administrator.",
+            Language::En => {
+                "Readable only with administrator rights: run rigscope as administrator."
+            }
+            Language::Ro => {
+                "Poate fi citit doar cu drepturi de administrator: rulează rigscope ca administrator."
+            }
         })
     } else {
         None

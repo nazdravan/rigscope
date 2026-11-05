@@ -1,7 +1,7 @@
 //! Graphics cards from `/sys/class/drm` (no root), named through the system's pci.ids.
 
 use crate::Source;
-use rigscope_model::{clean_text, Field, Gpu, GpuInfo};
+use rigscope_model::{Field, Gpu, GpuInfo, clean_text};
 use rigscope_procfs::pci_ids;
 
 pub const DRM_DIR: &str = "/sys/class/drm";

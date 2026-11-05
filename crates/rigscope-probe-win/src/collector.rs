@@ -1,4 +1,4 @@
-use crate::{cpu, gpu, net, power, sensors, storage, system, WinSource};
+use crate::{WinSource, cpu, gpu, net, power, sensors, storage, system};
 use rigscope_model::{Collector, CpuInfo, DmiDump, Platform, SensorInfo, Snapshot};
 
 /// The Windows collector. Keeps the GPU list from the last collect for the cheap ticks.

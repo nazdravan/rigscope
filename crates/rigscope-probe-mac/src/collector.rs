@@ -1,4 +1,4 @@
-use crate::{gpu, memory, net, storage, system, MacSource};
+use crate::{MacSource, gpu, memory, net, storage, system};
 use rigscope_model::{Collector, CpuInfo, DmiDump, DmiSource, Platform, SensorInfo, Snapshot};
 
 /// The macOS collector. Memory, board and processor come from `system_profiler` and `sysctl`;

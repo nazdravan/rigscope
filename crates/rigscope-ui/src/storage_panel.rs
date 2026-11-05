@@ -1,7 +1,7 @@
-use crate::fmt;
-use crate::i18n::{tr, Key};
-use crate::widgets::{card, command_button, kv_grid};
 use crate::Actions;
+use crate::fmt;
+use crate::i18n::{Key, tr};
+use crate::widgets::{card, command_button, kv_grid};
 use rigscope_engine::App;
 use rigscope_model::{Field, Platform};
 use serde_json::json;

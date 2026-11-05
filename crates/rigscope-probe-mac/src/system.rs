@@ -1,6 +1,6 @@
-use crate::parse::{parse_boottime, parse_hardware};
 use crate::MacSource;
-use rigscope_model::{clean_text, BoardInfo, CpuInfo, Field, SystemInfo};
+use crate::parse::{parse_boottime, parse_hardware};
+use rigscope_model::{BoardInfo, CpuInfo, Field, SystemInfo, clean_text};
 
 fn sysctl_text(src: &dyn MacSource, name: &str) -> Field<String> {
     match src.sysctl(name) {

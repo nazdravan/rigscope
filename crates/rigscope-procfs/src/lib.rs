@@ -6,8 +6,8 @@ mod cpuinfo;
 pub mod pci_ids;
 mod values;
 
-pub use cpuinfo::{parse_cpuinfo, CpuinfoSummary};
+pub use cpuinfo::{CpuinfoSummary, parse_cpuinfo};
 pub use values::{
-    clean_dmi_value, parse_cache_size, parse_cpu_list, parse_khz, parse_meminfo_total,
-    parse_os_release, parse_uptime, MAX_CPUS,
+    MAX_CPUS, clean_dmi_value, parse_cache_size, parse_cpu_list, parse_khz, parse_meminfo_total,
+    parse_os_release, parse_uptime,
 };

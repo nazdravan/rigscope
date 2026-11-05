@@ -2,7 +2,7 @@
 //! and `cargo xtask screenshot` to drive the app and capture the window.
 
 use eframe::egui;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::mpsc;
@@ -272,7 +272,7 @@ impl eframe::App for Controlled {
 
 #[cfg(test)]
 mod tests {
-    use super::{generate_token, Request, MAX_REQUEST};
+    use super::{MAX_REQUEST, Request, generate_token};
     use serde_json::json;
 
     const T: &str = "secret-token";
@@ -288,9 +288,11 @@ mod tests {
 
     #[test]
     fn missing_or_wrong_token_is_rejected() {
-        assert!(super::parse_request(r#"{"method":"quit"}"#, T)
-            .unwrap_err()
-            .contains("token"));
+        assert!(
+            super::parse_request(r#"{"method":"quit"}"#, T)
+                .unwrap_err()
+                .contains("token")
+        );
         assert!(
             super::parse_request(r#"{"token":"nope","method":"quit"}"#, T)
                 .unwrap_err()

@@ -1,5 +1,5 @@
-use crate::{field_err, WinSource};
-use rigscope_model::{clean_text, Field, Gpu, GpuInfo};
+use crate::{WinSource, field_err};
+use rigscope_model::{Field, Gpu, GpuInfo, clean_text};
 use rigscope_win::{DxgiAdapterRaw, PciDisplayRaw};
 
 pub const MAX_GPUS: usize = 16;

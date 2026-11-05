@@ -1,6 +1,6 @@
 //! The live Windows source: forwards to `rigscope_win::ffi`.
 
-use crate::{mask_fixture, MemWin, WinSource, R};
+use crate::{MemWin, R, WinSource, mask_fixture};
 use rigscope_win::{ffi, *};
 
 pub struct RealWin {

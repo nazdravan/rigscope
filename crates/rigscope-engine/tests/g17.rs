@@ -8,8 +8,8 @@
 use rigscope_engine::testutil::FakeEnv;
 use rigscope_engine::*;
 use rigscope_model::DmiSource;
-use rigscope_model::{encode_dmi_dump, DmiDump};
-use rigscope_probe::{paths, MemSource};
+use rigscope_model::{DmiDump, encode_dmi_dump};
+use rigscope_probe::{MemSource, paths};
 use serde_json::json;
 
 #[test]

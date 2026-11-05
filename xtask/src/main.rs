@@ -4,7 +4,7 @@ mod layers;
 mod screenshot;
 mod unsafe_scope;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -38,7 +38,9 @@ fn main() -> Result<()> {
         "shots" => screenshot::readme_shots(),
         "banner" => run(Command::new("python3").args(["-I", "assets/banner.py"])),
         _ => {
-            eprintln!("usage: cargo xtask <ci|layers|unsafe|wasm|linux [cmd...]|gen-fixtures|icons|windows-icon|banner|shots|screenshot [--fixture D --section S --lang L --out P]>");
+            eprintln!(
+                "usage: cargo xtask <ci|layers|unsafe|wasm|linux [cmd...]|gen-fixtures|icons|windows-icon|banner|shots|screenshot [--fixture D --section S --lang L --out P]>"
+            );
             Ok(())
         }
     }

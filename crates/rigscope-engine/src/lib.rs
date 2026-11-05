@@ -17,4 +17,4 @@ pub fn builtin_commands() -> Vec<CommandSpec> {
 }
 pub use env::Env;
 pub use error::EngineError;
-pub use session::{Language, SectionId, Session, HISTORY_LIMIT};
+pub use session::{HISTORY_LIMIT, Language, SectionId, Session};

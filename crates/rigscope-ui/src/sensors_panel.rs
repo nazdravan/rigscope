@@ -1,5 +1,5 @@
 use crate::fmt;
-use crate::i18n::{tr, Key};
+use crate::i18n::{Key, tr};
 use crate::widgets::card;
 use rigscope_engine::App;
 use rigscope_model::{chip_kind, format_celsius};

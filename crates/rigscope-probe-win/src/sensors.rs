@@ -1,4 +1,4 @@
-use crate::{field_err, WinSource};
+use crate::{WinSource, field_err};
 use rigscope_model::{Fan, Field, SensorChip, SensorInfo, Temperature};
 use rigscope_win::WinError;
 

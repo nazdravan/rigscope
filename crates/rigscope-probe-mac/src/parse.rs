@@ -1,6 +1,6 @@
 //! Pure parsers for what `system_profiler` prints. Never panic: anything unexpected is `None`.
 
-use rigscope_model::{clean_text, FormFactor, MemType};
+use rigscope_model::{FormFactor, MemType, clean_text};
 use serde_json::Value;
 
 /// Most memory slots read from the profiler output.

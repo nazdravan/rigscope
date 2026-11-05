@@ -1,6 +1,6 @@
-use crate::bytes::{u16_at, u32_at, u64_at, u8_at};
-use crate::table::{structures, Structure};
-use crate::{parse_entry_point, SmbiosError};
+use crate::bytes::{u8_at, u16_at, u32_at, u64_at};
+use crate::table::{Structure, structures};
+use crate::{SmbiosError, parse_entry_point};
 use rigscope_model::{
     BoardInfo, Field, FormFactor, MemType, MemoryArray, MemoryInfo, MemoryModule, MemorySlot,
     SlotState, VoltageMv,

@@ -1,6 +1,6 @@
 //! Plain-text report (English), for pasting into forums or chats.
 
-use crate::{compat_summary, CacheKind, DmiSource, Field, Platform, SlotState, Snapshot};
+use crate::{CacheKind, DmiSource, Field, Platform, SlotState, Snapshot, compat_summary};
 
 /// Binary size: `8 GiB`, `7.7 GiB`, `512 KiB`.
 pub fn format_bytes(n: u64) -> String {

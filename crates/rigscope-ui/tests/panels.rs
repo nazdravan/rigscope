@@ -5,11 +5,11 @@
     clippy::indexing_slicing
 )]
 
-use egui_kittest::kittest::Queryable;
 use egui_kittest::Harness;
-use rigscope_engine::testutil::FakeEnv;
+use egui_kittest::kittest::Queryable;
 use rigscope_engine::App;
-use rigscope_probe::{paths, MemSource};
+use rigscope_engine::testutil::FakeEnv;
+use rigscope_probe::{MemSource, paths};
 use serde_json::json;
 
 fn harness(env: FakeEnv, setup: impl FnOnce(&mut App)) -> Harness<'static, App> {

@@ -26,13 +26,14 @@ fn copy_text_masks_by_default() {
     assert!(clip.contains("****2C3D"));
     assert!(!clip.contains("4A1B2C3D"));
     a.run("report.copy_text", json!({"mask": false})).unwrap();
-    assert!(h
-        .lock()
-        .unwrap()
-        .clipboard
-        .clone()
-        .unwrap()
-        .contains("4A1B2C3D"));
+    assert!(
+        h.lock()
+            .unwrap()
+            .clipboard
+            .clone()
+            .unwrap()
+            .contains("4A1B2C3D")
+    );
     let spec = a
         .specs()
         .iter()
@@ -111,9 +112,10 @@ fn open_rejects_wrong_schema_garbage_and_oversize() {
             "{p}"
         );
     }
-    assert!(a
-        .run("snapshot.open", json!({"path": "/missing.json"}))
-        .is_err());
+    assert!(
+        a.run("snapshot.open", json!({"path": "/missing.json"}))
+            .is_err()
+    );
     assert_eq!(a.session.snapshot, before);
 }
 

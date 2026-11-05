@@ -1,7 +1,7 @@
 use super::always;
 use crate::{CommandSpec, EngineError, Session};
 use rigscope_model::{DmiSource, Field, Platform, Snapshot};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -34,8 +34,7 @@ pub fn specs() -> Vec<CommandSpec> {
             label_key: "cmd.elevate",
             menu: "File",
             shortcut: None,
-            params_doc:
-                "{} — runs the privileged helper (pkexec) to read the SMBIOS table and SMART",
+            params_doc: "{} — runs the privileged helper (pkexec) to read the SMBIOS table and SMART",
             enabled: |s| {
                 if !s.env.can_elevate() {
                     Err(if s.snapshot.platform == Platform::Windows {

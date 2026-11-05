@@ -2,7 +2,7 @@
 //! verdict ("Verified" / "Failing"), not the attributes, so only the verdict is shown.
 
 use crate::MacSource;
-use rigscope_model::{clean_text, Disk, DiskHealth, DiskKind, Field, Interface, StorageInfo};
+use rigscope_model::{Disk, DiskHealth, DiskKind, Field, Interface, StorageInfo, clean_text};
 use serde_json::Value;
 
 /// Most disks read from the profiler output.

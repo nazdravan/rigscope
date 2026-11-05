@@ -1,9 +1,9 @@
-use crate::fmt;
-use crate::i18n::{slots_free, tr, Key};
-use crate::widgets::{card, command_button, kv_grid};
 use crate::Actions;
+use crate::fmt;
+use crate::i18n::{Key, slots_free, tr};
+use crate::widgets::{card, command_button, kv_grid};
 use rigscope_engine::{App, Language};
-use rigscope_model::{compat_summary, CompatLine, DmiSource, MemoryModule, MemorySlot, SlotState};
+use rigscope_model::{CompatLine, DmiSource, MemoryModule, MemorySlot, SlotState, compat_summary};
 use serde_json::json;
 
 pub fn show(ui: &mut egui::Ui, app: &App, actions: &mut Actions) {

@@ -2,12 +2,12 @@
 
 use super::{from_error, wide};
 use crate::WinError;
-use windows::core::PCWSTR;
 use windows::Win32::Foundation::{CloseHandle, GENERIC_READ, GENERIC_WRITE, HANDLE};
 use windows::Win32::Storage::FileSystem::{
     CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, FILE_SHARE_WRITE, OPEN_EXISTING,
 };
 use windows::Win32::System::IO::DeviceIoControl;
+use windows::core::PCWSTR;
 
 /// An open device handle, closed on drop.
 pub struct Device(HANDLE);

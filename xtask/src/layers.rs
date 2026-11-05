@@ -53,11 +53,13 @@ mod tests {
 
     #[test]
     fn probe_may_depend_on_parsers() {
-        assert!(check(
-            "rigscope-probe",
-            &["rigscope-smbios", "rigscope-procfs", "rigscope-model"]
-        )
-        .is_empty());
+        assert!(
+            check(
+                "rigscope-probe",
+                &["rigscope-smbios", "rigscope-procfs", "rigscope-model"]
+            )
+            .is_empty()
+        );
     }
 
     #[test]

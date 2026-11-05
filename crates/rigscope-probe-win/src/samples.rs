@@ -2,7 +2,7 @@
 //! Values are documented examples (a 2024 laptop, a Hyper-V guest), not captured data.
 
 use crate::MemWin;
-use rigscope_smbios::testutil::{memory_array, memory_device, table, Dimm, StructBuilder};
+use rigscope_smbios::testutil::{Dimm, StructBuilder, memory_array, memory_device, table};
 use rigscope_win::*;
 
 fn rsmb(t: &[u8]) -> Vec<u8> {

@@ -57,10 +57,12 @@ fn laptop_amd_igpu_reports_vram() {
 
 #[test]
 fn vm_without_drm_has_no_gpus() {
-    assert!(build_snapshot(&fixture("minimal-vm"), None, 0)
-        .gpu
-        .gpus
-        .is_empty());
+    assert!(
+        build_snapshot(&fixture("minimal-vm"), None, 0)
+            .gpu
+            .gpus
+            .is_empty()
+    );
 }
 
 #[test]

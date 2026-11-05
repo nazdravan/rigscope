@@ -6,7 +6,7 @@
 //! unprivileged window parses everything.
 
 use rigscope_engine::EngineError;
-use rigscope_probe::{encode_dmi_dump, paths, DmiDump, Source, MAX_DMI_PART, MAX_SMART_JSON};
+use rigscope_probe::{DmiDump, MAX_DMI_PART, MAX_SMART_JSON, Source, encode_dmi_dump, paths};
 
 /// Kernel disk names only: `nvme0n1`, `sda`, `mmcblk0`. Anything else is never passed on.
 pub fn valid_disk_name(name: &str) -> bool {
@@ -277,7 +277,7 @@ pub fn run_elevated(disks: &[String]) -> Result<Vec<u8>, EngineError> {
     {
         Ok(c) => c,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            return interpret(Some(127), &[], "", disks)
+            return interpret(Some(127), &[], "", disks);
         }
         Err(e) => return Err(EngineError::Io(format!("pkexec: {e}"))),
     };
@@ -332,7 +332,7 @@ pub const ELEVATE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rigscope_probe::{decode_dmi_dump, MemSource};
+    use rigscope_probe::{MemSource, decode_dmi_dump};
 
     fn no_smart(_: &str) -> Vec<u8> {
         b"{}".to_vec()

@@ -1,13 +1,13 @@
 #![allow(unsafe_code)]
 
 use crate::WinError;
-use windows::core::{w, PCWSTR};
 use windows::Win32::System::Performance::{
-    PdhAddEnglishCounterW, PdhCloseQuery, PdhCollectQueryData, PdhGetFormattedCounterArrayW,
-    PdhOpenQueryW, PDH_CSTATUS_INVALID_DATA, PDH_CSTATUS_NEW_DATA, PDH_CSTATUS_VALID_DATA,
+    PDH_CSTATUS_INVALID_DATA, PDH_CSTATUS_NEW_DATA, PDH_CSTATUS_VALID_DATA,
     PDH_FMT_COUNTERVALUE_ITEM_W, PDH_FMT_DOUBLE, PDH_HCOUNTER, PDH_HQUERY, PDH_INVALID_DATA,
-    PDH_MORE_DATA,
+    PDH_MORE_DATA, PdhAddEnglishCounterW, PdhCloseQuery, PdhCollectQueryData,
+    PdhGetFormattedCounterArrayW, PdhOpenQueryW,
 };
+use windows::core::{PCWSTR, w};
 
 /// `\Processor Information(*)\% Processor Performance`, kept open between ticks.
 pub struct Pdh {

@@ -1,7 +1,7 @@
 //! Disks from `/sys/block` (no root needed except for SATA serial numbers).
 
 use crate::{ReadError, Source};
-use rigscope_model::{clean_text, Disk, DiskKind, Field, Interface, StorageInfo};
+use rigscope_model::{Disk, DiskKind, Field, Interface, StorageInfo, clean_text};
 
 pub const BLOCK_DIR: &str = "/sys/block";
 pub const NO_SMART: &str = "this kind of device has no SMART data";

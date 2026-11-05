@@ -1,8 +1,8 @@
 //! Windows `GetSystemFirmwareTable('RSMB')` buffers: an 8-byte `RawSMBIOSData` header
 //! (`Used20CallingMethod`, major, minor, `DmiRevision`, `Length: u32`) followed by the table.
 
-use crate::bytes::{u32_at, u8_at};
-use crate::{decode_table, Decoded, SmbiosError, MAX_TABLE_LEN};
+use crate::bytes::{u8_at, u32_at};
+use crate::{Decoded, MAX_TABLE_LEN, SmbiosError, decode_table};
 
 pub const RSMB_HEADER_LEN: usize = 8;
 
@@ -138,7 +138,7 @@ pub fn mask_serials(table: &mut [u8]) {
 mod tests {
     #![allow(clippy::unwrap_used, clippy::indexing_slicing)]
     use super::*;
-    use crate::testutil::{memory_array, memory_device, table, Dimm, StructBuilder};
+    use crate::testutil::{Dimm, StructBuilder, memory_array, memory_device, table};
 
     fn rsmb(major: u8, minor: u8, t: &[u8]) -> Vec<u8> {
         let mut b = vec![0, major, minor, 0];

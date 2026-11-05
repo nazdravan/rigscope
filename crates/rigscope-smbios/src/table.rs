@@ -1,5 +1,5 @@
-use crate::bytes::{u16_at, u8_at};
-use crate::{SmbiosError, MAX_STRINGS, MAX_STRUCTURES, MAX_TABLE_LEN};
+use crate::bytes::{u8_at, u16_at};
+use crate::{MAX_STRINGS, MAX_STRUCTURES, MAX_TABLE_LEN, SmbiosError};
 
 /// One SMBIOS structure: header + formatted area, plus its string set.
 #[derive(Debug, Clone, PartialEq, Eq)]

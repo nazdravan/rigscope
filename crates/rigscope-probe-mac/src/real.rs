@@ -1,7 +1,7 @@
 //! The live macOS source: runs `system_profiler` and `sysctl` from their fixed system paths, with
 //! fixed arguments, a time limit and an output cap. The arguments are checked, never shell-parsed.
 
-use crate::{mask_fixture, MacError, MacSource, MemMac, R};
+use crate::{MacError, MacSource, MemMac, R, mask_fixture};
 use std::io::Read;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};

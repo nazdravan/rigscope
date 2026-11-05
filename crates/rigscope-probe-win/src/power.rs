@@ -1,5 +1,5 @@
-use crate::{field_err, WinSource};
-use rigscope_model::{clean_text, Battery, Field, PowerInfo};
+use crate::{WinSource, field_err};
+use rigscope_model::{Battery, Field, PowerInfo, clean_text};
 use rigscope_win::layout::BATTERY_UNKNOWN;
 
 pub const MAX_SUPPLIES: usize = 8;

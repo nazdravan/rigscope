@@ -1,5 +1,5 @@
-use crate::bytes::{u16_at, u32_at, u8_at};
 use crate::SmbiosError;
+use crate::bytes::{u8_at, u16_at, u32_at};
 
 /// The parts of the entry point the decoder needs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

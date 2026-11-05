@@ -8,8 +8,8 @@
 use rigscope_engine::testutil::FakeEnv;
 use rigscope_engine::*;
 use rigscope_model::DmiSource;
-use rigscope_model::{encode_dmi_dump, DmiDump};
-use rigscope_probe::{paths, MemSource};
+use rigscope_model::{DmiDump, encode_dmi_dump};
+use rigscope_probe::{MemSource, paths};
 use serde_json::json;
 
 fn denied_env() -> FakeEnv {
@@ -66,12 +66,13 @@ fn elevate_cancelled_keeps_snapshot() {
     assert!(matches!(elevate(&mut a), Err(EngineError::Io(_))));
     assert_eq!(a.session.snapshot, before);
     assert!(a.session.history.is_empty());
-    assert!(a
-        .session
-        .status
-        .as_deref()
-        .unwrap_or_default()
-        .contains("cancelled"));
+    assert!(
+        a.session
+            .status
+            .as_deref()
+            .unwrap_or_default()
+            .contains("cancelled")
+    );
 }
 
 #[test]

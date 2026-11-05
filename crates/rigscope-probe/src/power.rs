@@ -1,8 +1,8 @@
 //! Batteries and the mains adapter from `/sys/class/power_supply` (no root).
 
-use crate::sysfs::text;
 use crate::Source;
-use rigscope_model::{clean_text, Battery, Field, PowerInfo};
+use crate::sysfs::text;
+use rigscope_model::{Battery, Field, PowerInfo, clean_text};
 
 pub const POWER_DIR: &str = "/sys/class/power_supply";
 pub const MAX_SUPPLIES: usize = 32;

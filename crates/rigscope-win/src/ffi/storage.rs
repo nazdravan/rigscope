@@ -2,9 +2,9 @@
 
 use super::Device;
 use crate::layout::{
-    ata_data_from_response, ata_smart_request, device_descriptor_query, nvme_health_query,
     ATA_READ_ATTRIBUTES, ATA_READ_THRESHOLDS, ATA_SMART_OUT_LEN, IOCTL_DISK_GET_LENGTH_INFO,
     IOCTL_STORAGE_QUERY_PROPERTY, NVME_HEALTH_OUT_LEN, SMART_RCV_DRIVE_DATA,
+    ata_data_from_response, ata_smart_request, device_descriptor_query, nvme_health_query,
 };
 use crate::{AtaSmartRaw, DiskIoctlRaw, WinError};
 

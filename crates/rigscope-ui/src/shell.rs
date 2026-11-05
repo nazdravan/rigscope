@@ -1,9 +1,9 @@
 //! Window layout, menus, shortcuts and the eframe entry point.
 
-use crate::i18n::{command_label, tr, Key};
+use crate::i18n::{Key, command_label, tr};
 use crate::{
-    cpu_panel, gpu_panel, memory_panel, net_panel, power_panel, sensors_panel, storage_panel,
-    system_panel, Actions,
+    Actions, cpu_panel, gpu_panel, memory_panel, net_panel, power_panel, sensors_panel,
+    storage_panel, system_panel,
 };
 use rigscope_engine::{App, Language, SectionId};
 use serde_json::json;

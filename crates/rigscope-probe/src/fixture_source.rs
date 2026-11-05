@@ -1,4 +1,4 @@
-use crate::fsutil::{list_dir, map_io, read_capped, MAX_DIR_ENTRIES};
+use crate::fsutil::{MAX_DIR_ENTRIES, list_dir, map_io, read_capped};
 use crate::{ReadError, Source};
 use std::path::PathBuf;
 

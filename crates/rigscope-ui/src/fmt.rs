@@ -1,6 +1,6 @@
 //! Value formatting for display.
 
-use crate::i18n::{tr, Key};
+use crate::i18n::{Key, tr};
 use rigscope_engine::Language;
 use rigscope_model::Field;
 

@@ -1,7 +1,7 @@
 #![cfg(windows)]
 #![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)]
 
-use rigscope_win::{ffi, layout, WinError};
+use rigscope_win::{WinError, ffi, layout};
 
 #[test]
 fn smbios_has_a_valid_header() {

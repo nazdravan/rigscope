@@ -22,9 +22,11 @@ fn fixture(name: &str) -> FixtureSource {
 #[test]
 fn fixture_source_reads_and_lists() {
     let src = fixture("desktop-ddr4");
-    assert!(String::from_utf8(src.read("/proc/cpuinfo").unwrap())
-        .unwrap()
-        .contains("i5-7500"));
+    assert!(
+        String::from_utf8(src.read("/proc/cpuinfo").unwrap())
+            .unwrap()
+            .contains("i5-7500")
+    );
     assert_eq!(src.read("/nope"), Err(ReadError::NotFound));
     let cache = src.list("/sys/devices/system/cpu/cpu0/cache").unwrap();
     assert_eq!(cache, vec!["index0", "index1", "index2", "index3"]);
@@ -345,11 +347,12 @@ fn smart_from_the_dump_reaches_the_disks() {
 #[test]
 fn without_a_dump_disks_need_root_for_smart() {
     let s = build_snapshot(&fixture("desktop-ddr4"), None, 0);
-    assert!(s
-        .storage
-        .disks
-        .iter()
-        .all(|d| d.health == Field::NeedsElevation));
+    assert!(
+        s.storage
+            .disks
+            .iter()
+            .all(|d| d.health == Field::NeedsElevation)
+    );
     let vm = build_snapshot(&fixture("minimal-vm"), None, 0);
     assert!(
         matches!(vm.storage.disks[0].health, Field::Unavailable(_)),
