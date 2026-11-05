@@ -30,7 +30,7 @@ the question that usually starts the search: *which RAM can I buy for this machi
 <img src="docs/assets/screenshot-memory.png" alt="rigscope: the Memory section with the compatibility line and the slot table" />
 
 > **Note: tested on real hardware on Windows, not yet on Linux.** Windows ran on a real laptop
-> (i7-4600U, Windows 10 22H2) on 2026-11-05; the values matched Task Manager and WMI. The Linux
+> (i7-4600U, Windows 10 22H2); the values matched Task Manager and WMI. The Linux
 > build was built and tested inside Docker (with synthetic hardware data) and on macOS: the
 > privilege prompt (`pkexec`), SMART on real disks, the clipboard and the file dialogs still need
 > a check on a real Linux machine.
@@ -190,7 +190,7 @@ Windows 10 1809; on older builds the PCIe link and the GPU temperature show as u
   never as the CPU temperature.
 - **What it cannot read:** the CPU temperature and the fans. Both need a kernel driver, and
   rigscope installs no drivers.
-- **Tested on real hardware** on 2026-11-05: an i7-4600U laptop with Windows 10 22H2. Memory,
+- **Tested on real hardware**: an i7-4600U laptop with Windows 10 22H2. Memory,
   cores / threads, caches, disk, graphics, network and battery matched Task Manager and WMI.
 
 For contributors: `rigscope --capture-fixture DIR` (Windows, elevated) saves a masked fixture of

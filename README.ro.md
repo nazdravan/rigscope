@@ -31,7 +31,7 @@ pentru calculatorul ăsta?*
 <img src="docs/assets/screenshot-memory-ro.png" alt="rigscope: secțiunea Memorie cu rândul de compatibilitate și tabelul sloturilor" />
 
 > **Notă: testat pe hardware real pe Windows, încă nu pe Linux.** Windows a rulat pe un laptop
-> real (i7-4600U, Windows 10 22H2) pe 2026-11-05; valorile au coincis cu Task Manager și WMI.
+> real (i7-4600U, Windows 10 22H2); valorile au coincis cu Task Manager și WMI.
 > Varianta Linux a fost construită și testată în Docker (cu date hardware sintetice) și pe macOS:
 > fereastra de parolă (`pkexec`), SMART pe discuri reale, clipboard-ul și dialogurile de fișiere
 > trebuie încă verificate pe un calculator real cu Linux.
@@ -196,7 +196,7 @@ nu se instalează nimic, iar build-ul este x86_64 MSVC, cu CRT static. Minimul e
   apar ca „ACPI thermal zone”, niciodată ca temperatura procesorului.
 - **Ce nu se poate citi:** temperatura procesorului și ventilatoarele. Ambele necesită un driver
   de kernel, iar rigscope nu instalează drivere.
-- **Testat pe hardware real** pe 2026-11-05: un laptop i7-4600U cu Windows 10 22H2. Memoria,
+- **Testat pe hardware real**: un laptop i7-4600U cu Windows 10 22H2. Memoria,
   nucleele / firele, cache-urile, discul, placa video, rețeaua și bateria au coincis cu Task
   Manager și WMI.
 

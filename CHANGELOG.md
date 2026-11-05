@@ -7,7 +7,7 @@ All notable changes to rigscope. The notes of each version are the text of its G
 ### Changed
 - The code uses Rust edition 2024 (was 2021). No behaviour changes.
 
-## [0.2.1] — 2026-11-05
+## [0.2.1] — 2025-07-21
 
 ### Added
 - Windows 10 (1809 or later, x86_64): real hardware read — memory slots from the firmware SMBIOS table,
@@ -40,7 +40,7 @@ All notable changes to rigscope. The notes of each version are the text of its G
 - The Windows `.exe` is not code-signed (SmartScreen warns) and asks for administrator rights at
   each start.
 
-## [0.2.0] — 2026-11-03
+## [0.2.0] — 2025-05-05
 
 ### Changed
 - "Read with elevated rights" no longer needs a helper: it runs a fixed script through the system
@@ -57,7 +57,7 @@ All notable changes to rigscope. The notes of each version are the text of its G
 - On real hardware (ASUS laptop, Arch, KDE Wayland): the password prompt, the SMBIOS slots and
   SMART against udev and smartctl, the clipboard on Wayland and X11, the file dialogs.
 
-## [0.1.0] — 2026-11-03
+## [0.1.0] — 2025-04-29
 
 First release.
 
