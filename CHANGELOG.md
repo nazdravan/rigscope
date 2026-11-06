@@ -2,7 +2,7 @@
 
 All notable changes to rigscope. The notes of each version are the text of its GitHub release.
 
-## Unreleased
+## [0.2.2] — 2026-11-06
 
 ### Added
 - A portable Windows archive, `rigscope-<version>-windows-x86_64-portable.zip`: `rigscope.exe`
