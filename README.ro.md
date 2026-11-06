@@ -39,7 +39,7 @@ pentru calculatorul ăsta?*
 ## Pornire rapidă
 
 Descarcă un pachet de pe pagina [releases](../../releases): AppImage, `.deb` sau `.tar.gz` pentru
-Linux, un `.exe` portabil pentru Windows, o imagine de disc pentru macOS, cu `SHA256SUMS.txt`. Sau
+Linux, un `.zip` portabil (și un `.exe` simplu) pentru Windows, o imagine de disc pentru macOS, cu `SHA256SUMS.txt`. Sau
 construiește aplicația din surse.
 
 ### Din surse
@@ -177,8 +177,10 @@ opțional: polkit (`pkexec`), `smartmontools`, `hwdata`. Testat pe Debian 12 (Do
 
 ## Windows
 
-Descarcă `rigscope-<versiune>-windows-x86_64.exe` din
-[releases](../../releases). E portabil:
+Descarcă `rigscope-<versiune>-windows-x86_64-portable.zip` din
+[releases](../../releases), dezarhivează-l și rulează `rigscope.exe`: folderul conține programul,
+licențele și acest README. `rigscope-<versiune>-windows-x86_64.exe` e același program, fără
+folder. E portabil:
 nu se instalează nimic, iar build-ul este x86_64 MSVC, cu CRT static. Minimul este Windows 10
 1809; pe versiuni mai vechi legătura PCIe și temperatura plăcii video apar ca indisponibile.
 
@@ -187,7 +189,7 @@ nu se instalează nimic, iar build-ul este x86_64 MSVC, cu CRT static. Minimul e
   helper separat).
 - **SmartScreen avertizează** („Windows a protejat computerul”): `.exe`-ul nu e semnat. Se trece
   de avertisment cu **Mai multe informații** → **Rulați oricum**, iar suma se verifică cu
-  `SHA256SUMS.txt` din release: `Get-FileHash rigscope-<versiune>-windows-x86_64.exe`.
+  `SHA256SUMS.txt` din release: `Get-FileHash rigscope-<versiune>-windows-x86_64-portable.zip` (sau `.exe`).
 - **Ce citește:** sloturile de memorie din tabela SMBIOS a firmware-ului (fără drepturi ridicate),
   topologia procesorului și cache-urile, o frecvență live estimată ca % Processor Performance ×
   frecvența de bază, discurile din WMI cu SMART pentru NVMe și SATA (și în spatele Intel
@@ -246,7 +248,7 @@ salvează în `docs/assets/`.
 
 ## Release
 
-Release-urile sunt construite și publicate de CI: pachete Linux, o imagine de disc macOS și un `.exe` portabil pentru Windows, cu `SHA256SUMS.txt`. Vezi `docs/releasing.md`.
+Release-urile sunt construite și publicate de CI: pachete Linux, o imagine de disc macOS și un `.zip` și un `.exe` portabile pentru Windows, cu `SHA256SUMS.txt`. Vezi `docs/releasing.md`.
 
 ## Teste
 

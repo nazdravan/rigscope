@@ -4,6 +4,10 @@ All notable changes to rigscope. The notes of each version are the text of its G
 
 ## Unreleased
 
+### Added
+- A portable Windows archive, `rigscope-<version>-windows-x86_64-portable.zip`: `rigscope.exe`
+  with the licences and the README in one folder. The bare `.exe` stays in the release too.
+
 ### Changed
 - The code uses Rust edition 2024 (was 2021). No behaviour changes.
 

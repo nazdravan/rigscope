@@ -37,12 +37,13 @@ and tests everything and keeps the files as workflow artifacts; it publishes not
 | `rigscope-<v>-linux-x86_64.AppImage` | Ubuntu 22.04 | One file, no install; the root-only data (SMBIOS, SMART) works from it too. |
 | `rigscope-<v>-linux-x86_64.tar.gz` | Ubuntu 22.04 | Binary and licences. |
 | `rigscope-<v>-macos-universal.dmg` | macOS | arm64 + x86_64, ad-hoc signed, not notarized (right click -> Open). Reads memory, processor, board, system, disks, graphics and network through `system_profiler`; battery and sensors are not read yet. |
+| `rigscope-<v>-windows-x86_64-portable.zip` | `Windows x86_64` job | The folder `rigscope-<v>-windows-x86_64-portable/` with `rigscope.exe`, `LICENSE-MIT`, `LICENSE-APACHE`, `THIRD-PARTY.txt` (the font licence) and `README.md`. Built with `Compress-Archive` in a pwsh step, staged outside `dist/` so only the release files are uploaded. |
 | `rigscope-<v>-windows-x86_64.exe` | `Windows x86_64` job, `windows-2025` runner | Portable, nothing to install. x86_64 MSVC build with a static CRT (`RUSTFLAGS=-C target-feature=+crt-static`); `build.rs` embeds the `requireAdministrator` manifest, icon and version (needs `rc.exe` from the runner's Windows SDK). Not code-signed, so SmartScreen warns; users verify it with `SHA256SUMS.txt`. |
 | `SHA256SUMS.txt` | | Checksums of all of the above. |
 
 The `Windows x86_64` job builds with `cargo build --release --locked -p rigscope --target
-x86_64-pc-windows-msvc`, copies `rigscope.exe` to `dist/rigscope-<v>-windows-x86_64.exe` and
-uploads it as the `release-windows-x86_64` artifact; the release job waits for it like for the
+x86_64-pc-windows-msvc`, copies `rigscope.exe` to `dist/rigscope-<v>-windows-x86_64.exe`, makes the
+portable zip next to it and uploads both as the `release-windows-x86_64` artifact; the release job waits for it like for the
 others. There is no signing step.
 
 ## Root without a helper

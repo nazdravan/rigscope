@@ -38,7 +38,7 @@ the question that usually starts the search: *which RAM can I buy for this machi
 ## Quick start
 
 Download a package from the [releases](../../releases) page: AppImage, `.deb` or `.tar.gz` for
-Linux, a portable `.exe` for Windows, a disk image for macOS, with `SHA256SUMS.txt`. Or build it
+Linux, a portable `.zip` (and a bare `.exe`) for Windows, a disk image for macOS, with `SHA256SUMS.txt`. Or build it
 from source.
 
 ### From source
@@ -173,15 +173,17 @@ polkit (`pkexec`), `smartmontools`, `hwdata`. Tested in Debian 12 (Docker, Xvfb)
 
 ## Windows
 
-Download `rigscope-<version>-windows-x86_64.exe` from the
-[releases](../../releases). It is portable: nothing is installed, and it is an x86_64 MSVC build with a static CRT. The minimum is
+Download `rigscope-<version>-windows-x86_64-portable.zip` from the
+[releases](../../releases), unzip it and run `rigscope.exe`: the folder holds the program, the
+licences and this README. The bare `rigscope-<version>-windows-x86_64.exe` is the same program
+without the folder. It is portable: nothing is installed, and it is an x86_64 MSVC build with a static CRT. The minimum is
 Windows 10 1809; on older builds the PCIe link and the GPU temperature show as unavailable.
 
 - **A UAC prompt at every start.** The `.exe` asks for administrator rights because SMART and the
   disk IOCTLs need them. The whole app runs elevated (there is no separate helper).
 - **SmartScreen warns** ("Windows protected your PC"): the `.exe` is not code-signed. Click
   **More info** → **Run anyway**, and check the file against `SHA256SUMS.txt` from the release:
-  `Get-FileHash rigscope-<version>-windows-x86_64.exe`.
+  `Get-FileHash rigscope-<version>-windows-x86_64-portable.zip` (or the `.exe`).
 - **What it reads:** memory slots from the firmware SMBIOS table (no elevation needed), CPU
   topology and caches, a live clock estimated as % Processor Performance × base clock, disks from
   WMI with SMART for NVMe and SATA (also behind Intel RST/RAID when the controller passes ATA
@@ -234,7 +236,7 @@ them to `docs/assets/`.
 
 ## Release
 
-Releases are built and published by CI: Linux packages, a macOS disk image and a portable Windows `.exe`, with `SHA256SUMS.txt`. See `docs/releasing.md`.
+Releases are built and published by CI: Linux packages, a macOS disk image and a portable Windows `.zip` and `.exe`, with `SHA256SUMS.txt`. See `docs/releasing.md`.
 
 ## Tests
 
