@@ -29,6 +29,11 @@
    "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/rigscope-0.1.0-windows-x86_64.exe"
   },
   {
+   "name": "rigscope-0.1.0-windows-x86_64-portable.zip",
+   "size": 5006000,
+   "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/rigscope-0.1.0-windows-x86_64-portable.zip"
+  },
+  {
    "name": "SHA256SUMS.txt",
    "size": 5004000,
    "url": "https://github.com/nazdravan/rigscope/releases/download/v0.1.0/SHA256SUMS.txt"

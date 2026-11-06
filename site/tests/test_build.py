@@ -51,10 +51,30 @@ class ReleaseTest(unittest.TestCase):
         a = build.release_assets(release())
         self.assertEqual(a["windows-exe"]["name"], "rigscope-0.1.0-windows-x86_64.exe")
 
-    def test_a_release_without_the_windows_exe_still_builds(self):
+    def test_the_windows_zip_is_recognised(self):
+        a = build.release_assets(release())
+        self.assertEqual(a["windows-zip"]["name"], "rigscope-0.1.0-windows-x86_64-portable.zip")
+
+    def test_the_button_offers_the_zip_and_a_release_with_only_the_exe_offers_that(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            build.build(release(), Path(tmp))
+            en = (Path(tmp) / "index.html").read_text(encoding="utf-8")
+            self.assertIn("&quot;windows&quot;: &quot;https://github.com/nazdravan/rigscope/releases/download/v0.1.0/rigscope-0.1.0-windows-x86_64-portable.zip&quot;", en)
+            # The zip row comes first, then the bare exe.
+            self.assertLess(en.index("windows-x86_64-portable.zip</a>"), en.index("windows-x86_64.exe</a>"))
         r = release()
-        r["assets"] = [x for x in r["assets"] if not x["name"].endswith(".exe")]
+        r["assets"] = [x for x in r["assets"] if not x["name"].endswith(".zip")]
+        with tempfile.TemporaryDirectory() as tmp:
+            build.build(r, Path(tmp))
+            en = (Path(tmp) / "index.html").read_text(encoding="utf-8")
+            self.assertIn("&quot;windows&quot;: &quot;https://github.com/nazdravan/rigscope/releases/download/v0.1.0/rigscope-0.1.0-windows-x86_64.exe&quot;", en)
+            self.assertNotIn("portable.zip", en)
+
+    def test_a_release_without_the_windows_files_still_builds(self):
+        r = release()
+        r["assets"] = [x for x in r["assets"] if not x["name"].endswith((".exe", "-portable.zip"))]
         self.assertNotIn("windows-exe", build.release_assets(r))
+        self.assertNotIn("windows-zip", build.release_assets(r))
         with tempfile.TemporaryDirectory() as tmp:
             build.build(r, Path(tmp))
             for page in ("index.html", "ro/index.html"):
@@ -100,7 +120,8 @@ class PageTest(unittest.TestCase):
         self.assertIn("releases/download/v0.1.0/rigscope-0.1.0-windows-x86_64.exe", en)
         self.assertIn("Windows (x86_64, portable .exe)", en)
         self.assertIn("Windows (x86_64, .exe portabil)", (self.out / "ro/index.html").read_text(encoding="utf-8"))
-        self.assertIn('data-label-windows="Download for Windows (.exe)"', en)
+        self.assertIn('data-label-windows="Download for Windows (portable)"', en)
+        self.assertIn("Windows (x86_64, portable .zip)", en)
         self.assertIn("v0.1.0", en)
 
     def test_romanian_page_uses_relative_paths_one_level_up(self):

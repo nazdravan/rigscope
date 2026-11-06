@@ -33,6 +33,7 @@ ASSET_KINDS = {
 }
 # Not in every release (0.2.0 and earlier have none): the page then has no Windows row or button.
 OPTIONAL_ASSET_KINDS = {
+    "windows-zip": "windows-x86_64-portable.zip",
     "windows-exe": "windows-x86_64.exe",
 }
 
@@ -197,8 +198,10 @@ def build(release, out):
     template = (SITE / "template.html").read_text(encoding="utf-8")
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     kind_urls = {"linux": assets["linux-appimage"]["url"], "mac": assets["mac-dmg"]["url"]}
-    if "windows-exe" in assets:
-        kind_urls["windows"] = assets["windows-exe"]["url"]
+    # The button offers the portable archive; a release that has only the bare exe offers that.
+    windows_main = assets.get("windows-zip") or assets.get("windows-exe")
+    if windows_main:
+        kind_urls["windows"] = windows_main["url"]
     kinds = json.dumps(kind_urls)
     for lang, path in LANGS.items():
         t = json.loads((SITE / "i18n" / f"{lang}.json").read_text(encoding="utf-8"))
@@ -214,14 +217,15 @@ def build(release, out):
             "date": format_date(release["publishedAt"], t["months"], t["date_format"]),
             "kinds_json": kinds,
             "windows_label_attr": (
-                f'data-label-windows="{html.escape(t["btn_windows"])}"' if "windows-exe" in assets else ""
+                f'data-label-windows="{html.escape(t["btn_windows"])}"' if windows_main else ""
             ),
-            "windows_row": (
-                f'<tr><td><a href="{html.escape(assets["windows-exe"]["url"])}">'
-                f'{html.escape(assets["windows-exe"]["name"])}</a></td>'
-                f'<td>{html.escape(t["dl_windows"])}</td>'
-                f'<td>{format_size(assets["windows-exe"]["size"])}</td></tr>'
-                if "windows-exe" in assets else ""
+            "windows_row": "".join(
+                f'<tr><td><a href="{html.escape(assets[k]["url"])}">'
+                f'{html.escape(assets[k]["name"])}</a></td>'
+                f'<td>{html.escape(t[text])}</td>'
+                f'<td>{format_size(assets[k]["size"])}</td></tr>'
+                for k, text in (("windows-zip", "dl_windows_zip"), ("windows-exe", "dl_windows"))
+                if k in assets
             ),
             "news_html": news_html(changelog, t, version),
             "name": theme["name"],
