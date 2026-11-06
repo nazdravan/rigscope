@@ -203,6 +203,21 @@ jobs:
           cargo build --release --locked -p rigscope --target x86_64-pc-windows-msvc
           mkdir -p dist
           cp target/x86_64-pc-windows-msvc/release/rigscope.exe "dist/rigscope-$VERSION-windows-x86_64.exe"
+      # The portable archive: the exe next to the licences and the README, in one folder. It is
+      # staged outside dist/ so that only the two release files are uploaded.
+      - name: Portable zip
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          $name = "rigscope-$env:VERSION-windows-x86_64-portable"
+          $stage = Join-Path $env:RUNNER_TEMP $name
+          New-Item -ItemType Directory -Force $stage | Out-Null
+          Copy-Item target/x86_64-pc-windows-msvc/release/rigscope.exe (Join-Path $stage "rigscope.exe")
+          Copy-Item LICENSE-MIT, LICENSE-APACHE, README.md $stage
+          Copy-Item assets/fonts/OFL.txt (Join-Path $stage "THIRD-PARTY.txt")
+          Compress-Archive -Path $stage -DestinationPath "dist/$name.zip"
+          Get-ChildItem dist
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-windows-x86_64
