@@ -24,11 +24,20 @@ install -m 644 README.md "$root/usr/share/doc/rigscope/README.md"
     echo "Source: https://github.com/nazdravan/rigscope"
     echo
     echo "Files: *"
+    echo "Copyright: $(sed -n 's/^Copyright (c) //p' LICENSE-MIT)"
     echo "License: MIT or Apache-2.0"
-    echo " Either the MIT license or the Apache License, Version 2.0, at your option."
-    echo " On Debian systems, the Apache-2.0 text is in /usr/share/common-licenses/Apache-2.0."
     echo
     echo "Files: assets/fonts/*"
+    echo "Copyright: $(sed -n '1s/^Copyright //p' assets/fonts/OFL.txt)"
+    echo "License: OFL-1.1"
+    echo "Comment: Noto Sans, built into usr/bin/rigscope."
+    echo
+    echo "License: MIT"
+    sed 's/^/ /; s/^ $/ ./' LICENSE-MIT
+    echo
+    echo "License: Apache-2.0"
+    echo " On Debian systems, the full text is in /usr/share/common-licenses/Apache-2.0."
+    echo
     echo "License: OFL-1.1"
     sed 's/^/ /; s/^ $/ ./' assets/fonts/OFL.txt
 } >"$root/usr/share/doc/rigscope/copyright"
