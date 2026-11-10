@@ -264,3 +264,7 @@ snapshot, cereri de control) au teste de proprietăți; panourile au teste egui 
 
 Licențiat, la alegere, sub [Apache License, Version 2.0](LICENSE-APACHE) sau [licența MIT](LICENSE-MIT).
 Noto Sans e sub SIL Open Font License ([assets/fonts/OFL.txt](assets/fonts/OFL.txt)).
+
+Dacă nu declari explicit altceva, orice contribuție trimisă intenționat de tine pentru a fi inclusă
+în rigscope, în sensul licenței Apache-2.0, este licențiată dublu ca mai sus, fără termeni sau
+condiții suplimentare.
