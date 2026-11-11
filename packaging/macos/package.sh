@@ -19,8 +19,7 @@ lipo -create -output "$app/Contents/MacOS/rigscope" \
     target/aarch64-apple-darwin/release/rigscope target/x86_64-apple-darwin/release/rigscope
 sed "s/@VERSION@/${VERSION%%-*}/g" packaging/macos/Info.plist >"$app/Contents/Info.plist"
 cp assets/rigscope.icns "$app/Contents/Resources/rigscope.icns"
-cp LICENSE-MIT LICENSE-APACHE "$app/Contents/Resources/"
-cp assets/fonts/OFL.txt "$app/Contents/Resources/THIRD-PARTY.txt"
+copy_docs "$app/Contents/Resources"
 codesign --force --deep --sign - "$app"
 
 cp -R "$app" "$dmgdir/"

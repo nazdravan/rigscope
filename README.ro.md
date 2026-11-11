@@ -263,7 +263,11 @@ snapshot, cereri de control) au teste de proprietăți; panourile au teste egui 
 ## Licență
 
 Licențiat, la alegere, sub [Apache License, Version 2.0](LICENSE-APACHE) sau [licența MIT](LICENSE-MIT).
-Noto Sans e sub SIL Open Font License ([assets/fonts/OFL.txt](assets/fonts/OFL.txt)).
+Copyright (c) 2024 Nicolae Postica.
+
+Fonturile incluse (Noto Sans și fonturile egui) și crate-urile Rust au licențele lor, enumerate în
+[NOTICE](NOTICE). Fiecare pachet conține `NOTICE`, `OFL-NotoSans.txt` și `THIRD-PARTY.txt`, cu
+textul complet al licenței fiecărui crate.
 
 Dacă nu declari explicit altceva, orice contribuție trimisă intenționat de tine pentru a fi inclusă
 în rigscope, în sensul licenței Apache-2.0, este licențiată dublu ca mai sus, fără termeni sau

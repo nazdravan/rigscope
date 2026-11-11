@@ -106,10 +106,38 @@ jobs:
           key: release-test
       - run: cargo xtask ci
 
+  licences:
+    timeout-minutes: 20
+    name: licences
+    needs: version
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: rustup show
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: release-licences
+      # On every run: a crate under a licence not accepted in about.toml stops the build.
+      - name: cargo-about
+        run: |
+          . packaging/env.sh
+          if [ "$(cargo about --version 2>/dev/null)" != "cargo-about $CARGO_ABOUT_VERSION" ]; then
+            cargo install cargo-about --locked --features cli --version "$CARGO_ABOUT_VERSION"
+          fi
+      - run: packaging/licences.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: third-party
+          path: dist/THIRD-PARTY.txt
+          if-no-files-found: error
+
   linux:
     timeout-minutes: 45
     name: Linux x86_64
-    needs: version
+    needs: [version, licences]
     if: needs.version.outputs.build == 'true'
     # The oldest supported Ubuntu, so the binary runs against its glibc (2.35) and newer.
     runs-on: ubuntu-22.04
@@ -119,6 +147,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # The crate licences, generated once by the licences job; copy_docs needs them.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: third-party
+          path: dist
       - name: Install the Rust toolchain
         run: rustup show
       - name: System libraries
@@ -145,7 +178,7 @@ jobs:
   macos:
     timeout-minutes: 60
     name: macOS universal
-    needs: version
+    needs: [version, licences]
     if: needs.version.outputs.build == 'true'
     runs-on: macos-26
     env:
@@ -154,6 +187,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # The crate licences, generated once by the licences job; copy_docs needs them.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: third-party
+          path: dist
       # Both macOS targets come from rust-toolchain.toml's channel.
       - name: Install the Rust toolchain
         run: |
@@ -174,7 +212,7 @@ jobs:
 
   windows:
     name: Windows x86_64
-    needs: [version, test]
+    needs: [version, test, licences]
     if: needs.version.outputs.build == 'true'
     # LTO (thin, one codegen unit) makes the release build slow.
     timeout-minutes: 60
@@ -183,6 +221,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # The crate licences, generated once by the licences job; outside dist/, which is uploaded whole.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: third-party
+          path: third-party
       - name: Install the Rust toolchain
         run: rustup show
       # packaging/version.sh only needs sed, grep, head and cargo, all in Git Bash on the runner.
@@ -214,8 +257,9 @@ jobs:
           $stage = Join-Path $env:RUNNER_TEMP $name
           New-Item -ItemType Directory -Force $stage | Out-Null
           Copy-Item target/x86_64-pc-windows-msvc/release/rigscope.exe (Join-Path $stage "rigscope.exe")
-          Copy-Item LICENSE-MIT, LICENSE-APACHE, README.md $stage
-          Copy-Item assets/fonts/OFL.txt (Join-Path $stage "THIRD-PARTY.txt")
+          # The same files as copy_docs in packaging/env.sh.
+          Copy-Item LICENSE-MIT, LICENSE-APACHE, NOTICE, third-party/THIRD-PARTY.txt, README.md $stage
+          Copy-Item assets/fonts/OFL.txt (Join-Path $stage "OFL-NotoSans.txt")
           Compress-Archive -Path $stage -DestinationPath "dist/$name.zip"
           Get-ChildItem dist
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -231,7 +275,7 @@ jobs:
     if: >-
       github.event_name == 'push' && needs.version.outputs.build == 'true' &&
       !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    needs: [version, test, linux, macos, windows]
+    needs: [version, test, licences, linux, macos, windows]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

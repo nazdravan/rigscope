@@ -54,6 +54,23 @@ runs as root, so no package has to install anything, and nothing a user process 
 the password is typed is ever executed. The script checks its arguments again (smartctl path
 from a fixed list, kernel disk names) and only prints hex; the window parses it.
 
+## Licences in the packages
+
+Every package carries `LICENSE-MIT`, `LICENSE-APACHE`, `NOTICE`, `THIRD-PARTY.txt` and
+`OFL-NotoSans.txt` (from `assets/fonts/OFL.txt`). The packaging scripts copy them only through
+`copy_docs` (`packaging/env.sh`); the Windows zip step in `release.yml` copies the same files.
+The standalone Windows `.exe` carries none: the zip is the one with the licences.
+
+- `THIRD-PARTY.txt` is generated, not in git: `packaging/licences.sh` (needs
+  `cargo install cargo-about --locked --features cli --version <CARGO_ABOUT_VERSION from env.sh>`)
+  writes it to `dist/` with the licence of every crate and of egui's fonts. In CI the `licences`
+  job makes it on every run, and fails if a crate has a licence that is not in `about.toml`.
+- After an egui update the checksums in `[epaint_default_fonts.clarify]` (`about.toml`) stop
+  matching and `packaging/licences.sh` stops: check the crate's `fonts/*.txt` and update the sums
+  (`shasum -a 256`).
+- A new file in `assets/fonts/` must be named in `NOTICE`, with its licence: otherwise
+  `cargo xtask licences` (part of `cargo xtask ci`) fails.
+
 ## Local checks
 
 - `packaging/linux/package.sh`, `deb.sh`, `appimage.sh` on Linux; `packaging/macos/package.sh`

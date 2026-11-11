@@ -1,6 +1,7 @@
-//! Project automation: `cargo xtask <ci|layers|unsafe|wasm|linux>`.
+//! Project automation: `cargo xtask <ci|layers|unsafe|licences|wasm|linux>`.
 
 mod layers;
+mod licences;
 mod screenshot;
 mod unsafe_scope;
 
@@ -25,6 +26,7 @@ fn main() -> Result<()> {
         "ci" => ci(),
         "layers" => layers_check(),
         "unsafe" => unsafe_scope_check(),
+        "licences" => licences::check(),
         "wasm" => wasm(),
         "linux" => linux(rest),
         "gen-fixtures" => gen_fixtures(),
@@ -39,7 +41,7 @@ fn main() -> Result<()> {
         "banner" => run(Command::new("python3").args(["-I", "assets/banner.py"])),
         _ => {
             eprintln!(
-                "usage: cargo xtask <ci|layers|unsafe|wasm|linux [cmd...]|gen-fixtures|icons|windows-icon|banner|shots|screenshot [--fixture D --section S --lang L --out P]>"
+                "usage: cargo xtask <ci|layers|unsafe|licences|wasm|linux [cmd...]|gen-fixtures|icons|windows-icon|banner|shots|screenshot [--fixture D --section S --lang L --out P]>"
             );
             Ok(())
         }
@@ -82,6 +84,7 @@ fn ci() -> Result<()> {
     run(cargo().args(["test", "--workspace", "--quiet"]))?;
     layers_check()?;
     unsafe_scope_check()?;
+    licences::check()?;
     wasm()?;
     eprintln!("xtask ci: OK");
     Ok(())

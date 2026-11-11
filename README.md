@@ -251,7 +251,11 @@ control requests) have property tests; the panels have headless egui tests.
 ## License
 
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT license](LICENSE-MIT)
-at your option. Noto Sans is under the SIL Open Font License ([assets/fonts/OFL.txt](assets/fonts/OFL.txt)).
+at your option. Copyright (c) 2024 Nicolae Postica.
+
+The bundled fonts (Noto Sans and egui's fonts) and the Rust crates keep their own licences, listed
+in [NOTICE](NOTICE). Every package carries `NOTICE`, `OFL-NotoSans.txt` and `THIRD-PARTY.txt`,
+with the full licence text of each crate.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in
 rigscope by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without

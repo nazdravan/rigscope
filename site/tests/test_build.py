@@ -143,6 +143,13 @@ class PageTest(unittest.TestCase):
         css = (self.out / "assets/style.css").read_text(encoding="utf-8")
         self.assertNotIn("http", css)
 
+    def test_every_served_font_has_its_licence(self):
+        fonts = sorted(p.name for p in (self.out / "assets").glob("*.ttf"))
+        self.assertEqual(fonts, ["NotoSans-Bold.ttf", "NotoSans-Regular.ttf"])
+        licence = (self.out / "assets/OFL-NotoSans.txt").read_text(encoding="utf-8")
+        self.assertIn("SIL Open Font License", licence)
+        self.assertTrue(licence.startswith("Copyright 2022 The Noto Project Authors"))
+
     def test_theme_css_has_the_theme_colours(self):
         theme = tomllib.loads((ROOT / "assets/theme.toml").read_text(encoding="utf-8"))
         css = (self.out / "assets/theme.css").read_text(encoding="utf-8")

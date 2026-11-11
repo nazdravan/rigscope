@@ -26,8 +26,8 @@ mkdir -p "$appdir/usr/bin" "$appdir/usr/share/applications" \
 install -m 755 target/release/rigscope "$appdir/usr/bin/rigscope"
 cp packaging/linux/rigscope.desktop "$appdir/usr/share/applications/"
 cp assets/icon.png "$appdir/usr/share/icons/hicolor/256x256/apps/rigscope.png"
-cp README.md LICENSE-MIT LICENSE-APACHE "$appdir/usr/share/doc/rigscope/"
-cp assets/fonts/OFL.txt "$appdir/usr/share/doc/rigscope/THIRD-PARTY.txt"
+cp README.md "$appdir/usr/share/doc/rigscope/"
+copy_docs "$appdir/usr/share/doc/rigscope"
 # appimagetool wants the .desktop file and the icon in the AppDir root too.
 ln -s usr/share/applications/rigscope.desktop "$appdir/rigscope.desktop"
 ln -s usr/share/icons/hicolor/256x256/apps/rigscope.png "$appdir/rigscope.png"

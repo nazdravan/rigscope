@@ -248,6 +248,8 @@ def build(release, out):
         shutil.copy2(src, out / "assets" / name)
     for font in FONTS:
         shutil.copy2(ROOT / "assets/fonts" / font, out / "assets" / font)
+    # Noto Sans's licence travels with the fonts (see NOTICE).
+    shutil.copy2(ROOT / "assets/fonts/OFL.txt", out / "assets/OFL-NotoSans.txt")
     (out / "assets" / "theme.css").write_text(theme_css(theme), encoding="utf-8")
     (out / ".nojekyll").write_text("")
 
